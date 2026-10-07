@@ -1,0 +1,1582 @@
+import {
+    useMemo,
+    useState,
+} from "react";
+
+import {
+    RiAlarmWarningLine,
+    RiBarChartBoxLine,
+    RiCheckboxCircleLine,
+    RiFlashlightLine,
+    RiLoader4Line,
+    RiMapPinLine,
+    RiRefreshLine,
+    RiSparkling2Line,
+    RiSpeedLine,
+    RiTimeLine,
+    RiToolsLine,
+} from "react-icons/ri";
+
+import SmartTable from "../../react-components/SmartTable/SmartTable.jsx";
+
+import {
+    useAnalyticsAnomalies,
+    useAnalyticsDashboard,
+    useFailureForecast,
+    useRunAnalyticsAnomalies,
+} from "../../hooks/useAnalytics.js";
+
+import {
+    useDowntimeReport,
+    useShiftReport,
+} from "../../hooks/useReports.js";
+
+import {
+    useAreas,
+} from "../../hooks/useReferences.js";
+
+import {
+    useI18n,
+} from "../../i18n/index.js";
+
+
+// MARK: Config
+
+const PERIODS = [
+    {
+        value: "shift",
+        label: "Смена",
+        days: 1,
+    },
+    {
+        value: "day",
+        label: "День",
+        days: 1,
+    },
+    {
+        value: "week",
+        label: "Неделя",
+        days: 7,
+    },
+    {
+        value: "month",
+        label: "30 дней",
+        days: 30,
+    },
+];
+
+const ANOMALY_TYPES = [
+    {
+        value: "",
+        label: "Все аномалии",
+    },
+    {
+        value: "FREQUENT_FAILURES",
+        label: "Частые отказы",
+    },
+    {
+        value: "REPEATED_FAULT",
+        label: "Повторная неисправность",
+    },
+    {
+        value:
+            "FAILURE_AFTER_PLANNED_MAINTENANCE",
+        label:
+            "Отказ после ППР",
+    },
+    {
+        value: "MATERIAL_ANOMALY",
+        label:
+            "Расход материалов",
+    },
+    {
+        value: "AREA_HOTSPOT",
+        label:
+            "Проблемный участок",
+    },
+    {
+        value: "SHIFT_PATTERN",
+        label:
+            "Паттерн смены",
+    },
+    {
+        value: "TIME_OF_DAY",
+        label:
+            "Время суток",
+    },
+    {
+        value:
+            "EXECUTOR_REPEAT_FAILURES",
+        label:
+            "Повтор после исполнителя",
+    },
+    {
+        value:
+            "BRIGADE_REPEAT_FAILURES",
+        label:
+            "Повтор после бригады",
+    },
+];
+
+
+// MARK: Helpers
+
+function asArray(value) {
+    return Array.isArray(
+        value,
+    )
+        ? value
+        : [];
+}
+
+function formatMinutes(
+    value,
+) {
+    const minutes =
+        Math.max(
+            0,
+            Math.round(
+                Number(
+                    value,
+                ) || 0,
+            ),
+        );
+
+    if (minutes < 60) {
+        return `${minutes} мин`;
+    }
+
+    const hours =
+        Math.floor(
+            minutes / 60,
+        );
+
+    const rest =
+        minutes % 60;
+
+    if (!rest) {
+        return `${hours} ч`;
+    }
+
+    return `${hours} ч ${rest} мин`;
+}
+
+function formatPercent(
+    value,
+) {
+    const number =
+        Number(value);
+
+    if (
+        !Number.isFinite(
+            number,
+        )
+    ) {
+        return "—";
+    }
+
+    return `${Math.round(
+        number * 100,
+    )}%`;
+}
+
+function extractError(
+    error,
+) {
+    return (
+        error?.response?.data
+            ?.error ||
+        error?.message ||
+        "Ошибка загрузки данных"
+    );
+}
+
+function createPeriodRange(
+    period,
+) {
+    const now =
+        new Date();
+
+    const from =
+        new Date(
+            now,
+        );
+
+    if (
+        period ===
+        "shift"
+    ) {
+        from.setHours(
+            from.getHours() -
+                12,
+        );
+    } else if (
+        period ===
+        "day"
+    ) {
+        from.setDate(
+            from.getDate() -
+                1,
+        );
+    } else if (
+        period ===
+        "week"
+    ) {
+        from.setDate(
+            from.getDate() -
+                7,
+        );
+    } else {
+        from.setDate(
+            from.getDate() -
+                30,
+        );
+    }
+
+    return {
+        from:
+            from.toISOString(),
+
+        to:
+            now.toISOString(),
+    };
+}
+
+
+// MARK: Page
+
+export default function Analytics() {
+    useI18n();
+
+    const [
+        period,
+        setPeriod,
+    ] = useState(
+        "week",
+    );
+
+    const [
+        areaId,
+        setAreaId,
+    ] = useState("");
+
+    const [
+        anomalyType,
+        setAnomalyType,
+    ] = useState("");
+
+    const areasQuery =
+        useAreas();
+
+    const dashboardQuery =
+        useAnalyticsDashboard();
+
+    const currentPeriod =
+        PERIODS.find(
+            (item) =>
+                item.value ===
+                period,
+        ) ??
+        PERIODS[2];
+
+    const reportParams =
+        useMemo(
+            () => ({
+                period,
+
+                ...(areaId
+                    ? {
+                        areaId:
+                            Number(
+                                areaId,
+                            ),
+                    }
+                    : {}),
+            }),
+            [
+                period,
+                areaId,
+            ],
+        );
+
+    const shiftQuery =
+        useShiftReport(
+            reportParams,
+        );
+
+    const downtimeQuery =
+        useDowntimeReport(
+            reportParams,
+        );
+
+    const forecastQuery =
+        useFailureForecast(
+            currentPeriod.days,
+        );
+
+    const anomaliesQuery =
+        useAnalyticsAnomalies({
+            ...(areaId
+                ? {
+                    areaId:
+                        Number(
+                            areaId,
+                        ),
+                }
+                : {}),
+
+            ...(anomalyType
+                ? {
+                    type:
+                        anomalyType,
+                }
+                : {}),
+        });
+
+    const runMutation =
+        useRunAnalyticsAnomalies();
+
+    const areas =
+        asArray(
+            areasQuery.data,
+        );
+
+    const dashboard =
+        dashboardQuery.data ??
+        {};
+
+    const shift =
+        shiftQuery.data ??
+        {};
+
+    const downtime =
+        downtimeQuery.data ??
+        {};
+
+    const forecasts =
+        asArray(
+            forecastQuery.data,
+        );
+
+    const anomalies =
+        asArray(
+            anomaliesQuery.data,
+        );
+
+    const sortedForecast =
+        useMemo(
+            () =>
+                [...forecasts].sort(
+                    (
+                        a,
+                        b,
+                    ) =>
+                        Number(
+                            b.probability,
+                        ) -
+                        Number(
+                            a.probability,
+                        ),
+                ),
+            [
+                forecasts,
+            ],
+        );
+
+    const sortedAnomalies =
+        useMemo(
+            () =>
+                [...anomalies].sort(
+                    (
+                        a,
+                        b,
+                    ) =>
+                        Number(
+                            b.severity,
+                        ) -
+                        Number(
+                            a.severity,
+                        ),
+                ),
+            [
+                anomalies,
+            ],
+        );
+
+    const downtimeEquipment =
+        asArray(
+            downtime.byEquipment,
+        );
+
+    const aiResult =
+        runMutation.data
+            ?.ai;
+
+    const downtimeColumns =
+        useMemo(
+            () => [
+                {
+                    key:
+                        "equipment",
+
+                    header:
+                        "Оборудование",
+
+                    minWidth:
+                        220,
+
+                    sortValue:
+                        (
+                            row,
+                        ) =>
+                            row.equipment
+                                ?.name ??
+                            row.equipment ??
+                            "",
+
+                    render:
+                        (
+                            row,
+                        ) => (
+                            <div>
+                                <p className="font-semibold text-gray-900">
+                                    {row
+                                        .equipment
+                                        ?.name ||
+                                        row.equipment ||
+                                        "—"}
+                                </p>
+
+                                <p className="mt-1 text-xs text-gray-400">
+                                    {row.area
+                                        ?.name ||
+                                        "Участок не указан"}
+                                </p>
+                            </div>
+                        ),
+                },
+
+                {
+                    field:
+                        "count",
+
+                    header:
+                        "Событий",
+
+                    minWidth:
+                        100,
+                },
+
+                {
+                    field:
+                        "minutes",
+
+                    header:
+                        "Простой",
+
+                    minWidth:
+                        130,
+
+                    sortValue:
+                        (
+                            row,
+                        ) =>
+                            Number(
+                                row.minutes,
+                            ),
+
+                    render:
+                        (
+                            row,
+                        ) =>
+                            formatMinutes(
+                                row.minutes,
+                            ),
+                },
+
+                {
+                    field:
+                        "plannedMinutes",
+
+                    header:
+                        "Плановый",
+
+                    minWidth:
+                        130,
+
+                    render:
+                        (
+                            row,
+                        ) =>
+                            formatMinutes(
+                                row.plannedMinutes,
+                            ),
+                },
+
+                {
+                    field:
+                        "unplannedMinutes",
+
+                    header:
+                        "Аварийный",
+
+                    minWidth:
+                        130,
+
+                    render:
+                        (
+                            row,
+                        ) => (
+                            <span className="font-semibold text-red-600">
+                                {formatMinutes(
+                                    row.unplannedMinutes,
+                                )}
+                            </span>
+                        ),
+                },
+
+                {
+                    field:
+                        "ongoing",
+
+                    header:
+                        "Сейчас",
+
+                    minWidth:
+                        100,
+
+                    render:
+                        (
+                            row,
+                        ) =>
+                            row.ongoing
+                                ? (
+                                    <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
+                                        Да
+                                    </span>
+                                )
+                                : (
+                                    <span className="text-gray-400">
+                                        Нет
+                                    </span>
+                                ),
+                },
+            ],
+        [],
+    );
+
+    async function refreshAll() {
+        await Promise.all([
+            dashboardQuery.refetch(),
+            shiftQuery.refetch(),
+            downtimeQuery.refetch(),
+            forecastQuery.refetch(),
+            anomaliesQuery.refetch(),
+        ]);
+    }
+
+    async function recalculate() {
+        const range =
+            createPeriodRange(
+                period,
+            );
+
+        try {
+            await runMutation.mutateAsync({
+                ...range,
+
+                ...(areaId
+                    ? {
+                        areaId:
+                            Number(
+                                areaId,
+                            ),
+                    }
+                    : {}),
+            });
+        } catch {
+            // Ошибка отображается ниже.
+        }
+    }
+
+    const loading =
+        shiftQuery.isLoading &&
+        !shiftQuery.data;
+
+    if (loading) {
+        return (
+            <PageLoader />
+        );
+    }
+
+    return (
+        <div className="mx-auto max-w-[1800px]">
+
+            {/* HEADER */}
+
+            <div className="mb-6 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                        Аналитика
+                    </h1>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Производственные
+                        показатели,
+                        простои,
+                        прогноз отказов
+                        и аномалии
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        onClick={
+                            refreshAll
+                        }
+                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                        <RiRefreshLine />
+
+                        Обновить
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={
+                            recalculate
+                        }
+                        disabled={
+                            runMutation.isPending
+                        }
+                        className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                    >
+                        {runMutation.isPending
+                            ? (
+                                <RiLoader4Line className="animate-spin" />
+                            )
+                            : (
+                                <RiSparkling2Line />
+                            )}
+
+                        {runMutation.isPending
+                            ? "AI анализирует..."
+                            : "Пересчитать аномалии"}
+                    </button>
+                </div>
+            </div>
+
+
+            {/* FILTERS */}
+
+            <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="flex flex-wrap gap-2">
+                        {PERIODS.map(
+                            (
+                                item,
+                            ) => (
+                                <PeriodButton
+                                    key={
+                                        item.value
+                                    }
+                                    active={
+                                        period ===
+                                        item.value
+                                    }
+                                    onClick={() =>
+                                        setPeriod(
+                                            item.value,
+                                        )
+                                    }
+                                >
+                                    {
+                                        item.label
+                                    }
+                                </PeriodButton>
+                            ),
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        <select
+                            value={
+                                areaId
+                            }
+                            onChange={(
+                                event,
+                            ) =>
+                                setAreaId(
+                                    event
+                                        .target
+                                        .value,
+                                )
+                            }
+                            className="min-w-[220px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+                        >
+                            <option value="">
+                                Все участки
+                            </option>
+
+                            {areas.map(
+                                (
+                                    area,
+                                ) => (
+                                    <option
+                                        key={
+                                            area.id
+                                        }
+                                        value={
+                                            area.id
+                                        }
+                                    >
+                                        {
+                                            area.name
+                                        }
+                                    </option>
+                                ),
+                            )}
+                        </select>
+
+                        <select
+                            value={
+                                anomalyType
+                            }
+                            onChange={(
+                                event,
+                            ) =>
+                                setAnomalyType(
+                                    event
+                                        .target
+                                        .value,
+                                )
+                            }
+                            className="min-w-[240px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+                        >
+                            {ANOMALY_TYPES.map(
+                                (
+                                    item,
+                                ) => (
+                                    <option
+                                        key={
+                                            item.value
+                                        }
+                                        value={
+                                            item.value
+                                        }
+                                    >
+                                        {
+                                            item.label
+                                        }
+                                    </option>
+                                ),
+                            )}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+            {/* ERRORS */}
+
+            {(shiftQuery.isError ||
+                downtimeQuery.isError) && (
+                <ErrorBox
+                    text={extractError(
+                        shiftQuery.error ||
+                            downtimeQuery.error,
+                    )}
+                />
+            )}
+
+
+            {/* KPI */}
+
+            <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-5">
+                <KpiCard
+                    label="Закрыто"
+                    value={
+                        shift.closed ??
+                        0
+                    }
+                    helper="За период"
+                    icon={
+                        RiCheckboxCircleLine
+                    }
+                    tone="green"
+                />
+
+                <KpiCard
+                    label="В работе"
+                    value={
+                        shift.inProgress ??
+                        0
+                    }
+                    helper="Активные работы"
+                    icon={
+                        RiToolsLine
+                    }
+                    tone="blue"
+                />
+
+                <KpiCard
+                    label="Просрочено"
+                    value={
+                        shift.overdue ??
+                        0
+                    }
+                    helper="Требуют внимания"
+                    icon={
+                        RiAlarmWarningLine
+                    }
+                    tone="red"
+                />
+
+                <KpiCard
+                    label="Общий простой"
+                    value={formatMinutes(
+                        downtime.totals
+                            ?.minutes,
+                    )}
+                    helper={`${downtime.totals?.ongoing ?? 0} активных`}
+                    icon={
+                        RiTimeLine
+                    }
+                    tone="orange"
+                />
+
+                <KpiCard
+                    label="Средняя реакция"
+                    value={formatMinutes(
+                        dashboard.averageReactionMinutes,
+                    )}
+                    helper={`Выполнение ${formatMinutes(
+                        dashboard.averageCompletionMinutes,
+                    )}`}
+                    icon={
+                        RiSpeedLine
+                    }
+                    tone="violet"
+                />
+            </div>
+
+
+            {/* WORKLOAD */}
+
+            <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <Section
+                    title="Загрузка смены"
+                    subtitle="Состояние исполнителей за выбранный период"
+                    icon={
+                        RiBarChartBoxLine
+                    }
+                >
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                        <MiniStat
+                            title="На смене"
+                            value={
+                                shift.workload
+                                    ?.executorsOnShift ??
+                                0
+                            }
+                        />
+
+                        <MiniStat
+                            title="Заняты"
+                            value={
+                                shift.workload
+                                    ?.busy ??
+                                0
+                            }
+                        />
+
+                        <MiniStat
+                            title="Свободны"
+                            value={
+                                shift.workload
+                                    ?.free ??
+                                0
+                            }
+                        />
+
+                        <MiniStat
+                            title="Оборудование в простое"
+                            value={
+                                shift.downtime
+                                    ?.equipmentInDowntimeNow ??
+                                0
+                            }
+                        />
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <ProgressMetric
+                            label="Загрузка исполнителей"
+                            value={
+                                shift.workload
+                                    ?.executorsOnShift
+                                    ? (
+                                        Number(
+                                            shift.workload
+                                                .busy ??
+                                                0,
+                                        ) /
+                                        Number(
+                                            shift.workload
+                                                .executorsOnShift,
+                                        )
+                                    ) *
+                                    100
+                                    : 0
+                            }
+                        />
+
+                        <ProgressMetric
+                            label="Закрытые / выданные"
+                            value={
+                                shift.issued
+                                    ? (
+                                        Number(
+                                            shift.closed ??
+                                                0,
+                                        ) /
+                                        Number(
+                                            shift.issued,
+                                        )
+                                    ) *
+                                    100
+                                    : 0
+                            }
+                        />
+                    </div>
+                </Section>
+
+                <Section
+                    title="AI-сводка"
+                    subtitle="Вывод сервера по периоду"
+                    icon={
+                        RiSparkling2Line
+                    }
+                >
+                    <p className="text-sm leading-6 text-gray-600">
+                        {aiResult
+                            ?.summary ||
+                            shift.aiSummary ||
+                            "AI-сводка пока отсутствует."}
+                    </p>
+
+                    {asArray(
+                        aiResult
+                            ?.recommendations,
+                    ).length >
+                        0 && (
+                        <div className="mt-4 space-y-2">
+                            {aiResult.recommendations.map(
+                                (
+                                    item,
+                                    index,
+                                ) => (
+                                    <div
+                                        key={`${item}-${index}`}
+                                        className="rounded-lg bg-violet-50 px-3 py-2 text-xs leading-5 text-violet-800"
+                                    >
+                                        {
+                                            item
+                                        }
+                                    </div>
+                                ),
+                            )}
+                        </div>
+                    )}
+                </Section>
+            </div>
+
+
+            {/* FORECAST */}
+
+            <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <Section
+                    title="Прогноз отказов"
+                    subtitle={`Горизонт: ${currentPeriod.days} дн.`}
+                    icon={
+                        RiFlashlightLine
+                    }
+                >
+                    {forecastQuery.isLoading ? (
+                        <InlineLoader />
+                    ) : sortedForecast.length >
+                      0 ? (
+                        <div className="space-y-3">
+                            {sortedForecast
+                                .slice(
+                                    0,
+                                    8,
+                                )
+                                .map(
+                                    (
+                                        item,
+                                    ) => (
+                                        <ForecastItem
+                                            key={
+                                                item.equipmentId
+                                            }
+                                            item={
+                                                item
+                                            }
+                                        />
+                                    ),
+                                )}
+                        </div>
+                    ) : (
+                        <EmptyBlock text="Прогноз отсутствует" />
+                    )}
+                </Section>
+
+                <Section
+                    title="Аномалии"
+                    subtitle={`${sortedAnomalies.length} найдено`}
+                    icon={
+                        RiSparkling2Line
+                    }
+                >
+                    {anomaliesQuery.isLoading ? (
+                        <InlineLoader />
+                    ) : sortedAnomalies.length >
+                      0 ? (
+                        <div className="max-h-[430px] space-y-3 overflow-y-auto pr-1">
+                            {sortedAnomalies.map(
+                                (
+                                    item,
+                                ) => (
+                                    <AnomalyItem
+                                        key={
+                                            item.id
+                                        }
+                                        item={
+                                            item
+                                        }
+                                    />
+                                ),
+                            )}
+                        </div>
+                    ) : (
+                        <EmptyBlock text="Аномалий не найдено" />
+                    )}
+                </Section>
+            </div>
+
+
+            {/* DOWNTIME */}
+
+            <Section
+                title="Простой оборудования"
+                subtitle="Разбивка по оборудованию"
+                icon={
+                    RiTimeLine
+                }
+            >
+                <SmartTable
+                    data={
+                        downtimeEquipment
+                    }
+                    columns={
+                        downtimeColumns
+                    }
+                    dataKey="equipmentId"
+                    mode="sort"
+                    compact
+                    striped
+                    stickyHeader
+                    minWidth={
+                        900
+                    }
+                    scrollHeight="420px"
+                    emptyText="Простоев нет"
+                    emptyDescription="За выбранный период простоев оборудования не зарегистрировано"
+                />
+            </Section>
+
+
+            {/* TOPS */}
+
+            <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <Section
+                    title="Проблемное оборудование"
+                    subtitle="Аварийные наряды за 30 дней"
+                    icon={
+                        RiToolsLine
+                    }
+                >
+                    <Ranking
+                        items={asArray(
+                            dashboard.topEquipment,
+                        )}
+                        titleKey="name"
+                        valueKey="_count"
+                        suffix="аварий"
+                    />
+                </Section>
+
+                <Section
+                    title="Проблемные участки"
+                    subtitle="Аварийность на единицу оборудования"
+                    icon={
+                        RiMapPinLine
+                    }
+                >
+                    <Ranking
+                        items={asArray(
+                            dashboard.topAreas,
+                        )}
+                        titleKey="name"
+                        valueKey="emergenciesPerUnit"
+                        suffix="/ ед."
+                    />
+                </Section>
+            </div>
+        </div>
+    );
+}
+
+
+// MARK: Period
+
+function PeriodButton({
+    active,
+    onClick,
+    children,
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                active
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+        >
+            {children}
+        </button>
+    );
+}
+
+
+// MARK: KPI
+
+function KpiCard({
+    label,
+    value,
+    helper,
+    icon: Icon,
+    tone,
+}) {
+    const tones = {
+        green:
+            "bg-green-50 text-green-600",
+        blue:
+            "bg-blue-50 text-blue-600",
+        red:
+            "bg-red-50 text-red-600",
+        orange:
+            "bg-orange-50 text-orange-600",
+        violet:
+            "bg-violet-50 text-violet-600",
+    };
+
+    return (
+        <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="min-w-0">
+                <p className="truncate text-xs font-medium text-gray-500">
+                    {label}
+                </p>
+
+                <p className="mt-1 truncate text-2xl font-bold text-gray-900">
+                    {value}
+                </p>
+
+                <p className="mt-1 truncate text-[10px] text-gray-400">
+                    {helper}
+                </p>
+            </div>
+
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                tones[tone] ||
+                tones.blue
+            }`}>
+                <Icon
+                    size={
+                        20
+                    }
+                />
+            </div>
+        </div>
+    );
+}
+
+
+// MARK: Section
+
+function Section({
+    title,
+    subtitle,
+    icon: Icon,
+    children,
+}) {
+    return (
+        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
+                <div>
+                    <h2 className="text-[15px] font-semibold text-gray-900">
+                        {title}
+                    </h2>
+
+                    <p className="mt-1 text-xs text-gray-500">
+                        {subtitle}
+                    </p>
+                </div>
+
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                    <Icon
+                        size={
+                            18
+                        }
+                    />
+                </div>
+            </div>
+
+            <div className="p-5">
+                {children}
+            </div>
+        </section>
+    );
+}
+
+
+// MARK: Mini Stats
+
+function MiniStat({
+    title,
+    value,
+}) {
+    return (
+        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+            <p className="text-xs text-gray-500">
+                {title}
+            </p>
+
+            <p className="mt-1 text-2xl font-bold text-gray-900">
+                {value}
+            </p>
+        </div>
+    );
+}
+
+function ProgressMetric({
+    label,
+    value,
+}) {
+    const percent =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Number(value) ||
+                    0,
+            ),
+        );
+
+    return (
+        <div className="rounded-xl border border-gray-100 p-4">
+            <div className="flex justify-between gap-3">
+                <span className="text-xs font-medium text-gray-500">
+                    {label}
+                </span>
+
+                <span className="text-xs font-bold text-gray-900">
+                    {Math.round(
+                        percent,
+                    )}
+                    %
+                </span>
+            </div>
+
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+                <div
+                    className="h-full rounded-full bg-blue-600"
+                    style={{
+                        width:
+                            `${percent}%`,
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
+
+// MARK: Forecast
+
+function ForecastItem({
+    item,
+}) {
+    const probability =
+        Number(
+            item.probability,
+        ) || 0;
+
+    const percent =
+        Math.round(
+            probability * 100,
+        );
+
+    return (
+        <div className="rounded-xl border border-gray-200 p-4">
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                        {item.equipment
+                            ?.name ||
+                            item.equipment ||
+                            `Оборудование #${item.equipmentId}`}
+                    </p>
+
+                    <p className="mt-1 text-xs text-gray-500">
+                        Сейчас:{" "}
+                        {
+                            item.recentFailures
+                        }
+
+                        {" • "}
+
+                        Ранее:{" "}
+                        {
+                            item.previousFailures
+                        }
+                    </p>
+                </div>
+
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                    percent >= 65
+                        ? "bg-red-50 text-red-700"
+                        : percent >= 40
+                          ? "bg-orange-50 text-orange-700"
+                          : "bg-green-50 text-green-700"
+                }`}>
+                    {formatPercent(
+                        probability,
+                    )}
+                </span>
+            </div>
+
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+                <div
+                    className="h-full rounded-full bg-blue-600"
+                    style={{
+                        width:
+                            `${percent}%`,
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
+
+// MARK: Anomaly
+
+function AnomalyItem({
+    item,
+}) {
+    const severity =
+        Number(
+            item.severity,
+        ) || 1;
+
+    return (
+        <div className="rounded-xl border border-gray-200 p-4">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900">
+                        {
+                            item.title
+                        }
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-gray-500">
+                        {
+                            item.description
+                        }
+                    </p>
+                </div>
+
+                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
+                    severity >= 4
+                        ? "bg-red-50 text-red-700"
+                        : severity >= 3
+                          ? "bg-orange-50 text-orange-700"
+                          : "bg-blue-50 text-blue-700"
+                }`}>
+                    {
+                        severity
+                    }
+                    /5
+                </span>
+            </div>
+
+            {item.recommendation && (
+                <div className="mt-3 rounded-lg bg-violet-50 px-3 py-2 text-xs leading-5 text-violet-800">
+                    {
+                        item.recommendation
+                    }
+                </div>
+            )}
+        </div>
+    );
+}
+
+
+// MARK: Ranking
+
+function Ranking({
+    items,
+    titleKey,
+    valueKey,
+    suffix,
+}) {
+    if (
+        !items.length
+    ) {
+        return (
+            <EmptyBlock text="Данных нет" />
+        );
+    }
+
+    const max =
+        Math.max(
+            ...items.map(
+                (item) =>
+                    Number(
+                        item[valueKey],
+                    ) || 0,
+            ),
+            1,
+        );
+
+    return (
+        <div className="space-y-3">
+            {items
+                .slice(
+                    0,
+                    5,
+                )
+                .map(
+                    (
+                        item,
+                        index,
+                    ) => {
+                        const value =
+                            Number(
+                                item[
+                                    valueKey
+                                ],
+                            ) || 0;
+
+                        return (
+                            <div
+                                key={
+                                    item.id ??
+                                    item.areaId ??
+                                    item.equipmentId ??
+                                    index
+                                }
+                            >
+                                <div className="flex justify-between gap-4">
+                                    <span className="truncate text-sm font-semibold text-gray-800">
+                                        {
+                                            item[
+                                                titleKey
+                                            ]
+                                        }
+                                    </span>
+
+                                    <span className="shrink-0 text-xs font-semibold text-gray-500">
+                                        {value.toFixed(
+                                            value %
+                                                1
+                                                ? 2
+                                                : 0,
+                                        )}{" "}
+                                        {
+                                            suffix
+                                        }
+                                    </span>
+                                </div>
+
+                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                                    <div
+                                        className="h-full rounded-full bg-blue-600"
+                                        style={{
+                                            width:
+                                                `${Math.max(
+                                                    4,
+                                                    value /
+                                                        max *
+                                                        100,
+                                                )}%`,
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    },
+                )}
+        </div>
+    );
+}
+
+
+// MARK: State
+
+function InlineLoader() {
+    return (
+        <div className="flex min-h-[180px] items-center justify-center">
+            <RiLoader4Line
+                size={26}
+                className="animate-spin text-blue-600"
+            />
+        </div>
+    );
+}
+
+function PageLoader() {
+    return (
+        <div className="flex min-h-[500px] items-center justify-center">
+            <RiLoader4Line
+                size={32}
+                className="animate-spin text-blue-600"
+            />
+        </div>
+    );
+}
+
+function EmptyBlock({
+    text,
+}) {
+    return (
+        <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-sm text-gray-400">
+            {text}
+        </div>
+    );
+}
+
+function ErrorBox({
+    text,
+}) {
+    return (
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {text}
+        </div>
+    );
+}

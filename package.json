@@ -1,0 +1,50 @@
+{
+  "name": "hackathon_crm",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "i18n:extract": "node scripts/extract-i18n.mjs",
+    "i18n:apply": "node scripts/apply-i18n.mjs",
+    "i18n:reactive": "node scripts/make-i18n-reactive.mjs"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "@hugeicons/core-free-icons": "^4.3.5",
+    "@hugeicons/react": "^1.1.10",
+    "@tanstack/react-query": "^5.104.1",
+    "apexcharts": "^7.8.0",
+    "axios": "^1.20.0",
+    "dayjs": "^1.11.23",
+    "motion": "^14.0.0",
+    "react": "^19.2.8",
+    "react-apexcharts": "^2.1.1",
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.89.0",
+    "react-icons": "^5.7.0",
+    "react-router-dom": "^7.18.4",
+    "socket.io-client": "^4.8.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@babel/generator": "^8.0.6",
+    "@babel/parser": "^7.29.9",
+    "@babel/traverse": "^8.0.6",
+    "@babel/types": "^8.0.6",
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.6",
+    "globals": "^17.12.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.0"
+  }
+}
