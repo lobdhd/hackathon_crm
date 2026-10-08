@@ -57,7 +57,7 @@ import { t as i18nT } from "../../i18n/index.js";
 
 // MARK: Config
 
-const REPORT_TYPES = [
+const REPORT_TYPES = () => ([
   {
     id: "shift",
     title: i18nT("pages.reports.reports.f8c41b8"),
@@ -134,9 +134,9 @@ const REPORT_TYPES = [
       "bg-purple-50 text-purple-600",
     preview: false,
   },
-];
+]);
 
-const PERIODS = [
+const PERIODS = () => ([
   {
     value: "shift",
     label: i18nT("reportModal.shift"),
@@ -153,9 +153,9 @@ const PERIODS = [
     value: "month",
     label: i18nT("reportModal.thirtyDays"),
   },
-];
+]);
 
-const GROUP_BY_OPTIONS = [
+const GROUP_BY_OPTIONS = () => ([
   {
     value: "material",
     label: i18nT("pages.reports.reports.2bc8226"),
@@ -172,7 +172,7 @@ const GROUP_BY_OPTIONS = [
     value: "executor",
     label: i18nT("pages.reports.reports.a3436b1"),
   },
-];
+]);
 
 
 // MARK: Helpers
@@ -364,6 +364,7 @@ function downloadBlob(
 // MARK: Page
 
 export default function Reports() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
 
   const [
@@ -490,7 +491,7 @@ export default function Reports() {
       [
         workOrders,
         orderReportId,
-      ],
+       __i18nLocaleToken],
     );
 
   const orderReportOptions =
@@ -596,7 +597,7 @@ export default function Reports() {
       workOrders,
       orderPdfSearch,
       orderReportId,
-    ]);
+     __i18nLocaleToken]);
 
 
   // MARK: Params
@@ -667,7 +668,7 @@ export default function Reports() {
       return params;
     }, [
       filters,
-    ]);
+     __i18nLocaleToken]);
 
 
   // MARK: Queries
@@ -856,7 +857,7 @@ export default function Reports() {
       [
         ratings,
         query,
-      ],
+       __i18nLocaleToken],
     );
 
   const filteredBrigades =
@@ -879,7 +880,7 @@ export default function Reports() {
       [
         brigadeRatings,
         query,
-      ],
+       __i18nLocaleToken],
     );
 
   const filteredMaterials =
@@ -911,7 +912,7 @@ export default function Reports() {
       [
         materials,
         query,
-      ],
+       __i18nLocaleToken],
     );
 
   const filteredDowntime =
@@ -948,7 +949,7 @@ export default function Reports() {
       [
         downtimeItems,
         query,
-      ],
+       __i18nLocaleToken],
     );
 
 
@@ -1085,14 +1086,14 @@ export default function Reports() {
   // MARK: Current report
 
   const currentType =
-    REPORT_TYPES.find(
+    REPORT_TYPES().find(
       (
         item,
       ) =>
         item.id ===
         selectedType,
     ) ??
-    REPORT_TYPES[0];
+    REPORT_TYPES()[0];
 
   const currentLoading =
     selectedType ===
@@ -1231,7 +1232,7 @@ export default function Reports() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
-          {REPORT_TYPES.map(
+          {REPORT_TYPES().map(
             (
               report,
             ) => (
@@ -1271,7 +1272,7 @@ export default function Reports() {
       <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-2">
-            {PERIODS.map(
+            {PERIODS().map(
               (
                 item,
               ) => (
@@ -1541,7 +1542,7 @@ export default function Reports() {
                     }
                     className="reports-input"
                   >
-                    {GROUP_BY_OPTIONS.map(
+                    {GROUP_BY_OPTIONS().map(
                       (
                         item,
                       ) => (
@@ -1944,6 +1945,7 @@ export default function Reports() {
 function SelectedOrderPdfPreview({
   order,
 }) {
+    useI18n();
   return (
     <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
@@ -2060,6 +2062,8 @@ function ReportTypeCard({
 function ShiftReport({
   data,
 }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const load =
     asArray(
       data.load,
@@ -2171,7 +2175,7 @@ function ShiftReport({
                 : "Нет",
         },
       ],
-      [],
+      [ __i18nLocaleToken],
     );
 
   return (
@@ -2272,6 +2276,8 @@ function ShiftReport({
 function RatingsReport({
   data,
 }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const columns =
     useMemo(
       () => [
@@ -2416,7 +2422,7 @@ function RatingsReport({
             100,
         },
       ],
-      [],
+      [ __i18nLocaleToken],
     );
 
   const average =
@@ -2495,6 +2501,8 @@ function RatingsReport({
 function BrigadesReport({
   data,
 }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const columns =
     useMemo(
       () => [
@@ -2616,7 +2624,7 @@ function BrigadesReport({
             110,
         },
       ],
-      [],
+      [ __i18nLocaleToken],
     );
 
   return (
@@ -2647,6 +2655,8 @@ function BrigadesReport({
 function MaterialsReport({
     data,
 }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const tableData =
         useMemo(
             () =>
@@ -2663,7 +2673,7 @@ function MaterialsReport({
                 ),
             [
                 data,
-            ],
+             __i18nLocaleToken],
         );
 
     const columns =
@@ -2959,7 +2969,7 @@ function MaterialsReport({
                         },
                 },
             ],
-        [],
+        [ __i18nLocaleToken],
     );
 
     const totalOver =
@@ -3048,6 +3058,8 @@ function DowntimeReport({
   data,
   items,
 }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const columns =
     useMemo(
       () => [
@@ -3179,7 +3191,7 @@ function DowntimeReport({
                 : "Нет",
         },
       ],
-      [],
+      [ __i18nLocaleToken],
     );
 
   return (
@@ -3251,6 +3263,7 @@ function ExportOnly({
   onPdf,
   loading,
 }) {
+    useI18n();
   const Icon =
     type.icon;
 
@@ -3406,6 +3419,7 @@ function ScoreBadge({
 function EmployeeStatus({
   value,
 }) {
+    useI18n();
   const config = {
     AVAILABLE: {
       title:
@@ -3470,6 +3484,7 @@ function PreviewLoader() {
 function ErrorState({
   text,
 }) {
+    useI18n();
   return (
     <div className="flex min-h-[280px] items-center justify-center">
       <div className="max-w-md text-center">

@@ -76,7 +76,7 @@ const PRIORITY_LABELS = {
     PLANNED:
         "Плановый",
 };
-const EXECUTOR_STATUS = {
+const EXECUTOR_STATUS = () => ({
     AVAILABLE: {
         label:
             i18nT("pages.dashboard.dashboard.0d91f1e"),
@@ -109,7 +109,7 @@ const EXECUTOR_STATUS = {
         dot:
             "bg-gray-400",
     },
-};
+});
 // MARK: Helpers
 function asArray(
     value,
@@ -205,6 +205,7 @@ function equipmentName(
 }
 // MARK: Dashboard
 export default function Dashboard() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
     useI18n();
     const navigate =
         useNavigate();
@@ -296,7 +297,7 @@ export default function Dashboard() {
                     ),
             [
                 executors,
-            ],
+             __i18nLocaleToken],
         );
     // At desktop width, align the bottom of the orders table with the
     // executors card when it contains enough rows to be useful.
@@ -324,7 +325,7 @@ export default function Dashboard() {
                     ),
             [
                 forecasts,
-            ],
+             __i18nLocaleToken],
         );
     const importantAnomaly =
         useMemo(() => {
@@ -350,7 +351,7 @@ export default function Dashboard() {
             )[0];
         }, [
             anomalies,
-        ]);
+         __i18nLocaleToken]);
     const stats = [
         {
             title:
@@ -543,7 +544,7 @@ export default function Dashboard() {
                         ),
                 },
             ],
-        [],
+        [ __i18nLocaleToken],
     );
     const loading =
         dashboardQuery.isLoading ||
@@ -1029,11 +1030,12 @@ function ExecutorRow({
     employee,
     onClick,
 }) {
+    useI18n();
     const status =
-        EXECUTOR_STATUS[
+        EXECUTOR_STATUS()[
             employee.employeeStatus
         ] ??
-        EXECUTOR_STATUS.OFF_SHIFT;
+        EXECUTOR_STATUS().OFF_SHIFT;
     const statusText =
         employee.statusText ||
         status.label;
@@ -1242,6 +1244,7 @@ function RankingList({
 function ForecastRow({
     item,
 }) {
+    useI18n();
     const probability =
         Number(
             item.probability,
@@ -1327,6 +1330,7 @@ function AnomalyCard({
     anomaly,
     onOpen,
 }) {
+    useI18n();
     const severity =
         Number(
             anomaly.severity,
@@ -1507,6 +1511,7 @@ function PageError({
     text,
     onRetry,
 }) {
+    useI18n();
     return (
         <div className="flex min-h-[500px] flex-col items-center justify-center text-center">
             <RiAlarmWarningLine

@@ -32,6 +32,7 @@ import {
     useEquipmentHistory,
 } from "../../../hooks/useEquipment.js";
 import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
 
 // MARK: Config
@@ -212,6 +213,8 @@ function getOrderScore(
 // MARK: Page
 
 export default function EquipmentDetails() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const {
         id,
     } = useParams();
@@ -253,7 +256,7 @@ export default function EquipmentDetails() {
                 ),
             [
                 orders,
-            ],
+             __i18nLocaleToken],
         );
 
     const emergencyOrders =
@@ -268,7 +271,7 @@ export default function EquipmentDetails() {
                 ),
             [
                 orders,
-            ],
+             __i18nLocaleToken],
         );
 
     const downtimeMinutes =
@@ -287,7 +290,7 @@ export default function EquipmentDetails() {
                 ),
             [
                 orders,
-            ],
+             __i18nLocaleToken],
         );
 
     const scores =
@@ -310,7 +313,7 @@ export default function EquipmentDetails() {
                     .map(Number),
             [
                 orders,
-            ],
+             __i18nLocaleToken],
         );
 
     const averageScore =
@@ -776,6 +779,7 @@ function OrderCard({
 function HistoryTable({
     orders,
 }) {
+    __useI18nReactive();
     const navigate =
         useNavigate();
 

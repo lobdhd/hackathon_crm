@@ -43,6 +43,7 @@ const STATUS_LABELS = { AVAILABLE: "Свободен", BUSY: "В работе", 
 const STATUS_STYLES = { AVAILABLE: "bg-green-50 text-green-700", BUSY: "bg-orange-50 text-orange-700", QUEUED: "bg-blue-50 text-blue-700", OFF_SHIFT: "bg-gray-100 text-gray-600" };
 
 export default function Employees() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
     useI18n();
     const navigate = useNavigate();
     const {
@@ -129,7 +130,7 @@ export default function Employees() {
                     "ru",
                 ),
             );
-        }, [employees]);
+        }, [employees, __i18nLocaleToken]);
     const filteredEmployees =
         useMemo(() => {
             const search =
@@ -185,7 +186,7 @@ export default function Employees() {
         }, [
             employees,
             filters,
-        ]);
+         __i18nLocaleToken]);
     const stats =
         useMemo(() => {
             return {
@@ -218,7 +219,7 @@ export default function Employees() {
                             "OFF_SHIFT",
                     ).length,
             };
-        }, [employees]);
+        }, [employees, __i18nLocaleToken]);
     const activeFiltersCount =
         Object.entries(
             filters,
@@ -272,7 +273,7 @@ export default function Employees() {
             sortValue: (employee) => Number(employee._count?.assignedOrders ?? 0),
             render: (employee) => <span className="font-semibold text-gray-800">{employee._count?.assignedOrders ?? 0}</span>,
         },
-    ], []);
+    ], [ __i18nLocaleToken]);
 
     if (
         executorsQuery.isLoading

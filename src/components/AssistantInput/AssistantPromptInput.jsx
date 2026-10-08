@@ -19,6 +19,7 @@ import {
 import LiveWaveform from "./LiveWaveform.jsx";
 import VoiceTopGlow from "./VoiceTopGlow.jsx";
 import { t as i18nT } from "../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../i18n/index.js";
 
 
 function formatDuration(
@@ -60,6 +61,7 @@ export default function AssistantPromptInput({
     placeholder =
     "Спросите: кто свободен, что просрочено, как прошла смена...",
 }) {
+    __useI18nReactive();
     const textareaRef =
         useRef(null);
 

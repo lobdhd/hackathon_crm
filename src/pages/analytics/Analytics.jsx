@@ -35,7 +35,7 @@ import {
 } from "../../i18n/index.js";
 import { t as i18nT } from "../../i18n/index.js";
 // MARK: Config
-const PERIODS = [
+const PERIODS = () => ([
     {
         value: "shift",
         label: i18nT("reportModal.shift"),
@@ -56,8 +56,8 @@ const PERIODS = [
         label: i18nT("reportModal.thirtyDays"),
         days: 30,
     },
-];
-const ANOMALY_TYPES = [
+]);
+const ANOMALY_TYPES = () => ([
     {
         value: "",
         label: i18nT("pages.analytics.analytics.32a2cfd"),
@@ -108,7 +108,7 @@ const ANOMALY_TYPES = [
         label:
             i18nT("pages.analytics.analytics.15a05ac"),
     },
-];
+]);
 // MARK: Helpers
 function asArray(value) {
     return Array.isArray(
@@ -217,6 +217,7 @@ function createPeriodRange(
 }
 // MARK: Page
 export default function Analytics() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
     useI18n();
     const [
         period,
@@ -237,12 +238,12 @@ export default function Analytics() {
     const dashboardQuery =
         useAnalyticsDashboard();
     const currentPeriod =
-        PERIODS.find(
+        PERIODS().find(
             (item) =>
                 item.value ===
                 period,
         ) ??
-        PERIODS[2];
+        PERIODS()[2];
     const reportParams =
         useMemo(
             () => ({
@@ -259,7 +260,7 @@ export default function Analytics() {
             [
                 period,
                 areaId,
-            ],
+             __i18nLocaleToken],
         );
     const shiftQuery =
         useShiftReport(
@@ -330,7 +331,7 @@ export default function Analytics() {
                 ),
             [
                 forecasts,
-            ],
+             __i18nLocaleToken],
         );
     const sortedAnomalies =
         useMemo(
@@ -349,7 +350,7 @@ export default function Analytics() {
                 ),
             [
                 anomalies,
-            ],
+             __i18nLocaleToken],
         );
     const downtimeEquipment =
         asArray(
@@ -483,7 +484,7 @@ export default function Analytics() {
                                 ),
                 },
             ],
-        [],
+        [ __i18nLocaleToken],
     );
     async function refreshAll() {
         await Promise.all([
@@ -573,7 +574,7 @@ export default function Analytics() {
             <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex flex-wrap gap-2">
-                        {PERIODS.map(
+                        {PERIODS().map(
                             (
                                 item,
                             ) => (
@@ -651,7 +652,7 @@ export default function Analytics() {
                             }
                             className="min-w-[240px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
                         >
-                            {ANOMALY_TYPES.map(
+                            {ANOMALY_TYPES().map(
                                 (
                                     item,
                                 ) => (
@@ -1150,6 +1151,7 @@ function ProgressMetric({ label, value }) {
 function ForecastItem({
     item,
 }) {
+    useI18n();
     const probability =
         Number(
             item.probability,
@@ -1409,6 +1411,7 @@ function ForecastChart({ items, height = 200 }) {
 
 // MARK: Severity chart — кольцевая диаграмма распределения критичности
 function SeverityChart({ items }) {
+    useI18n();
     if (!items.length) return null;
     const counts = [1, 2, 3, 4, 5].map((level) => items.filter((item) => Math.round(Number(item.severity)) === level).length);
     const options = {

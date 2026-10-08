@@ -54,8 +54,9 @@ import {
 
 import "./Admin.css";
 import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
-const TABS = [
+const TABS = () => ([
     {
         id: "users",
         label: i18nT("pages.admin.admin.admin.b8c4e70"),
@@ -96,7 +97,7 @@ const TABS = [
         label: i18nT("pages.admin.admin.admin.2f5840c"),
         icon: RiFileList3Line,
     },
-];
+]);
 
 const ROLE_LABELS = {
     ADMIN: "Администратор",
@@ -244,6 +245,7 @@ function EmptyState({
 function ErrorState({
     onRetry,
 }) {
+    __useI18nReactive();
     return (
         <div className="admin-error-state">
             <RiErrorWarningLine />
@@ -323,6 +325,7 @@ function UserModal({
     mutation,
     onClose,
 }) {
+    __useI18nReactive();
     const isEdit =
         Boolean(user);
 
@@ -804,6 +807,7 @@ function AreaModal({
     mutation,
     onClose,
 }) {
+    __useI18nReactive();
     const [name, setName] =
         useState(
             area?.name || "",
@@ -918,6 +922,7 @@ function EquipmentModal({
     mutation,
     onClose,
 }) {
+    __useI18nReactive();
     const [form, setForm] =
         useState({
             name:
@@ -1204,6 +1209,7 @@ function SimpleModal({
     mutation,
     onClose,
 }) {
+    __useI18nReactive();
     const config = {
         faultCode: {
             title:
@@ -1388,6 +1394,7 @@ function NormativeModal({
     mutation,
     onClose,
 }) {
+    __useI18nReactive();
     const [form, setForm] =
         useState({
             name: "",
@@ -1862,6 +1869,7 @@ function DeleteModal({
     state,
     onClose,
 }) {
+    __useI18nReactive();
     const [error, setError] =
         useState("");
 
@@ -1938,6 +1946,8 @@ function DeleteModal({
 }
 
 export default function Admin() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const [activeTab, setActiveTab] =
         useState("users");
 
@@ -2091,7 +2101,7 @@ export default function Admin() {
         }, [
             search,
             users,
-        ]);
+         __i18nLocaleToken]);
 
     const filteredAreas =
         useMemo(() => {
@@ -2113,7 +2123,7 @@ export default function Admin() {
         }, [
             areas,
             search,
-        ]);
+         __i18nLocaleToken]);
 
     const filteredEquipment =
         useMemo(() => {
@@ -2147,7 +2157,7 @@ export default function Admin() {
         }, [
             equipment,
             search,
-        ]);
+         __i18nLocaleToken]);
 
     const executors =
         users.filter(
@@ -3034,7 +3044,7 @@ export default function Admin() {
         ].includes(activeTab);
 
     const activeTabData =
-        TABS.find(
+        TABS().find(
             (tab) =>
                 tab.id ===
                 activeTab,
@@ -3141,7 +3151,7 @@ export default function Admin() {
 
             <div className="admin-workspace">
                 <aside className="admin-tabs">
-                    {TABS.map(
+                    {TABS().map(
                         (tab) => {
                             const Icon =
                                 tab.icon;

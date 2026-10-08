@@ -35,10 +35,11 @@ import {
     useAreas,
 } from "../../hooks/useReferences.js";
 import { t as i18nT } from "../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../i18n/index.js";
 
 // MARK: Config
 
-const PERIODS = [
+const PERIODS = () => ([
     {
         value: "shift",
         label: i18nT("reportModal.shift"),
@@ -51,7 +52,7 @@ const PERIODS = [
         value: "month",
         label: i18nT("pages.rating.rating.aeb10f7"),
     },
-];
+]);
 
 // MARK: Helpers
 
@@ -129,6 +130,8 @@ function getErrorMessage(error) {
 // MARK: Page
 
 export default function Rating() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const navigate =
         useNavigate();
     const auth =
@@ -181,7 +184,7 @@ export default function Rating() {
             [
                 filters.period,
                 filters.areaId,
-            ],
+             __i18nLocaleToken],
         );
     const ratingsQuery =
         useRatings(
@@ -266,7 +269,7 @@ export default function Rating() {
                         .filter(Boolean),
                 ),
             ].sort(),
-            [employees],
+            [employees, __i18nLocaleToken],
         );
     const areaOptions =
         useMemo(
@@ -286,7 +289,7 @@ export default function Rating() {
                     }),
                 ),
             ],
-            [areas],
+            [areas, __i18nLocaleToken],
         );
     const specialtyOptions =
         useMemo(
@@ -305,7 +308,7 @@ export default function Rating() {
                     }),
                 ),
             ],
-            [specialties],
+            [specialties, __i18nLocaleToken],
         );
     const filteredEmployees =
         useMemo(() => {
@@ -357,7 +360,7 @@ export default function Rating() {
             employees,
             filters.search,
             filters.specialty,
-        ]);
+         __i18nLocaleToken]);
     const filteredBrigades =
         useMemo(() => {
             const search =
@@ -389,7 +392,7 @@ export default function Rating() {
         }, [
             brigades,
             filters.search,
-        ]);
+         __i18nLocaleToken]);
     const scoredEmployees =
         filteredEmployees.filter(
             (employee) =>
@@ -989,6 +992,8 @@ export default function Rating() {
 // MARK: My rating
 
 function MyRatingView({ period, onPeriodChange, query }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const rating = asObject(query.data);
     const score = Number(rating?.score);
     const validScore = rating?.score != null && Number.isFinite(score);
@@ -1022,7 +1027,7 @@ function MyRatingView({ period, onPeriodChange, query }) {
             },
         },
         tooltip: { enabled: false },
-    }), [score, validScore]);
+    }), [score, validScore, __i18nLocaleToken]);
     if (query.isLoading && !query.data) return <LoadingPage />;
     const metrics = rating ? [
         { label: i18nT("pages.rating.rating.cfedc14"), value: numberValue(rating.quality), icon: RiStarFill, tone: "blue" },
@@ -1116,6 +1121,7 @@ function MyMetric({ label, value, icon: Icon, tone = "blue", index }) {
 function FormulaSection({
     rating,
 }) {
+    __useI18nReactive();
     return (
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
@@ -1187,6 +1193,7 @@ function ExplanationSection({
     subtitle,
     compactResult = false,
 }) {
+    __useI18nReactive();
     return (
         <section className="overflow-hidden rounded-xl border border-violet-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50/40 px-5 py-4">
@@ -1237,9 +1244,10 @@ function PeriodSwitch({
     value,
     onChange,
 }) {
+    __useI18nReactive();
     return (
         <div className="inline-flex self-start rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-            {PERIODS.map(
+            {PERIODS().map(
                 (item) => (
                     <button
                         key={
@@ -1313,6 +1321,7 @@ function LeaderCard({
     employee,
     onClick,
 }) {
+    __useI18nReactive();
     const styles = {
         1: "border-amber-200 bg-amber-50/60",
         2: "border-slate-200 bg-slate-50",
@@ -1402,6 +1411,7 @@ function PointCard({
     title,
     value,
 }) {
+    __useI18nReactive();
     return (
         <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
             <p className="text-xs text-gray-500">

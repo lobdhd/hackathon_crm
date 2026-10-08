@@ -32,11 +32,12 @@ import {
     useRunOneCQueue,
 } from "../../../hooks/useOneC.js";
 import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
 
 // MARK: Config
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS = () => ([
     {
         value:
             "",
@@ -78,9 +79,9 @@ const STATUS_OPTIONS = [
         label:
             i18nT("pages.integrations.onec.onec.daf4c7b"),
     },
-];
+]);
 
-const DIRECTION_OPTIONS = [
+const DIRECTION_OPTIONS = () => ([
     {
         value:
             "",
@@ -101,9 +102,9 @@ const DIRECTION_OPTIONS = [
         label:
             i18nT("pages.integrations.onec.onec.cdc2a62"),
     },
-];
+]);
 
-const LIMIT_OPTIONS = [
+const LIMIT_OPTIONS = () => ([
     {
         value:
             "50",
@@ -131,9 +132,9 @@ const LIMIT_OPTIONS = [
         label:
             i18nT("pages.integrations.onec.onec.733ea90"),
     },
-];
+]);
 
-const PUSH_MODE_OPTIONS = [
+const PUSH_MODE_OPTIONS = () => ([
     {
         value:
             "IDS",
@@ -147,7 +148,7 @@ const PUSH_MODE_OPTIONS = [
         label:
             i18nT("pages.integrations.onec.onec.3215adf"),
     },
-];
+]);
 
 const STATUS_LABELS = {
     PENDING:
@@ -405,6 +406,8 @@ function matchesJobSearch(
 // MARK: Page
 
 export default function OneC() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const [
         activeTab,
         setActiveTab,
@@ -532,7 +535,7 @@ export default function OneC() {
                 jobs,
                 direction,
                 search,
-            ],
+             __i18nLocaleToken],
         );
 
     const stats =
@@ -597,7 +600,7 @@ export default function OneC() {
             },
             [
                 statsQuery.data,
-            ],
+             __i18nLocaleToken],
         );
 
 
@@ -687,7 +690,7 @@ export default function OneC() {
             [
                 mappings,
                 mappingSearch,
-            ],
+             __i18nLocaleToken],
         );
 
 
@@ -705,7 +708,7 @@ export default function OneC() {
                         1000,
                     ),
                 ),
-            [],
+            [ __i18nLocaleToken],
         );
 
     const [
@@ -795,7 +798,7 @@ export default function OneC() {
             [
                 reconciliationOrders,
                 reconcileSearch,
-            ],
+             __i18nLocaleToken],
         );
 
 
@@ -1412,6 +1415,7 @@ function JobsTab({
     onRetry,
     retryingId,
 }) {
+    __useI18nReactive();
     return (
         <div>
             <div className="flex flex-col gap-3 border-b border-gray-100 p-4 xl:flex-row xl:items-center">
@@ -1441,7 +1445,7 @@ function JobsTab({
                 <div className="flex flex-wrap items-center gap-2">
                     <GlideSelect
                         options={
-                            STATUS_OPTIONS
+                            STATUS_OPTIONS()
                         }
                         value={
                             status
@@ -1457,7 +1461,7 @@ function JobsTab({
 
                     <GlideSelect
                         options={
-                            DIRECTION_OPTIONS
+                            DIRECTION_OPTIONS()
                         }
                         value={
                             direction
@@ -1473,7 +1477,7 @@ function JobsTab({
 
                     <GlideSelect
                         options={
-                            LIMIT_OPTIONS
+                            LIMIT_OPTIONS()
                         }
                         value={
                             limit
@@ -1727,6 +1731,7 @@ function MappingsTab({
     items,
     query,
 }) {
+    __useI18nReactive();
     return (
         <div>
             <div className="border-b border-gray-100 p-4">
@@ -1948,6 +1953,7 @@ function ReconciliationTab({
 
     query,
 }) {
+    __useI18nReactive();
     return (
         <div>
             <div className="border-b border-gray-100 p-4">
@@ -2156,6 +2162,8 @@ function PushOrdersModal({
     onClose,
     onSubmit,
 }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const [
         mode,
         setMode,
@@ -2196,7 +2204,7 @@ function PushOrdersModal({
                 ),
             [
                 idsText,
-            ],
+             __i18nLocaleToken],
         );
 
 
@@ -2316,7 +2324,7 @@ function PushOrdersModal({
 
                         <GlideSelect
                             options={
-                                PUSH_MODE_OPTIONS
+                                PUSH_MODE_OPTIONS()
                             }
                             value={
                                 mode
@@ -2452,6 +2460,7 @@ function JobDetailsModal({
     onRetry,
     retrying,
 }) {
+    __useI18nReactive();
     const canRetry =
         job.status ===
         "DEAD" &&
@@ -2685,6 +2694,7 @@ function StatusBadge({
 function DirectionBadge({
     direction,
 }) {
+    __useI18nReactive();
     const outbound =
         direction ===
         "OUTBOUND";
@@ -2831,6 +2841,7 @@ function ErrorState({
     text,
     onRetry,
 }) {
+    __useI18nReactive();
     return (
         <div className="flex min-h-[320px] items-center justify-center p-6 text-center">
             <div>

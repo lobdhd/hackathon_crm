@@ -9,6 +9,7 @@ export default function CreateOrderModal({
   employees,
   onCreate
 }) {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const [form, setForm] = useState({
     workType: "UNPLANNED",
@@ -23,12 +24,12 @@ export default function CreateOrderModal({
   const availableEquipment = useMemo(() => {
     if (!form.areaId) return [];
     return equipment.filter(item => item.areaId === Number(form.areaId));
-  }, [equipment, form.areaId]);
+  }, [equipment, form.areaId, __i18nLocaleToken]);
   const availableEmployees = useMemo(() => {
     if (!form.areaId) return [];
     const areaId = Number(form.areaId);
     return employees.filter(employee => employee.areaIds.includes(areaId));
-  }, [employees, form.areaId]);
+  }, [employees, form.areaId, __i18nLocaleToken]);
   useEffect(() => {
     setForm(prev => ({
       ...prev,

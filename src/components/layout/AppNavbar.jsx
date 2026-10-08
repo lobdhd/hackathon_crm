@@ -279,6 +279,7 @@ function formatNotificationTime(
 export default function AppNavbar({
     onMenuClick,
 }) {
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const navigate =
         useNavigate();
 
@@ -328,7 +329,7 @@ export default function AppNavbar({
                 ),
             [
                 notifications,
-            ],
+             __i18nLocaleToken],
         );
 
     const unreadCount =
@@ -1166,6 +1167,7 @@ function NotificationItem({
     notification,
     onClick,
 }) {
+    useI18n();
     const meta = getNotificationMeta(notification.type);
     const Icon = meta.icon;
     const isUnread = !notification.isRead;

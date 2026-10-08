@@ -56,6 +56,7 @@ import { useVoiceInput } from "../../../hooks/useVoiceInput.js";
 
 import { DROP_COLUMNS, canDrag, resolveMove } from "./kanbanMoves.js";
 import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
 
 // MARK: Config
@@ -106,37 +107,37 @@ const PRIORITY_STYLES = {
     PLANNED: "bg-gray-100 text-gray-600",
 };
 
-const BOARD_COLUMNS = [
+const BOARD_COLUMNS = () => ([
     { key: "issued", title: i18nT("pages.orders.orders.orders.903b9d6") },
     { key: "queued", title: i18nT("status.queued") },
     { key: "accepted", title: i18nT("pages.orders.orders.orders.ec4dcec") },
     { key: "inProgress", title: i18nT("status.inProgress") },
     { key: "completed", title: i18nT("pages.orders.orders.orders.a6caf7e") },
     { key: "overdue", title: i18nT("pages.orders.orders.orders.97a53e1"), danger: true },
-];
+]);
 
-const TYPE_OPTIONS = [
+const TYPE_OPTIONS = () => ([
     { value: "", label: i18nT("pages.equipment.equipment.equipment.729d3f6") },
     { value: "EMERGENCY", label: i18nT("priority.emergency") },
     { value: "PLANNED", label: i18nT("priority.planned") },
-];
+]);
 
-const PRIORITY_OPTIONS = [
+const PRIORITY_OPTIONS = () => ([
     { value: "", label: i18nT("pages.orders.orders.orders.32c1af4") },
     ...Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label })),
-];
+]);
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS = () => ([
     { value: "", label: i18nT("employeesPage.allStatuses") },
     ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
     { value: "OVERDUE", label: i18nT("pages.orders.orders.orders.97a53e1") },
-];
+]);
 
-const ASSIGNMENT_OPTIONS = [
+const ASSIGNMENT_OPTIONS = () => ([
     { value: "executor", label: i18nT("ordersTable.assignee") },
     { value: "brigade", label: i18nT("employeeModal.team") },
     { value: "brigade_executor", label: i18nT("pages.orders.orders.orders.f5d91b1") },
-];
+]);
 
 const EMPTY_FILTERS = {
     search: "",
@@ -267,6 +268,8 @@ function uniqueBoardOrders(columns = {}) {
 // MARK: Page
 
 export default function Orders() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const navigate = useNavigate();
 
     const auth = useAuth();
@@ -311,7 +314,7 @@ export default function Orders() {
         filters.brigadeId,
         filters.priority,
         filters.type,
-    ]);
+     __i18nLocaleToken]);
 
     const listParams = useMemo(
         () => ({
@@ -325,12 +328,12 @@ export default function Orders() {
                     ? { status: filters.status }
                     : {}),
         }),
-        [baseParams, filters.status],
+        [baseParams, filters.status, __i18nLocaleToken],
     );
 
     const boardParams = useMemo(
         () => ({ hours: 12, ...baseParams }),
-        [baseParams],
+        [baseParams, __i18nLocaleToken],
     );
 
     const ordersQuery = useWorkOrders(listParams, {
@@ -352,7 +355,7 @@ export default function Orders() {
 
     const filteredOrders = useMemo(
         () => orders.filter((order) => matchesSearch(order, search)),
-        [orders, search],
+        [orders, search, __i18nLocaleToken],
     );
 
     const boardOrders = useMemo(
@@ -366,7 +369,7 @@ export default function Orders() {
 
                 return true;
             }),
-        [board.columns, search, filters.status],
+        [board.columns, search, filters.status, __i18nLocaleToken],
     );
 
     function updateFilter(name, value) {
@@ -486,7 +489,7 @@ export default function Orders() {
                 ),
             },
         ],
-        [],
+        [ __i18nLocaleToken],
     );
 
     if (boardQuery.isLoading && !boardQuery.data) {
@@ -629,7 +632,7 @@ export default function Orders() {
                         <FilterSelect
                             value={filters.type}
                             onChange={(value) => updateFilter("type", value)}
-                            options={TYPE_OPTIONS}
+                            options={TYPE_OPTIONS()}
                             menuWidth={180}
                             ariaLabel="Тип"
                         />
@@ -637,7 +640,7 @@ export default function Orders() {
                         <FilterSelect
                             value={filters.priority}
                             onChange={(value) => updateFilter("priority", value)}
-                            options={PRIORITY_OPTIONS}
+                            options={PRIORITY_OPTIONS()}
                             menuWidth={190}
                             ariaLabel="Приоритет"
                         />
@@ -645,7 +648,7 @@ export default function Orders() {
                         <FilterSelect
                             value={filters.status}
                             onChange={(value) => updateFilter("status", value)}
-                            options={STATUS_OPTIONS}
+                            options={STATUS_OPTIONS()}
                             menuWidth={220}
                             ariaLabel="Статус"
                             align="right"
@@ -760,6 +763,7 @@ export default function Orders() {
 // MARK: Kanban
 
 function Kanban({ board, search, status, user, onChanged }) {
+    __useI18nReactive();
     const navigate = useNavigate();
 
     const [dragging, setDragging] = useState(null);
@@ -774,8 +778,8 @@ function Kanban({ board, search, status, user, onChanged }) {
 
     const visibleColumns =
         status === "OVERDUE"
-            ? BOARD_COLUMNS.filter((column) => column.key === "overdue")
-            : BOARD_COLUMNS;
+            ? BOARD_COLUMNS().filter((column) => column.key === "overdue")
+            : BOARD_COLUMNS();
 
     const interactive = visibleColumns.some((column) =>
         DROP_COLUMNS.includes(column.key),
@@ -957,6 +961,7 @@ function Kanban({ board, search, status, user, onChanged }) {
 // MARK: Reason modal
 
 function ReasonModal({ title, label, submitText, busy, onClose, onSubmit }) {
+    __useI18nReactive();
     const [text, setText] = useState("");
 
     const valid = text.trim().length >= 3;
@@ -1021,6 +1026,7 @@ function OrderCard({
     onDragStart,
     onDragEnd,
 }) {
+    __useI18nReactive();
     const overdue = isOverdue(order);
 
     return (
@@ -1094,6 +1100,8 @@ function OrderCard({
 // MARK: Create
 
 function CreateOrderModal({ onClose, onCreated }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const [form, setForm] = useState({
         type: "PLANNED",
         description: "",
@@ -1144,7 +1152,7 @@ function CreateOrderModal({ onClose, onCreated }) {
         () =>
             brigades.find((item) => String(item.id) === String(form.brigadeId)) ??
             null,
-        [brigades, form.brigadeId],
+        [brigades, form.brigadeId, __i18nLocaleToken],
     );
 
     const assignmentExecutors = useMemo(() => {
@@ -1157,7 +1165,7 @@ function CreateOrderModal({ onClose, onCreated }) {
         );
 
         return executors.filter((executor) => memberIds.has(String(executor.id)));
-    }, [executors, form.assignmentMode, selectedBrigade]);
+    }, [executors, form.assignmentMode, selectedBrigade, __i18nLocaleToken]);
 
     function change(field, value) {
         setForm((previous) => ({ ...previous, [field]: value }));
@@ -1462,7 +1470,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                         <FieldSelect
                             value={form.type}
                             onChange={(value) => change("type", value)}
-                            options={TYPE_OPTIONS.filter((item) => item.value)}
+                            options={TYPE_OPTIONS().filter((item) => item.value)}
                             ariaLabel="Тип наряда"
                         />
                     </Field>
@@ -1471,7 +1479,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                         <FieldSelect
                             value={form.priority}
                             onChange={(value) => change("priority", value)}
-                            options={PRIORITY_OPTIONS.filter((item) => item.value)}
+                            options={PRIORITY_OPTIONS().filter((item) => item.value)}
                             ariaLabel="Приоритет"
                         />
                     </Field>
@@ -1545,7 +1553,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                         <FieldSelect
                             value={form.assignmentMode}
                             onChange={changeAssignmentMode}
-                            options={ASSIGNMENT_OPTIONS}
+                            options={ASSIGNMENT_OPTIONS()}
                             menuWidth={260}
                             ariaLabel="Способ назначения"
                         />
@@ -1728,6 +1736,7 @@ function CreateOrderModal({ onClose, onCreated }) {
 // MARK: Order description voice
 
 function OrderDescriptionVoice({ onText, onError, disabled = false }) {
+    __useI18nReactive();
     const { recording, transcribing, startRecording, stopRecording, cancelRecording } =
         useVoiceInput({
             disabled,
@@ -1796,6 +1805,7 @@ function OrderDescriptionVoice({ onText, onError, disabled = false }) {
 // MARK: Recommendations
 
 function RecommendationCard({ suggestion, faultCode, normative, onApply }) {
+    __useI18nReactive();
     return (
         <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-4">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -1859,6 +1869,7 @@ function RecommendationCard({ suggestion, faultCode, normative, onApply }) {
 }
 
 function ExecutorRecommendations({ items, selectedId, onSelect }) {
+    __useI18nReactive();
     return (
         <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4">
             <div className="mb-3 flex items-center gap-2">
@@ -2035,6 +2046,7 @@ function InlineLoader() {
 }
 
 function InlineError({ text, onRetry }) {
+    __useI18nReactive();
     return (
         <div className="flex min-h-[360px] flex-col items-center justify-center rounded-xl border border-red-100 bg-white text-center">
             <RiAlarmWarningLine size={30} className="text-red-500" />
@@ -2066,6 +2078,7 @@ function PageLoader() {
 }
 
 function PageError({ text, onRetry }) {
+    __useI18nReactive();
     return (
         <div className="flex min-h-[500px] flex-col items-center justify-center">
             <RiAlarmWarningLine size={34} className="text-red-500" />

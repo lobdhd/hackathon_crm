@@ -26,6 +26,7 @@ import {
     useEquipmentByQr,
 } from "../../hooks/useEquipment.js";
 import { t as i18nT } from "../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../i18n/index.js";
 
 
 // MARK: Helpers
@@ -52,6 +53,8 @@ function getErrorMessage(
 // MARK: Route resolver
 
 export default function EquipmentEntry() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const {
         id = "",
     } = useParams();
@@ -91,7 +94,7 @@ export default function EquipmentEntry() {
             [
                 isNumericId,
                 routeValue,
-            ],
+             __i18nLocaleToken],
         );
 
 

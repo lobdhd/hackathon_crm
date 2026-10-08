@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
 
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -11,17 +11,13 @@ import {
     RiLockPasswordLine,
     RiPhoneLine,
     RiShieldCheckLine,
-    RiSparkling2Line,
 } from "react-icons/ri";
 
 import { t as i18nT, useI18n } from "../../../i18n/index.js";
 
 import { useAuth } from "../../../auth/AuthProvider.jsx";
-
 import { getDefaultRoute } from "../../../auth/roles.js";
-
 import { ApiError } from "../../../api/client.js";
-
 
 // MARK: Helpers
 
@@ -32,8 +28,6 @@ function formatRetryTime(seconds) {
     return `${minutes}:${String(restSeconds).padStart(2, "0")}`;
 }
 
-// Куда вести после входа: туда, откуда выкинуло, иначе домашняя страница роли.
-// Сама страница входа в качестве цели не годится.
 function resolveTarget(location, role) {
     const from = location.state?.from?.pathname;
 
@@ -44,17 +38,46 @@ function resolveTarget(location, role) {
     return getDefaultRoute(role);
 }
 
+// MARK: Brand Logo
+
+function BrandLogo({ dark = false }) {
+    return (
+        <div
+            className={[
+                "relative flex h-11 w-11 shrink-0 items-center justify-center",
+                "overflow-hidden rounded-[15px] p-[3px]",
+                "transition-transform duration-300 hover:scale-105",
+                dark
+                    ? "border border-white/20 bg-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.20)]"
+                    : "border border-blue-100 bg-white shadow-[0_6px_20px_rgba(37,99,235,0.12)]",
+            ].join(" ")}
+        >
+            <img
+                src="/icon.png"
+                alt="НарядAI"
+                className="block h-full w-full rounded-[11px] object-cover object-center"
+                draggable={false}
+            />
+        </div>
+    );
+}
 
 // MARK: Component
 
 export default function Login() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
+
     useI18n();
 
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { login, role, isAuthenticated, isBootstrapping } = useAuth();
-
+    const {
+        login,
+        role,
+        isAuthenticated,
+        isBootstrapping,
+    } = useAuth();
 
     // MARK: State
 
@@ -65,15 +88,21 @@ export default function Login() {
     const [errorMessage, setErrorMessage] = useState("");
     const [retryAfter, setRetryAfter] = useState(0);
 
-
     // MARK: Redirect authorized user
 
     useEffect(() => {
         if (!isBootstrapping && isAuthenticated) {
-            navigate(resolveTarget(location, role), { replace: true });
+            navigate(resolveTarget(location, role), {
+                replace: true,
+            });
         }
-    }, [isAuthenticated, isBootstrapping, role, location, navigate]);
-
+    }, [
+        isAuthenticated,
+        isBootstrapping,
+        role,
+        location,
+        navigate,
+    ]);
 
     // MARK: Retry countdown
 
@@ -89,14 +118,22 @@ export default function Login() {
         return () => window.clearInterval(timer);
     }, [retryAfter]);
 
-
     // MARK: Form state
 
     const isDisabled = useMemo(
-        () => isSubmitting || retryAfter > 0 || !phone.trim() || !password,
-        [isSubmitting, retryAfter, phone, password],
+        () =>
+            isSubmitting ||
+            retryAfter > 0 ||
+            !phone.trim() ||
+            !password,
+        [
+            isSubmitting,
+            retryAfter,
+            phone,
+            password,
+            __i18nLocaleToken,
+        ],
     );
-
 
     // MARK: Submit
 
@@ -116,9 +153,10 @@ export default function Login() {
                 password,
             });
 
-            navigate(resolveTarget(location, result?.user?.role), {
-                replace: true,
-            });
+            navigate(
+                resolveTarget(location, result?.user?.role),
+                { replace: true },
+            );
         } catch (error) {
             if (error instanceof ApiError) {
                 if (error.status === 429) {
@@ -134,6 +172,7 @@ export default function Login() {
         }
     }
 
+    // MARK: Render
 
     return (
         <div className="min-h-screen bg-[#f7f8fa]">
@@ -142,22 +181,31 @@ export default function Login() {
                 {/* MARK: Left side */}
 
                 <section className="relative hidden overflow-hidden bg-[#111827] p-10 text-white lg:flex lg:flex-col">
-                    <div className="absolute -left-28 top-[-120px] h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
-                    <div className="absolute bottom-[-160px] right-[-80px] h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+
+                    <div className="pointer-events-none absolute -left-28 top-[-120px] h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
+
+                    <div className="pointer-events-none absolute bottom-[-160px] right-[-80px] h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+
+                    {/* Brand */}
 
                     <div className="relative z-10 flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
-                            <RiSparkling2Line size={22} />
-                        </div>
+                        <BrandLogo dark />
 
-                        <span className="text-lg font-semibold">
+                        <span className="text-lg font-semibold tracking-tight">
                             {i18nT("sidebar.brand")}
                         </span>
                     </div>
 
+                    {/* Main content */}
+
                     <div className="relative z-10 my-auto max-w-xl">
+
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300">
-                            <RiShieldCheckLine size={16} className="text-blue-400" />
+                            <RiShieldCheckLine
+                                size={16}
+                                className="text-blue-400"
+                            />
+
                             {i18nT("pages.auth.login.login.04bd1d8")}
                         </div>
 
@@ -169,44 +217,54 @@ export default function Login() {
                             {i18nT("pages.auth.login.login.1991a6e")}
                         </p>
 
+                        {/* Features */}
+
                         <div className="mt-10 grid max-w-lg grid-cols-2 gap-3">
                             {[
                                 ["Контроль", "Наряды и сроки"],
                                 ["Аналитика", "Простои и эффективность"],
                                 ["AI", "Проверка выполнения"],
                                 ["Realtime", "Актуальные статусы"],
-                            ].map(([title, text]) => (
+                            ].map(([title, description]) => (
                                 <div
                                     key={title}
                                     className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
                                 >
-                                    <div className="text-xs text-gray-500">{title}</div>
+                                    <div className="text-xs text-gray-500">
+                                        {title}
+                                    </div>
+
                                     <div className="mt-1 text-sm font-medium text-gray-200">
-                                        {text}
+                                        {description}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className="relative z-10 text-xs text-gray-600">{i18nT("sidebar.brand")}</div>
-                </section>
+                    {/* Footer */}
 
+                    <div className="relative z-10 text-xs text-gray-600">
+                        {i18nT("sidebar.brand")}
+                    </div>
+                </section>
 
                 {/* MARK: Login side */}
 
                 <main className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
                     <div className="w-full max-w-[430px]">
 
-                        <div className="mb-9 flex items-center gap-3 lg:hidden">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
-                                <RiSparkling2Line size={21} />
-                            </div>
+                        {/* Mobile brand */}
 
-                            <span className="font-semibold text-gray-900">
+                        <div className="mb-9 flex items-center gap-3 lg:hidden">
+                            <BrandLogo />
+
+                            <span className="font-semibold tracking-tight text-gray-900">
                                 {i18nT("sidebar.brand")}
                             </span>
                         </div>
+
+                        {/* Heading */}
 
                         <div className="mb-8">
                             <h2 className="text-[28px] font-bold tracking-tight text-gray-950">
@@ -218,14 +276,28 @@ export default function Login() {
                             </p>
                         </div>
 
+                        {/* Error */}
+
                         {errorMessage && (
                             <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                <RiInformationLine size={19} className="mt-0.5 shrink-0" />
+                                <RiInformationLine
+                                    size={19}
+                                    className="mt-0.5 shrink-0"
+                                />
+
                                 <span>{errorMessage}</span>
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* MARK: Form */}
+
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-5"
+                        >
+
+                            {/* Phone */}
+
                             <div>
                                 <label
                                     htmlFor="phone"
@@ -257,15 +329,15 @@ export default function Login() {
                                 </div>
                             </div>
 
+                            {/* Password */}
+
                             <div>
-                                <div className="mb-2 flex items-center justify-between">
-                                    <label
-                                        htmlFor="password"
-                                        className="block text-sm font-medium text-gray-700"
-                                    >
-                                        {i18nT("login.password")}
-                                    </label>
-                                </div>
+                                <label
+                                    htmlFor="password"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    {i18nT("login.password")}
+                                </label>
 
                                 <div className="relative">
                                     <RiLockPasswordLine
@@ -276,7 +348,11 @@ export default function Login() {
                                     <input
                                         id="password"
                                         name="password"
-                                        type={showPassword ? "text" : "password"}
+                                        type={
+                                            showPassword
+                                                ? "text"
+                                                : "password"
+                                        }
                                         autoComplete="current-password"
                                         value={password}
                                         onChange={(event) => {
@@ -289,9 +365,15 @@ export default function Login() {
 
                                     <button
                                         type="button"
-                                        onClick={() => setShowPassword((current) => !current)}
+                                        onClick={() =>
+                                            setShowPassword((current) => !current)
+                                        }
                                         className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-                                        aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                                        aria-label={
+                                            showPassword
+                                                ? "Скрыть пароль"
+                                                : "Показать пароль"
+                                        }
                                     >
                                         {showPassword ? (
                                             <RiEyeOffLine size={19} />
@@ -302,6 +384,8 @@ export default function Login() {
                                 </div>
                             </div>
 
+                            {/* MARK: Submit button */}
+
                             <button
                                 type="submit"
                                 disabled={isDisabled}
@@ -309,11 +393,17 @@ export default function Login() {
                             >
                                 {isSubmitting ? (
                                     <>
-                                        <RiLoader4Line size={19} className="animate-spin" />
+                                        <RiLoader4Line
+                                            size={19}
+                                            className="animate-spin"
+                                        />
                                         {i18nT("pages.auth.login.login.d1231f6")}
                                     </>
                                 ) : retryAfter > 0 ? (
-                                    <>{i18nT("pages.auth.login.login.dd74643")} {formatRetryTime(retryAfter)}</>
+                                    <>
+                                        {i18nT("pages.auth.login.login.dd74643")}{" "}
+                                        {formatRetryTime(retryAfter)}
+                                    </>
                                 ) : (
                                     <>
                                         {i18nT("login.signIn")}
@@ -323,7 +413,7 @@ export default function Login() {
                             </button>
                         </form>
 
-                        {/* Регистрации нет: учётные записи создаёт администратор */}
+                        {/* MARK: Access information */}
 
                         <div className="mt-6 rounded-xl border border-gray-200 bg-white px-4 py-3.5">
                             <div className="flex items-start gap-3">

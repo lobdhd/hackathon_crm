@@ -74,6 +74,7 @@ import {
     useVoiceInput,
 } from "../../../hooks/useVoiceInput.js";
 import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
 
 // MARK: Config
@@ -171,7 +172,7 @@ const EDITABLE_STATUSES = [
     "REWORK",
 ];
 
-const PRIORITY_OPTIONS = [
+const PRIORITY_OPTIONS = () => ([
     {
         value: "EMERGENCY",
         label: i18nT("pages.orders.orderdetails.orderdetails.04a0f08"),
@@ -188,7 +189,7 @@ const PRIORITY_OPTIONS = [
         value: "PLANNED",
         label: i18nT("pages.orders.orderdetails.orderdetails.1d67544"),
     },
-];
+]);
 
 const SCORE_OPTIONS = [
     1,
@@ -510,6 +511,8 @@ function downloadBlob(
 // MARK: Page
 
 export default function OrderDetails() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const {
         id,
     } = useParams();
@@ -586,7 +589,7 @@ export default function OrderDetails() {
             [
                 order,
                 user,
-            ],
+             __i18nLocaleToken],
         );
 
     const canManage =
@@ -1489,6 +1492,7 @@ function CommentsSection({
     mutation,
     onQueued,
 }) {
+    __useI18nReactive();
     const [
         comment,
         setComment,
@@ -1636,6 +1640,7 @@ function EvaluationReport({
     order,
     canDownloadPdf,
 }) {
+    __useI18nReactive();
     const [
         pdfLoading,
         setPdfLoading,
@@ -1978,6 +1983,7 @@ function EditOrderModal({
     mutation,
     onClose,
 }) {
+    __useI18nReactive();
     const [
         form,
         setForm,
@@ -2067,7 +2073,7 @@ function EditOrderModal({
                             )
                         }
                         options={
-                            PRIORITY_OPTIONS
+                            PRIORITY_OPTIONS()
                         }
                         ariaLabel="Приоритет"
                     />
@@ -2139,6 +2145,7 @@ function ReassignModal({
     mutation,
     onClose,
 }) {
+    __useI18nReactive();
     const executorsQuery =
         useExecutors();
 
@@ -2360,6 +2367,7 @@ function ActionModal({
     onQueued,
     onClose,
 }) {
+    __useI18nReactive();
     const [
         comment,
         setComment,
@@ -2563,6 +2571,7 @@ function CompleteModal({
     onQueued,
     onClose,
 }) {
+    __useI18nReactive();
     const faultCodesQuery =
         useFaultCodes();
 
@@ -3052,6 +3061,7 @@ function CompletionVoiceInput({
     onError,
     disabled = false,
 }) {
+    __useI18nReactive();
     const {
         recording,
         transcribing,
@@ -3178,6 +3188,7 @@ function CompletionVoiceInput({
 function TimingCard({
     timing,
 }) {
+    __useI18nReactive();
     return (
         <Section
             title={i18nT("pages.orders.orderdetails.orderdetails.5e59c19")}
@@ -3289,6 +3300,7 @@ function TimingRow({
 function AiAssessmentCompact({
     assessment,
 }) {
+    __useI18nReactive();
     if (!assessment) {
         return (
             <EmptyText>
@@ -3351,6 +3363,7 @@ function AiAssessmentCompact({
 function Timeline({
     items,
 }) {
+    __useI18nReactive();
     if (!items.length) {
         return (
             <EmptyText>
@@ -3428,6 +3441,7 @@ function Timeline({
 function MaterialsTable({
     items,
 }) {
+    __useI18nReactive();
     if (!items.length) {
         return (
             <EmptyText>
@@ -3493,6 +3507,7 @@ function PhotoColumn({
     title,
     photos,
 }) {
+    __useI18nReactive();
     return (
         <div>
             <p className="mb-3 text-sm font-semibold text-gray-800">
@@ -3793,6 +3808,7 @@ function ModalFooter({
     pending,
     text,
 }) {
+    __useI18nReactive();
     return (
         <div className="flex justify-end gap-2 border-t border-gray-100 pt-5">
             <button

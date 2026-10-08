@@ -9,6 +9,7 @@ export default function GenerateReportModal({
   defaultType = "SHIFT",
   onGenerate
 }) {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const [form, setForm] = useState({
     type: defaultType,
@@ -26,7 +27,7 @@ export default function GenerateReportModal({
       }));
     }
   }, [open, defaultType]);
-  const selectedReportType = useMemo(() => reportTypes.find(item => item.id === form.type), [form.type, reportTypes]);
+  const selectedReportType = useMemo(() => reportTypes.find(item => item.id === form.type), [form.type, reportTypes, __i18nLocaleToken]);
   if (!open) {
     return null;
   }

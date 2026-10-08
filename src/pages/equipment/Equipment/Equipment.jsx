@@ -32,6 +32,7 @@ import {
 
 import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
 import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
 const LIST_HEIGHT = "clamp(360px, calc(100dvh - 430px), 640px)";
 
@@ -87,6 +88,8 @@ function getCriticalityStyle(
 }
 // MARK: Page
 export default function Equipment() {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const navigate = useNavigate();
     const {
         user,
@@ -122,7 +125,7 @@ export default function Equipment() {
             new Map(
                 areas.map((area) => [Number(area.id), area]),
             ),
-            [areas]);
+            [areas, __i18nLocaleToken]);
     const canCreate =
         user?.role ===
         "ADMIN";
@@ -161,7 +164,7 @@ export default function Equipment() {
             ].sort();
         }, [
             equipment,
-        ]);
+         __i18nLocaleToken]);
     const filteredEquipment =
         useMemo(() => {
             const search =
@@ -224,7 +227,7 @@ export default function Equipment() {
             equipment,
             areasById,
             filters,
-        ]);
+         __i18nLocaleToken]);
     const stats =
         useMemo(
             () => ({
@@ -258,7 +261,7 @@ export default function Equipment() {
             }),
             [
                 equipment,
-            ],
+             __i18nLocaleToken],
         );
     const activeFilters =
         Object.entries(
@@ -299,7 +302,7 @@ export default function Equipment() {
                 </span>
             ),
         },
-    ], [areasById]);
+    ], [areasById, __i18nLocaleToken]);
 
     if (
         equipmentQuery.isLoading ||
@@ -686,6 +689,7 @@ function EquipmentCard({
     item,
     area,
 }) {
+    __useI18nReactive();
     return (
         <Link
             to={`/equipment/${item.id}`}
@@ -758,6 +762,7 @@ function CreateEquipmentModal({
     areas,
     onClose,
 }) {
+    __useI18nReactive();
     const mutation =
         useCreateEquipment();
     const [

@@ -48,6 +48,7 @@ const TERMINAL_STATUSES =
     ]);
 
 export default function EmployeeDetails() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
     useI18n();
 
     const {
@@ -103,7 +104,7 @@ export default function EmployeeDetails() {
             [
                 employees,
                 employeeId,
-            ],
+             __i18nLocaleToken],
         );
 
     const employeeOrders =
@@ -126,7 +127,7 @@ export default function EmployeeDetails() {
                             order.status,
                         ),
                 ),
-            [employeeOrders],
+            [employeeOrders, __i18nLocaleToken],
         );
 
     const closedOrders =
@@ -139,7 +140,7 @@ export default function EmployeeDetails() {
                         order.status ===
                         "CLOSED",
                 ),
-            [employeeOrders],
+            [employeeOrders, __i18nLocaleToken],
         );
 
     const overdueOrders =
@@ -148,7 +149,7 @@ export default function EmployeeDetails() {
                 employeeOrders.filter(
                     isOverdue,
                 ),
-            [employeeOrders],
+            [employeeOrders, __i18nLocaleToken],
         );
 
     const aiReviewOrders =
@@ -161,7 +162,7 @@ export default function EmployeeDetails() {
                         order.status ===
                         "AI_REVIEW",
                 ),
-            [employeeOrders],
+            [employeeOrders, __i18nLocaleToken],
         );
 
     if (
@@ -632,6 +633,7 @@ export default function EmployeeDetails() {
 function HistoryRow({
     order,
 }) {
+    useI18n();
     const navigate =
         useNavigate();
 
@@ -713,6 +715,7 @@ function HistoryRow({
 function OrderRow({
     order,
 }) {
+    useI18n();
     const navigate =
         useNavigate();
 
@@ -940,6 +943,7 @@ function EmptyText({
 }
 
 function InlineLoading() {
+    useI18n();
     return (
         <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400">
             <RiLoader4Line

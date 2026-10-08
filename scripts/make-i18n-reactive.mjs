@@ -1,1157 +1,846 @@
-import fs from "fs";
-import path from "path";
-import { createRequire } from "module";
-import { parse } from "@babel/parser";
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { parse } from '@babel/parser';
 
 const require = createRequire(import.meta.url);
+const traverse = require('@babel/traverse').default;
+const generate = require('@babel/generator').default;
+const t = require('@babel/types');
 
-const traverse =
-    require("@babel/traverse").default;
-
-const generate =
-    require("@babel/generator").default;
-
-const bt =
-    require("@babel/types");
+// MARK: Configuration
 
 const ROOT = process.cwd();
+const SRC = path.join(ROOT, 'src');
+const WRITE = process.argv.includes('--write');
+const ONLY = (
+    process.argv.find(arg => arg.startsWith('--only=')) ?? ''
+).slice('--only='.length).replaceAll('\\', '/');
 
-const SRC_DIR =
-    path.join(ROOT, "src");
-
-const SEARCH_DIRS = [
-    path.join(
-        SRC_DIR,
-        "components"
-    ),
-    path.join(
-        SRC_DIR,
-        "pages"
-    ),
-];
-
-const EXTENSIONS = new Set([
-    ".js",
-    ".jsx",
-    ".ts",
-    ".tsx",
+const EXT = new Set(['.js', '.jsx', '.ts', '.tsx']);
+const EXCLUDED = new Set([
+    'node_modules', 'locales', 'i18n',
+    'assets', 'dist', 'build', '__tests__',
 ]);
+
+const PARSER_OPTIONS = {
+    sourceType: 'unambiguous',
+    plugins: [
+        'jsx',
+        'typescript',
+        'classProperties',
+        'decorators-legacy',
+    ],
+};
+
+// Этот ключ отличается в RU и KK.
+// Используется для обновления useMemo/useCallback.
+const LANGUAGE_KEY = 'sidebar.home';
 
 // MARK: Files
 
-function getFiles(dir) {
-    if (!fs.existsSync(dir)) {
-        return [];
-    }
+function listFiles(dir) {
+    if (!fs.existsSync(dir)) return [];
 
-    const result = [];
-
-    const entries =
-        fs.readdirSync(
-            dir,
-            {
-                withFileTypes: true,
-            }
-        );
-
-    for (const entry of entries) {
-        const fullPath =
-            path.join(
-                dir,
-                entry.name
-            );
+    return fs.readdirSync(dir, {
+        withFileTypes: true,
+    }).flatMap(entry => {
+        const full = path.join(dir, entry.name);
 
         if (entry.isDirectory()) {
-            result.push(
-                ...getFiles(
-                    fullPath
-                )
-            );
-
-            continue;
+            return EXCLUDED.has(entry.name)
+                ? []
+                : listFiles(full);
         }
 
-        if (
-            entry.isFile() &&
-            EXTENSIONS.has(
-                path.extname(
-                    entry.name
-                )
-            )
-        ) {
-            result.push(
-                fullPath
+        return entry.isFile() &&
+            EXT.has(path.extname(entry.name))
+            ? [full]
+            : [];
+    });
+}
+
+function parseSource(source) {
+    return parse(source, PARSER_OPTIONS);
+}
+
+function isI18nSource(value) {
+    return /(?:^|\/)i18n(?:\/index(?:\.[cm]?[jt]sx?)?)?$/.test(value);
+}
+
+// MARK: AST helpers
+
+function containsCall(node, names) {
+    if (!node) return false;
+
+    if (Array.isArray(node)) {
+        return node.some(item => containsCall(item, names));
+    }
+
+    if (typeof node !== 'object') return false;
+
+    if (
+        t.isCallExpression(node) &&
+        t.isIdentifier(node.callee) &&
+        names.has(node.callee.name)
+    ) {
+        return true;
+    }
+
+    return (t.VISITOR_KEYS[node.type] ?? []).some(
+        key => containsCall(node[key], names)
+    );
+}
+
+function hasAnyNameReference(node, names) {
+    if (!node) return false;
+
+    if (Array.isArray(node)) {
+        return node.some(item =>
+            hasAnyNameReference(item, names)
+        );
+    }
+
+    if (typeof node !== 'object') return false;
+
+    if (
+        t.isIdentifier(node) &&
+        names.has(node.name)
+    ) {
+        return true;
+    }
+
+    return (t.VISITOR_KEYS[node.type] ?? []).some(
+        key => hasAnyNameReference(node[key], names)
+    );
+}
+
+function getComponentName(p) {
+    if (p.isFunctionDeclaration()) {
+        return p.node.id?.name ?? 'default';
+    }
+
+    let parent = p.parentPath;
+
+    if (parent?.isVariableDeclarator()) {
+        return parent.node.id?.name;
+    }
+
+    if (parent?.isExportDefaultDeclaration()) {
+        return 'default';
+    }
+
+    // Поддержка memo() и forwardRef()
+    if (parent?.isCallExpression()) {
+        const callee = parent.node.callee;
+
+        const name = t.isIdentifier(callee)
+            ? callee.name
+            : t.isMemberExpression(callee) &&
+                t.isIdentifier(callee.property)
+                ? callee.property.name
+                : '';
+
+        if (['memo', 'forwardRef'].includes(name)) {
+            parent = parent.parentPath;
+
+            if (parent?.isVariableDeclarator()) {
+                return parent.node.id?.name;
+            }
+
+            if (parent?.isExportDefaultDeclaration()) {
+                return 'default';
+            }
+        }
+    }
+
+    return null;
+}
+
+function isComponent(p) {
+    if (
+        !p.isFunctionDeclaration() &&
+        !p.isFunctionExpression() &&
+        !p.isArrowFunctionExpression()
+    ) {
+        return false;
+    }
+
+    const name = getComponentName(p);
+
+    return name === 'default' ||
+        Boolean(name && /^[A-Z]/.test(name));
+}
+
+function enclosingFunction(p) {
+    return p.findParent(parent => parent.isFunction());
+}
+
+function lineIndent(source, position) {
+    const start =
+        source.lastIndexOf('\n', position - 1) + 1;
+
+    const indent =
+        source.slice(start, position).match(/^\s*/)?.[0] ?? '';
+
+    return indent.replace(/[^\t ]/g, '') + '    ';
+}
+
+function applyEdits(source, edits) {
+    const sorted = edits.slice().sort(
+        (a, b) => b.start - a.start || b.end - a.end
+    );
+
+    for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i].end > sorted[i - 1].start) {
+            throw new Error(
+                `Пересекающиеся правки: ${sorted[i].reason} / ${sorted[i - 1].reason}`
             );
         }
+    }
+
+    let result = source;
+
+    for (const edit of sorted) {
+        result =
+            result.slice(0, edit.start) +
+            edit.text +
+            result.slice(edit.end);
     }
 
     return result;
 }
 
-// MARK: AST helpers
-
-function isI18nImportSource(
-    source
-) {
-    if (
-        typeof source !==
-        "string"
-    ) {
-        return false;
-    }
-
-    return (
-        source ===
-        "../i18n/index.js" ||
-        source.endsWith(
-            "/i18n/index.js"
-        )
-    );
-}
-
-function getI18nImport(
-    programPath
-) {
-    const body =
-        programPath.get(
-            "body"
-        );
-
-    for (
-        const statement
-        of body
-    ) {
-        if (
-            !statement.isImportDeclaration()
-        ) {
-            continue;
-        }
-
-        const source =
-            statement.node.source
-                .value;
-
-        if (
-            !isI18nImportSource(
-                source
-            )
-        ) {
-            continue;
-        }
-
-        const translateSpecifier =
-            statement.node
-                .specifiers
-                .find(
-                    (
-                        specifier
-                    ) => {
-                        return (
-                            bt.isImportSpecifier(
-                                specifier
-                            ) &&
-                            bt.isIdentifier(
-                                specifier
-                                    .imported
-                            ) &&
-                            specifier
-                                .imported
-                                .name ===
-                            "t"
-                        );
-                    }
-                );
-
-        if (
-            translateSpecifier
-        ) {
-            return {
-                path:
-                    statement,
-
-                translateLocal:
-                    translateSpecifier
-                        .local
-                        .name,
-            };
-        }
-    }
-
-    return null;
-}
-
-function containsTranslateCall(
-    node,
-    translateLocal
-) {
-    if (!node) {
-        return false;
-    }
-
-    if (
-        Array.isArray(node)
-    ) {
-        return node.some(
-            (item) =>
-                containsTranslateCall(
-                    item,
-                    translateLocal
-                )
-        );
-    }
-
-    if (
-        typeof node !==
-        "object"
-    ) {
-        return false;
-    }
-
-    if (
-        bt.isCallExpression(
-            node
-        ) &&
-        bt.isIdentifier(
-            node.callee,
-            {
-                name:
-                    translateLocal,
-            }
-        )
-    ) {
-        return true;
-    }
-
-    const keys =
-        bt.VISITOR_KEYS[
-        node.type
-        ] ?? [];
-
-    for (const key of keys) {
-        if (
-            containsTranslateCall(
-                node[key],
-                translateLocal
-            )
-        ) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function isTopLevelFunction(
-    functionPath
-) {
-    const parent =
-        functionPath.parentPath;
-
-    if (!parent) {
-        return false;
-    }
-
-    // export default function Page() {}
-    if (
-        parent.isExportDefaultDeclaration()
-    ) {
-        return true;
-    }
-
-    // function Page() {}
-    if (
-        parent.isProgram()
-    ) {
-        return true;
-    }
-
-    // const Page = () => {}
-    if (
-        parent.isVariableDeclarator()
-    ) {
-        const declaration =
-            parent.parentPath;
-
-        if (
-            !declaration?.isVariableDeclaration()
-        ) {
-            return false;
-        }
-
-        const declarationParent =
-            declaration.parentPath;
-
-        if (
-            declarationParent?.isProgram()
-        ) {
-            return true;
-        }
-
-        // export const Page = () => {}
-        if (
-            declarationParent
-                ?.isExportNamedDeclaration() &&
-            declarationParent
-                .parentPath
-                ?.isProgram()
-        ) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function getTopLevelFunction(
-    pathRef
-) {
-    let current =
-        pathRef;
+function uniqueName(scope, base) {
+    let name = base;
+    let index = 2;
 
     while (
-        current &&
-        !current.isProgram()
+        scope.hasBinding(name) ||
+        scope.hasGlobal(name)
     ) {
-        if (
-            (
-                current.isFunctionDeclaration() ||
-                current.isFunctionExpression() ||
-                current.isArrowFunctionExpression()
-            ) &&
-            isTopLevelFunction(
-                current
-            )
-        ) {
-            return current;
-        }
-
-        current =
-            current.parentPath;
+        name = `${base}${index++}`;
     }
 
-    return null;
-}
-
-function getFunctionName(
-    functionPath
-) {
-    if (
-        functionPath
-            .isFunctionDeclaration()
-    ) {
-        return (
-            functionPath.node
-                .id?.name ??
-            "default"
-        );
-    }
-
-    const parent =
-        functionPath.parentPath;
-
-    if (
-        parent?.isVariableDeclarator() &&
-        bt.isIdentifier(
-            parent.node.id
-        )
-    ) {
-        return (
-            parent.node.id.name
-        );
-    }
-
-    if (
-        parent?.isExportDefaultDeclaration()
-    ) {
-        return "default";
-    }
-
-    return null;
-}
-
-function isLikelyComponent(
-    functionPath
-) {
-    const name =
-        getFunctionName(
-            functionPath
-        );
-
-    if (
-        name === "default"
-    ) {
-        return true;
-    }
-
-    if (
-        name &&
-        /^[A-Z]/.test(name)
-    ) {
-        return true;
-    }
-
-    return false;
-}
-
-function ensureBlockBody(
-    functionPath
-) {
-    // const Component = () => <div />
-    //
-    // превращаем в:
-    //
-    // const Component = () => {
-    //   return <div />;
-    // }
-
-    if (
-        functionPath
-            .isArrowFunctionExpression() &&
-        !bt.isBlockStatement(
-            functionPath.node.body
-        )
-    ) {
-        const oldBody =
-            functionPath.node.body;
-
-        functionPath
-            .get("body")
-            .replaceWith(
-                bt.blockStatement([
-                    bt.returnStatement(
-                        oldBody
-                    ),
-                ])
-            );
-    }
-
-    return functionPath.get(
-        "body"
-    );
-}
-
-function hasHookCall(
-    functionPath,
-    hookLocal
-) {
-    let found = false;
-
-    functionPath.traverse({
-        Function(innerPath) {
-            if (
-                innerPath.node !==
-                functionPath.node
-            ) {
-                innerPath.skip();
-            }
-        },
-
-        CallExpression(
-            callPath
-        ) {
-            if (
-                bt.isIdentifier(
-                    callPath
-                        .node
-                        .callee,
-                    {
-                        name:
-                            hookLocal,
-                    }
-                )
-            ) {
-                found = true;
-
-                callPath.stop();
-            }
-        },
-    });
-
-    return found;
-}
-
-function ensureUseI18nImport(
-    programPath,
-    importPath
-) {
-    const existing =
-        importPath.node
-            .specifiers
-            .find(
-                (
-                    specifier
-                ) =>
-                    bt.isImportSpecifier(
-                        specifier
-                    ) &&
-                    bt.isIdentifier(
-                        specifier
-                            .imported
-                    ) &&
-                    specifier
-                        .imported
-                        .name ===
-                    "useI18n"
-            );
-
-    if (existing) {
-        return (
-            existing.local.name
-        );
-    }
-
-    let localName =
-        "useI18n";
-
-    if (
-        programPath.scope
-            .hasBinding(
-                localName
-            )
-    ) {
-        localName =
-            "__useI18n";
-    }
-
-    importPath.node
-        .specifiers
-        .push(
-            bt.importSpecifier(
-                bt.identifier(
-                    localName
-                ),
-                bt.identifier(
-                    "useI18n"
-                )
-            )
-        );
-
-    return localName;
-}
-
-function addHookToComponent(
-    functionPath,
-    hookLocal
-) {
-    if (
-        hasHookCall(
-            functionPath,
-            hookLocal
-        )
-    ) {
-        return false;
-    }
-
-    const bodyPath =
-        ensureBlockBody(
-            functionPath
-        );
-
-    const hookStatement =
-        bt.expressionStatement(
-            bt.callExpression(
-                bt.identifier(
-                    hookLocal
-                ),
-                []
-            )
-        );
-
-    bodyPath.unshiftContainer(
-        "body",
-        hookStatement
-    );
-
-    return true;
+    return name;
 }
 
 // MARK: Process file
 
-function processFile(
-    filePath
-) {
-    const source =
-        fs.readFileSync(
-            filePath,
-            "utf8"
-        );
+function processFile(file) {
+    const warnings = [];
 
+    const stats = {
+        hooks: 0,
+        memoDeps: 0,
+        factories: 0,
+        arrows: 0,
+    };
+
+    let source = fs.readFileSync(file, 'utf8');
     let ast;
 
     try {
-        ast = parse(
-            source,
-            {
-                sourceType:
-                    "module",
-
-                plugins: [
-                    "jsx",
-                    "typescript",
-                    "classProperties",
-                    "objectRestSpread",
-                    "optionalChaining",
-                    "nullishCoalescingOperator",
-                    "topLevelAwait",
-                    "decorators-legacy",
-                ],
-            }
-        );
+        ast = parseSource(source);
     } catch (error) {
-        console.error(
-            `❌ ${path.relative(
-                ROOT,
-                filePath
-            )}`
-        );
-
-        console.error(
-            error.message
-        );
-
         return {
             changed: false,
-            hooks: 0,
-            moved: 0,
-            unresolved: [],
+            stats,
+            warnings: [`Ошибка JSX: ${error.message}`],
+            error: true,
         };
     }
 
-    let programPath = null;
+    let program;
 
     traverse(ast, {
-        Program(pathRef) {
-            programPath =
-                pathRef;
+        Program(p) {
+            program = p;
+            p.stop();
         },
     });
 
-    if (!programPath) {
-        return {
-            changed: false,
-            hooks: 0,
-            moved: 0,
-            unresolved: [],
-        };
-    }
+    // MARK: Find i18n imports
 
-    const i18n =
-        getI18nImport(
-            programPath
-        );
+    const imports = program.get('body').filter(
+        p => p.isImportDeclaration() &&
+            isI18nSource(p.node.source.value)
+    );
 
-    // Файл уже новый либо вообще
-    // не использует старый i18nT.
-    if (!i18n) {
-        return {
-            changed: false,
-            hooks: 0,
-            moved: 0,
-            unresolved: [],
-        };
-    }
+    const translateAliases = new Set();
+    let hookName = null;
+    let importSource = null;
 
-    const {
-        path: importPath,
-        translateLocal,
-    } = i18n;
+    for (const imp of imports) {
+        importSource ??= imp.node.source.value;
 
-    programPath.scope.crawl();
+        for (const spec of imp.node.specifiers) {
+            if (!t.isImportSpecifier(spec)) continue;
 
-    const moves =
-        new Map();
+            const imported = t.isIdentifier(spec.imported)
+                ? spec.imported.name
+                : spec.imported.value;
 
-    const unresolved = [];
-
-    let movedCount = 0;
-
-    // MARK: Move module constants
-
-    const bodyPaths = [
-        ...programPath.get(
-            "body"
-        ),
-    ];
-
-    for (
-        const statementPath
-        of bodyPaths
-    ) {
-        if (
-            !statementPath
-                .isVariableDeclaration()
-        ) {
-            continue;
-        }
-
-        const kind =
-            statementPath
-                .node.kind;
-
-        const declarationPaths =
-            [
-                ...statementPath.get(
-                    "declarations"
-                ),
-            ];
-
-        for (
-            const declarationPath
-            of declarationPaths
-        ) {
-            const {
-                id,
-                init,
-            } =
-                declarationPath.node;
-
-            if (
-                !bt.isIdentifier(id) ||
-                !init
-            ) {
-                continue;
+            if (imported === 't') {
+                translateAliases.add(spec.local.name);
             }
 
-            if (
-                !containsTranslateCall(
-                    init,
-                    translateLocal
-                )
-            ) {
-                continue;
+            if (imported === 'useI18n') {
+                hookName = spec.local.name;
             }
-
-            const variableName =
-                id.name;
-
-            const binding =
-                programPath.scope
-                    .getBinding(
-                        variableName
-                    );
-
-            if (
-                !binding ||
-                binding
-                    .referencePaths
-                    .length === 0
-            ) {
-                unresolved.push({
-                    type:
-                        "module-variable",
-                    name:
-                        variableName,
-                    reason:
-                        "Нет безопасного места для переноса",
-                });
-
-                continue;
-            }
-
-            const owners = [];
-
-            let unsafe =
-                false;
-
-            for (
-                const referencePath
-                of binding
-                    .referencePaths
-            ) {
-                const owner =
-                    getTopLevelFunction(
-                        referencePath
-                    );
-
-                if (!owner) {
-                    unsafe = true;
-                    break;
-                }
-
-                if (
-                    !isLikelyComponent(
-                        owner
-                    )
-                ) {
-                    unsafe = true;
-                    break;
-                }
-
-                if (
-                    !owners.some(
-                        (
-                            existing
-                        ) =>
-                            existing.node ===
-                            owner.node
-                    )
-                ) {
-                    owners.push(
-                        owner
-                    );
-                }
-            }
-
-            // Переменная используется
-            // только одним React-компонентом.
-            // Значит её можно безопасно
-            // перенести внутрь него.
-
-            if (
-                !unsafe &&
-                owners.length === 1
-            ) {
-                const target =
-                    owners[0];
-
-                let plan =
-                    moves.get(
-                        target.node
-                    );
-
-                if (!plan) {
-                    plan = {
-                        functionPath:
-                            target,
-                        declarations:
-                            [],
-                    };
-
-                    moves.set(
-                        target.node,
-                        plan
-                    );
-                }
-
-                plan.declarations.push(
-                    bt.variableDeclaration(
-                        kind,
-                        [
-                            bt.cloneNode(
-                                declarationPath
-                                    .node,
-                                true
-                            ),
-                        ]
-                    )
-                );
-
-                declarationPath.remove();
-
-                movedCount++;
-
-                continue;
-            }
-
-            unresolved.push({
-                type:
-                    "module-variable",
-                name:
-                    variableName,
-                reason:
-                    owners.length > 1
-                        ? "Используется несколькими компонентами"
-                        : "Используется вне React-компонента",
-            });
-        }
-
-        if (
-            statementPath.node &&
-            statementPath.node
-                .declarations
-                .length === 0
-        ) {
-            statementPath.remove();
         }
     }
 
-    // MARK: Insert moved declarations
-
-    for (
-        const plan
-        of moves.values()
-    ) {
-        const bodyPath =
-            ensureBlockBody(
-                plan.functionPath
-            );
-
-        bodyPath.unshiftContainer(
-            "body",
-            plan.declarations
-        );
+    if (!translateAliases.size) {
+        return { changed: false, stats, warnings };
     }
 
-    // MARK: Find components that use i18nT
+    // MARK: Detect translated globals
 
-    const components =
-        new Map();
+    const topLevelTranslationNames = new Set();
+
+    for (const statement of program.get('body')) {
+        const declaration = statement.isVariableDeclaration()
+            ? statement
+            : statement.isExportNamedDeclaration() &&
+                statement.get('declaration')?.isVariableDeclaration()
+                ? statement.get('declaration')
+                : null;
+
+        if (!declaration) continue;
+
+        for (const item of declaration.get('declarations')) {
+            if (
+                t.isIdentifier(item.node.id) &&
+                containsCall(item.node.init, translateAliases)
+            ) {
+                topLevelTranslationNames.add(item.node.id.name);
+            }
+        }
+    }
+
+    // MARK: Short arrow components
+
+    const expressionEdits = [];
 
     traverse(ast, {
-        CallExpression(
-            callPath
-        ) {
+        ArrowFunctionExpression(p) {
             if (
-                !bt.isIdentifier(
-                    callPath
-                        .node
-                        .callee,
-                    {
-                        name:
-                            translateLocal,
-                    }
+                !isComponent(p) ||
+                t.isBlockStatement(p.node.body)
+            ) {
+                return;
+            }
+
+            if (
+                !containsCall(p.node.body, translateAliases) &&
+                !hasAnyNameReference(
+                    p.node.body,
+                    topLevelTranslationNames
                 )
             ) {
                 return;
             }
 
-            const owner =
-                getTopLevelFunction(
-                    callPath
-                );
+            const clone = t.cloneNode(p.node, true);
 
-            if (
-                owner &&
-                isLikelyComponent(
-                    owner
-                )
-            ) {
-                components.set(
-                    owner.node,
-                    owner
-                );
+            clone.body = t.blockStatement([
+                t.returnStatement(clone.body),
+            ]);
 
-                return;
-            }
+            clone.expression = false;
 
-            unresolved.push({
-                type:
-                    "translation-call",
-                line:
-                    callPath.node
-                        .loc?.start
-                        .line ??
-                    null,
-                reason:
-                    "i18nT() остался вне React-компонента",
+            expressionEdits.push({
+                start: p.node.start,
+                end: p.node.end,
+                text: generate(clone, {
+                    comments: true,
+                    jsescOption: { minimal: true },
+                }).code,
+                reason: 'arrow component',
             });
+        },
+    });
+
+    if (expressionEdits.length) {
+        source = applyEdits(source, expressionEdits);
+        ast = parseSource(source);
+
+        traverse(ast, {
+            Program(p) {
+                program = p;
+                p.stop();
+            },
+        });
+
+        stats.arrows = expressionEdits.length;
+    }
+
+    program.scope.crawl();
+
+    const edits = [];
+    const factories = new Set();
+    const skippedGlobals = new Set();
+
+    // MARK: Reactive global arrays
+
+    for (const statement of program.get('body')) {
+        const exported =
+            statement.isExportNamedDeclaration() ||
+            statement.isExportDefaultDeclaration();
+
+        const decl = statement.isVariableDeclaration()
+            ? statement
+            : exported &&
+                statement.get('declaration')?.isVariableDeclaration()
+                ? statement.get('declaration')
+                : null;
+
+        if (!decl) continue;
+
+        for (const item of decl.get('declarations')) {
+            const { id, init } = item.node;
+
+            if (
+                !t.isIdentifier(id) ||
+                !init ||
+                !containsCall(init, translateAliases)
+            ) {
+                continue;
+            }
+
+            const name = id.name;
+
+            // Не преобразуем повторно
+            const alreadyFactory =
+                t.isArrowFunctionExpression(init) &&
+                (
+                    t.isArrayExpression(init.body) ||
+                    t.isObjectExpression(init.body)
+                );
+
+            if (
+                alreadyFactory &&
+                !exported &&
+                decl.node.kind === 'const'
+            ) {
+                factories.add(name);
+                continue;
+            }
+
+            const isLiteral =
+                t.isArrayExpression(init) ||
+                t.isObjectExpression(init);
+
+            if (
+                !isLiteral ||
+                exported ||
+                decl.node.kind !== 'const'
+            ) {
+                skippedGlobals.add(name);
+                warnings.push(
+                    `Глобальная ${name}: требуется ручная проверка`
+                );
+                continue;
+            }
+
+            const binding =
+                program.scope.getBinding(name);
+
+            if (!binding) {
+                warnings.push(`Не найден binding ${name}`);
+                continue;
+            }
+
+            const safeReferences =
+                binding.referencePaths.every(ref => {
+                    if (
+                        ref.parentPath.isObjectProperty() &&
+                        ref.parentPath.node.shorthand
+                    ) {
+                        return false;
+                    }
+
+                    if (
+                        ref.parentPath.isNewExpression() &&
+                        ref.key === 'callee'
+                    ) {
+                        return false;
+                    }
+
+                    // Другой глобальный const оставляем без изменений
+                    if (!enclosingFunction(ref)) {
+                        return false;
+                    }
+
+                    return true;
+                });
+
+            if (!safeReferences) {
+                skippedGlobals.add(name);
+                warnings.push(
+                    `Глобальная ${name}: небезопасные ссылки, пропущена`
+                );
+                continue;
+            }
+
+            factories.add(name);
+
+            // const OPTIONS = [...]
+            // -> const OPTIONS = () => ([...])
+            edits.push({
+                start: init.start,
+                end: init.end,
+                text: `() => (${source.slice(init.start, init.end)})`,
+                reason: `factory ${name}`,
+            });
+
+            // OPTIONS.map(...)
+            // -> OPTIONS().map(...)
+            for (const ref of binding.referencePaths) {
+                edits.push({
+                    start: ref.node.end,
+                    end: ref.node.end,
+                    text: '()',
+                    reason: `call ${name}`,
+                });
+            }
+
+            stats.factories++;
+        }
+    }
+
+    // MARK: Find React components
+
+    const reactiveComponents = [];
+
+    traverse(ast, {
+        Function(p) {
+            if (!isComponent(p)) return;
+            if (!t.isBlockStatement(p.node.body)) return;
+
+            if (
+                !containsCall(p.node.body, translateAliases) &&
+                !hasAnyNameReference(p.node.body, factories)
+            ) {
+                return;
+            }
+
+            reactiveComponents.push(p);
         },
     });
 
     if (
-        components.size === 0 &&
-        movedCount === 0
+        !reactiveComponents.length &&
+        !edits.length
     ) {
-        return {
-            changed: false,
-            hooks: 0,
-            moved: 0,
-            unresolved,
-        };
+        return { changed: false, stats, warnings };
     }
 
     // MARK: Add useI18n import
 
-    const hookLocal =
-        ensureUseI18nImport(
-            programPath,
-            importPath
+    if (!hookName && reactiveComponents.length) {
+        hookName = uniqueName(
+            program.scope,
+            '__useI18nReactive'
         );
 
-    let hooksAdded = 0;
+        const imported =
+            `\nimport { useI18n as ${hookName} } from ${JSON.stringify(importSource)};`;
 
-    // MARK: Add subscription to components
+        const lastImport = program
+            .get('body')
+            .filter(p => p.isImportDeclaration())
+            .at(-1);
 
-    for (
-        const functionPath
-        of components.values()
-    ) {
-        if (
-            addHookToComponent(
-                functionPath,
-                hookLocal
-            )
-        ) {
-            hooksAdded++;
-        }
+        const at = lastImport
+            ? lastImport.node.end
+            : 0;
+
+        edits.push({
+            start: at,
+            end: at,
+            text: imported + (lastImport ? '' : '\n'),
+            reason: 'import hook',
+        });
     }
 
-    // На случай компонента, куда
-    // были перенесены массивы,
-    // но после каких-либо преобразований
-    // прямой вызов не был найден.
+    // MARK: Process React components
 
-    for (
-        const plan
-        of moves.values()
-    ) {
-        if (
-            !components.has(
-                plan.functionPath
-                    .node
+    for (const component of reactiveComponents) {
+        const body = component.node.body;
+        let alreadyHooked = false;
+
+        const memos = [];
+
+        component.traverse({
+            Function(p) {
+                if (
+                    p.node !== component.node &&
+                    isComponent(p)
+                ) {
+                    p.skip();
+                }
+            },
+
+            CallExpression(p) {
+                if (
+                    t.isIdentifier(p.node.callee, {
+                        name: hookName,
+                    })
+                ) {
+                    alreadyHooked = true;
+                }
+
+                const callee = p.node.callee;
+
+                const method = t.isIdentifier(callee)
+                    ? callee.name
+                    : t.isMemberExpression(callee) &&
+                        t.isIdentifier(callee.property)
+                        ? callee.property.name
+                        : null;
+
+                if (
+                    !['useMemo', 'useCallback'].includes(method)
+                ) {
+                    return;
+                }
+
+                if (p.node.arguments.length < 2) {
+                    return;
+                }
+
+                const deps = p.node.arguments[1];
+
+                if (!t.isArrayExpression(deps)) {
+                    warnings.push(
+                        `Строка ${p.node.loc?.start.line}: сложные зависимости ${method}`
+                    );
+                    return;
+                }
+
+                memos.push(deps);
+            },
+        });
+
+        // MARK: Existing locale dependency
+
+        const existingToken = body.body
+            .flatMap(statement =>
+                t.isVariableDeclaration(statement)
+                    ? statement.declarations
+                    : []
             )
-        ) {
-            if (
-                addHookToComponent(
-                    plan.functionPath,
-                    hookLocal
+            .find(decl =>
+                t.isIdentifier(decl.id) &&
+                /^__i18nLocaleToken\d*$/.test(decl.id.name) &&
+                t.isCallExpression(decl.init) &&
+                t.isIdentifier(decl.init.callee) &&
+                translateAliases.has(decl.init.callee.name) &&
+                t.isStringLiteral(decl.init.arguments[0], {
+                    value: LANGUAGE_KEY,
+                })
+            );
+
+        const tokenName = memos.length
+            ? existingToken?.id.name ??
+                uniqueName(
+                    component.scope,
+                    '__i18nLocaleToken'
                 )
-            ) {
-                hooksAdded++;
+            : null;
+
+        const hookStatements = [];
+
+        if (!alreadyHooked) {
+            hookStatements.push(`${hookName}();`);
+            stats.hooks++;
+        }
+
+        if (tokenName && !existingToken) {
+            hookStatements.push(
+                `const ${tokenName} = ${[...translateAliases][0]}(${JSON.stringify(LANGUAGE_KEY)});`
+            );
+        }
+
+        if (hookStatements.length) {
+            const indent = lineIndent(
+                source,
+                body.start
+            );
+
+            const suffix =
+                source[body.start + 1] === '\n'
+                    ? ''
+                    : '\n' + indent;
+
+            const text =
+                '\n' +
+                indent +
+                hookStatements.join('\n' + indent) +
+                suffix;
+
+            edits.push({
+                start: body.start + 1,
+                end: body.start + 1,
+                text,
+                reason: 'reactive hook',
+            });
+        }
+
+        // MARK: Fix useMemo/useCallback dependencies
+
+        if (tokenName) {
+            for (const deps of memos) {
+                const beforeClose = source.slice(
+                    deps.start,
+                    deps.end - 1
+                );
+
+                if (beforeClose.includes(tokenName)) {
+                    continue;
+                }
+
+                const hasElements =
+                    deps.elements.some(Boolean);
+
+                const tail = beforeClose.trimEnd();
+
+                const needsComma =
+                    hasElements && !tail.endsWith(',');
+
+                const inner = source.slice(
+                    deps.start + 1,
+                    deps.end - 1
+                );
+
+                const hasLineComment =
+                    /\/\/[^\n]*$/.test(inner);
+
+                const addition = hasLineComment
+                    ? `\n${lineIndent(source, deps.start)}${needsComma ? ',' : ''}${tokenName}`
+                    : `${needsComma ? ',' : ''} ${tokenName}`;
+
+                edits.push({
+                    start: deps.end - 1,
+                    end: deps.end - 1,
+                    text: addition,
+                    reason: 'memo dependencies',
+                });
+
+                stats.memoDeps++;
             }
         }
     }
 
-    const output =
-        generate(
-            ast,
-            {
-                comments: true,
-                retainLines: false,
+    if (skippedGlobals.size) {
+        warnings.push(
+            `Неподвижные глобальные переводы: ${[...skippedGlobals].join(', ')}`
+        );
+    }
 
-                jsescOption: {
-                    minimal: true,
-                },
-            },
-            source
-        ).code + "\n";
+    // MARK: Validate and save
 
-    if (
-        output === source
-    ) {
+    let result;
+
+    try {
+        result = applyEdits(source, edits);
+
+        // Проверяем корректность преобразованного JSX
+        parseSource(result);
+    } catch (error) {
         return {
             changed: false,
-            hooks:
-                hooksAdded,
-            moved:
-                movedCount,
-            unresolved,
+            stats,
+            warnings: [
+                ...warnings,
+                `Конфликт изменений: ${error.message}`,
+            ],
+            error: true,
         };
     }
 
-    fs.writeFileSync(
-        filePath,
-        output,
-        "utf8"
-    );
+    const changed =
+        result !== fs.readFileSync(file, 'utf8');
 
-    return {
-        changed: true,
-        hooks:
-            hooksAdded,
-        moved:
-            movedCount,
-        unresolved,
-    };
+    if (WRITE && changed) {
+        fs.writeFileSync(file, result, 'utf8');
+    }
+
+    return { changed, stats, warnings };
 }
 
 // MARK: Main
 
-const files =
-    SEARCH_DIRS.flatMap(
-        getFiles
-    );
-
-console.log("");
-console.log(
-    `🔍 Найдено файлов: ${files.length}`
+const files = listFiles(SRC).filter(file =>
+    !ONLY ||
+    path.relative(ROOT, file)
+        .replaceAll('\\', '/')
+        .includes(ONLY)
 );
-console.log("");
 
-let changedFiles = 0;
-let hooksAdded = 0;
-let movedVariables = 0;
+let changed = 0;
+let problems = 0;
 
-const unresolvedAll = [];
+const totals = {
+    hooks: 0,
+    memoDeps: 0,
+    factories: 0,
+    arrows: 0,
+};
+
+console.log(
+    `🔎 Режим: ${WRITE ? 'ЗАПИСЬ' : 'ПРОСМОТР'}, файлов: ${files.length}`
+);
 
 for (const file of files) {
-    const result =
-        processFile(file);
+    const relative = path.relative(ROOT, file);
+    const result = processFile(file);
 
-    if (
-        result.changed
-    ) {
-        changedFiles++;
+    for (const key of Object.keys(totals)) {
+        totals[key] += result.stats[key];
+    }
+
+    if (result.changed) {
+        changed++;
 
         console.log(
-            `✅ ${path.relative(
-                ROOT,
-                file
-            )} | hooks: ${result.hooks} | moved: ${result.moved}`
+            `${WRITE ? '✅' : '🔎'} ${relative} | ` +
+            `хуки: ${result.stats.hooks}, ` +
+            `memo: ${result.stats.memoDeps}, ` +
+            `константы: ${result.stats.factories}`
         );
     }
 
-    hooksAdded +=
-        result.hooks;
+    for (const warning of result.warnings) {
+        console.warn(`⚠️ ${relative}: ${warning}`);
+    }
 
-    movedVariables +=
-        result.moved;
-
-    for (
-        const problem
-        of result.unresolved
-    ) {
-        unresolvedAll.push({
-            file:
-                path.relative(
-                    ROOT,
-                    file
-                ),
-            ...problem,
-        });
+    if (result.error) {
+        problems++;
     }
 }
 
-console.log("");
 console.log(
-    `✅ Изменено файлов: ${changedFiles}`
+    `\nИзменено файлов: ${changed}; ` +
+    `useI18n(): ${totals.hooks}; ` +
+    `зависимости: ${totals.memoDeps}; ` +
+    `реактивные константы: ${totals.factories}; ` +
+    `короткие компоненты: ${totals.arrows}.`
 );
 
 console.log(
-    `✅ Добавлено useI18n(): ${hooksAdded}`
+    'Неоднозначные случаи вне React-компонентов требуют ручной проверки.'
 );
 
-console.log(
-    `✅ Перенесено реактивных const: ${movedVariables}`
-);
-
-if (
-    unresolvedAll.length === 0
-) {
-    console.log("");
+if (!WRITE) {
     console.log(
-        "🎉 Нерешённых случаев нет."
-    );
-
-    console.log(
-        "RU ⇄ ҚАЗ теперь должен переключаться без перезагрузки."
-    );
-} else {
-    console.log("");
-    console.log(
-        `⚠️ Осталось нестандартных случаев: ${unresolvedAll.length}`
-    );
-
-    for (
-        const problem
-        of unresolvedAll
-    ) {
-        const extra =
-            problem.name
-                ? ` (${problem.name})`
-                : problem.line
-                    ? ` (строка ${problem.line})`
-                    : "";
-
-        console.log(
-            `   - ${problem.file}${extra}: ${problem.reason}`
-        );
-    }
-
-    console.log("");
-    console.log(
-        "Скинь мне только этот список — оставшиеся случаи добьём отдельно."
+        'Предпросмотр без записи. Для применения используй --write.'
     );
 }
 
-console.log("");
+if (problems) {
+    process.exitCode = 1;
+}

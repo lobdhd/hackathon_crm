@@ -33,10 +33,11 @@ import {
 
 import AssistantPromptInput from "../../../components/AssistantInput/AssistantPromptInput.jsx";
 import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
 // MARK: Suggestions
 
-const SUGGESTIONS = [
+const SUGGESTIONS = () => ([
     {
         text:
             i18nT("pages.assistant.assistant.assistant.dc77db9"),
@@ -78,7 +79,7 @@ const SUGGESTIONS = [
         icon:
             RiBarChartBoxLine,
     },
-];
+]);
 
 
 // MARK: Helpers
@@ -235,6 +236,7 @@ function formatMinutes(
 // MARK: Page
 
 export default function Assistant() {
+    __useI18nReactive();
     const navigate =
         useNavigate();
 
@@ -620,7 +622,7 @@ export default function Assistant() {
                     </p>
 
                     <div className="mt-4 space-y-2">
-                        {SUGGESTIONS.map(
+                        {SUGGESTIONS().map(
                             (
                                 item,
                             ) => {
@@ -683,6 +685,7 @@ export default function Assistant() {
 function Welcome({
     onSend,
 }) {
+    __useI18nReactive();
     return (
         <div className="flex h-full items-center justify-center">
             <div className="w-full max-w-[820px] text-center">
@@ -701,7 +704,7 @@ function Welcome({
                 </p>
 
                 <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {SUGGESTIONS.map(
+                    {SUGGESTIONS().map(
                         (
                             item,
                         ) => {
@@ -992,6 +995,7 @@ function OrdersResult({
     data,
     navigate,
 }) {
+    __useI18nReactive();
     const items =
         asArray(
             data,
@@ -1090,6 +1094,7 @@ function OrdersResult({
 function ShiftResult({
     data,
 }) {
+    __useI18nReactive();
     if (
         !data ||
         typeof data !==
@@ -1273,6 +1278,7 @@ function ForecastResult({
     data,
     navigate,
 }) {
+    __useI18nReactive();
     const items =
         asArray(
             data,
@@ -1361,6 +1367,7 @@ function ForecastResult({
 // MARK: Typing
 
 function Typing() {
+    __useI18nReactive();
     return (
         <div className="flex justify-start">
             <div className="flex items-start gap-3">

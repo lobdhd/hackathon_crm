@@ -113,6 +113,7 @@ function getBrigadeName(
 // MARK: Page
 
 export default function Settings() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const {
         user,
         refreshMe,
@@ -315,7 +316,7 @@ export default function Settings() {
             [
                 user,
                 roleLabel,
-            ],
+             __i18nLocaleToken],
         );
 
 
