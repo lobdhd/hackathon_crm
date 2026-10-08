@@ -14,6 +14,7 @@ import {
     RiArrowLeftLine,
     RiCalendarLine,
     RiCameraLine,
+    RiCheckLine,
     RiCloseLine,
     RiDownload2Line,
     RiEditLine,
@@ -21,6 +22,7 @@ import {
     RiHistoryLine,
     RiLoader4Line,
     RiMessage3Line,
+    RiMicFill,
     RiRefreshLine,
     RiSparkling2Line,
     RiTeamLine,
@@ -64,7 +66,13 @@ import {
     useRecommendExecutors,
 } from "../../../hooks/useRecommendations.js";
 
-import VoiceInputButton from "../../../components/VoiceInputButton/VoiceInputButton.jsx";
+import {
+    useWorkOrderOfflineQueueStatus,
+} from "../../../hooks/useWorkOrderOfflineQueue.js";
+
+import {
+    useVoiceInput,
+} from "../../../hooks/useVoiceInput.js";
 
 
 // MARK: Config
@@ -529,6 +537,16 @@ export default function OrderDetails() {
         setPageError,
     ] = useState("");
 
+    const [
+        pageNotice,
+        setPageNotice,
+    ] = useState("");
+
+    const offlineQueue =
+        useWorkOrderOfflineQueueStatus(
+            user?.id,
+        );
+
     const orderQuery =
         useWorkOrder(id);
 
@@ -604,17 +622,27 @@ export default function OrderDetails() {
         payload = {},
     ) {
         setPageError("");
+        setPageNotice("");
 
         try {
-            await actionMutation.mutateAsync({
-                id: order.id,
-                payload: {
-                    action,
-                    clientActionId:
-                        crypto.randomUUID(),
-                    ...payload,
-                },
-            });
+            const result =
+                await actionMutation.mutateAsync({
+                    id: order.id,
+                    payload: {
+                        action,
+                        clientActionId:
+                            crypto.randomUUID(),
+                        ...payload,
+                    },
+                });
+
+            if (
+                result?.queuedOffline
+            ) {
+                setPageNotice(
+                    "Нет связи с сервером. Действие сохранено в offline-очередь и будет отправлено после восстановления сети.",
+                );
+            }
 
             setModal(null);
         } catch (error) {
@@ -645,6 +673,8 @@ export default function OrderDetails() {
         orderQuery.isError
     ) {
         const status =
+            orderQuery.error
+                ?.status ??
             orderQuery.error
                 ?.response
                 ?.status;
@@ -759,6 +789,77 @@ export default function OrderDetails() {
                             size={19}
                         />
                         {pageError}
+                    </div>
+                )}
+
+                {pageNotice && (
+                    <div className="mb-5 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                        <RiTimeLine
+                            size={19}
+                            className="mt-0.5 shrink-0"
+                        />
+
+                        <span>
+                            {pageNotice}
+                        </span>
+                    </div>
+                )}
+
+                {(
+                    !offlineQueue.online ||
+                    offlineQueue.syncing ||
+                    offlineQueue.count > 0
+                ) && (
+                    <div className={`mb-5 flex items-start gap-3 rounded-xl border p-4 text-sm ${
+                        offlineQueue.online
+                            ? "border-blue-200 bg-blue-50 text-blue-800"
+                            : "border-amber-200 bg-amber-50 text-amber-800"
+                    }`}>
+                        {offlineQueue.syncing ? (
+                            <RiLoader4Line
+                                size={19}
+                                className="mt-0.5 shrink-0 animate-spin"
+                            />
+                        ) : (
+                            <RiRefreshLine
+                                size={19}
+                                className="mt-0.5 shrink-0"
+                            />
+                        )}
+
+                        <div>
+                            <p className="font-semibold">
+                                {offlineQueue.syncing
+                                    ? "Синхронизация offline-действий"
+                                    : !offlineQueue.online
+                                      ? "Нет сети"
+                                      : "Есть действия, ожидающие отправки"}
+                            </p>
+
+                            <p className="mt-1 text-xs opacity-80">
+                                {offlineQueue.count > 0
+                                    ? `В очереди: ${offlineQueue.count}`
+                                    : offlineQueue.lastMessage ||
+                                      "Проверяем очередь"}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {offlineQueue.lastMessage &&
+                    [
+                        "warning",
+                        "error",
+                    ].includes(
+                        offlineQueue.lastKind,
+                    ) && (
+                    <div className="mb-5 flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
+                        <RiAlarmWarningLine
+                            size={19}
+                            className="mt-0.5 shrink-0"
+                        />
+
+                        {offlineQueue.lastMessage}
                     </div>
                 )}
 
@@ -1141,6 +1242,11 @@ export default function OrderDetails() {
                                 mutation={
                                     commentMutation
                                 }
+                                onQueued={() =>
+                                    setPageNotice(
+                                        "Нет связи с сервером. Комментарий сохранён в offline-очередь и будет отправлен после восстановления сети.",
+                                    )
+                                }
                             />
                         </div>
 
@@ -1336,6 +1442,11 @@ export default function OrderDetails() {
                     mutation={
                         actionMutation
                     }
+                    onQueued={() =>
+                        setPageNotice(
+                            "Завершение сохранено в offline-очередь и будет отправлено после восстановления сети.",
+                        )
+                    }
                     onClose={() =>
                         setModal(null)
                     }
@@ -1354,6 +1465,11 @@ export default function OrderDetails() {
                     mutation={
                         actionMutation
                     }
+                    onQueued={() =>
+                        setPageNotice(
+                            "Действие сохранено в offline-очередь и будет отправлено после восстановления сети.",
+                        )
+                    }
                     onClose={() =>
                         setModal(null)
                     }
@@ -1370,6 +1486,7 @@ function CommentsSection({
     comments,
     orderId,
     mutation,
+    onQueued,
 }) {
     const [
         comment,
@@ -1396,12 +1513,19 @@ function CommentsSection({
         setError("");
 
         try {
-            await mutation.mutateAsync({
-                id: orderId,
-                comment: value,
-                clientActionId:
-                    crypto.randomUUID(),
-            });
+            const result =
+                await mutation.mutateAsync({
+                    id: orderId,
+                    comment: value,
+                    clientActionId:
+                        crypto.randomUUID(),
+                });
+
+            if (
+                result?.queuedOffline
+            ) {
+                onQueued?.();
+            }
 
             setComment("");
         } catch (requestError) {
@@ -2232,6 +2356,7 @@ function ActionModal({
     order,
     action,
     mutation,
+    onQueued,
     onClose,
 }) {
     const [
@@ -2308,10 +2433,17 @@ function ActionModal({
         }
 
         try {
-            await mutation.mutateAsync({
-                id: order.id,
-                payload,
-            });
+            const result =
+                await mutation.mutateAsync({
+                    id: order.id,
+                    payload,
+                });
+
+            if (
+                result?.queuedOffline
+            ) {
+                onQueued?.();
+            }
 
             onClose();
         } catch (requestError) {
@@ -2427,6 +2559,7 @@ function ActionModal({
 function CompleteModal({
     order,
     mutation,
+    onQueued,
     onClose,
 }) {
     const faultCodesQuery =
@@ -2551,6 +2684,19 @@ function CompleteModal({
             return;
         }
 
+        if (
+            files.length > 0 &&
+            typeof navigator !==
+                "undefined" &&
+            navigator.onLine ===
+                false
+        ) {
+            setError(
+                "Для завершения с фото сначала восстановите интернет. Файлы не сохраняются в offline-очередь.",
+            );
+            return;
+        }
+
         try {
             const afterPhotoUrls =
                 [];
@@ -2599,24 +2745,31 @@ function CompleteModal({
                         }),
                     );
 
-            await mutation.mutateAsync({
-                id: order.id,
-                payload: {
-                    action:
-                        "COMPLETE",
-                    completionText:
-                        completionText.trim(),
-                    faultCodeId:
-                        Number(
-                            faultCodeId,
-                        ),
-                    afterPhotoUrls,
-                    materials:
-                        materialPayload,
-                    clientActionId:
-                        crypto.randomUUID(),
-                },
-            });
+            const result =
+                await mutation.mutateAsync({
+                    id: order.id,
+                    payload: {
+                        action:
+                            "COMPLETE",
+                        completionText:
+                            completionText.trim(),
+                        faultCodeId:
+                            Number(
+                                faultCodeId,
+                            ),
+                        afterPhotoUrls,
+                        materials:
+                            materialPayload,
+                        clientActionId:
+                            crypto.randomUUID(),
+                    },
+                });
+
+            if (
+                result?.queuedOffline
+            ) {
+                onQueued?.();
+            }
 
             onClose();
         } catch (requestError) {
@@ -2666,31 +2819,39 @@ function CompleteModal({
                 )}
 
                 <Field label="Что выполнено и как проверено">
-                    <textarea
-                        value={
-                            completionText
-                        }
-                        onChange={(
-                            event,
-                        ) =>
-                            setCompletionText(
-                                event
-                                    .target
-                                    .value,
-                            )
-                        }
-                        rows={5}
-                        className="input min-h-[130px] resize-none py-3"
-                    />
+                    <div className="relative">
+                        <textarea
+                            value={
+                                completionText
+                            }
+                            onChange={(
+                                event,
+                            ) =>
+                                setCompletionText(
+                                    event
+                                        .target
+                                        .value,
+                                )
+                            }
+                            rows={5}
+                            minLength={3}
+                            required
+                            placeholder="Опишите, что было выполнено и как проверили результат..."
+                            className="input min-h-[138px] resize-none py-3 pb-14 pr-16"
+                        />
 
-                    <div className="mt-2">
-                        <VoiceInputButton
-                            onText={(text) =>
+                        <CompletionVoiceInput
+                            disabled={
+                                mutation.isPending
+                            }
+                            onText={(
+                                recognizedText,
+                            ) =>
                                 setCompletionText(
                                     (previous) =>
                                         [
                                             previous.trim(),
-                                            text,
+                                            recognizedText,
                                         ]
                                             .filter(
                                                 Boolean,
@@ -2703,11 +2864,12 @@ function CompleteModal({
                             onError={
                                 setError
                             }
-                            disabled={
-                                mutation.isPending
-                            }
                         />
                     </div>
+
+                    <p className="mt-2 text-[11px] text-gray-400">
+                        Можно заполнить отчёт вручную или надиктовать его через микрофон.
+                    </p>
                 </Field>
 
                 <Field label="Шифр неисправности">
@@ -2878,6 +3040,134 @@ function CompleteModal({
                 />
             </form>
         </Modal>
+    );
+}
+
+
+// MARK: Completion voice
+
+function CompletionVoiceInput({
+    onText,
+    onError,
+    disabled = false,
+}) {
+    const {
+        recording,
+        transcribing,
+        startRecording,
+        stopRecording,
+        cancelRecording,
+    } = useVoiceInput({
+        disabled,
+
+        onError,
+
+        onText: (
+            recognizedText,
+        ) => {
+            const text =
+                String(
+                    recognizedText ??
+                    "",
+                ).trim();
+
+            if (text) {
+                onText?.(
+                    text,
+                );
+            }
+        },
+    });
+
+    if (recording) {
+        return (
+            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full border border-red-200 bg-white p-1 shadow-sm">
+                <div className="flex items-center gap-1.5 px-2 text-[11px] font-semibold text-red-600">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+
+                    Запись
+                </div>
+
+                <button
+                    type="button"
+                    onClick={
+                        cancelRecording
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+                    title="Отменить запись"
+                >
+                    <RiCloseLine
+                        size={17}
+                    />
+                </button>
+
+                <button
+                    type="button"
+                    onClick={
+                        stopRecording
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700"
+                    title="Остановить и распознать"
+                >
+                    <RiCheckLine
+                        size={17}
+                    />
+                </button>
+            </div>
+        );
+    }
+
+    if (transcribing) {
+        return (
+            <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[11px] font-semibold text-blue-600 shadow-sm">
+                <RiLoader4Line
+                    size={15}
+                    className="animate-spin"
+                />
+
+                Распознаём…
+            </div>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={
+                startRecording
+            }
+            disabled={
+                disabled
+            }
+            className="
+                absolute
+                bottom-3
+                right-3
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-gray-200
+                bg-white
+                text-gray-500
+                shadow-sm
+                transition
+                hover:border-blue-200
+                hover:bg-blue-50
+                hover:text-blue-600
+                active:scale-95
+                disabled:cursor-not-allowed
+                disabled:opacity-40
+            "
+            title="Надиктовать отчёт о выполнении"
+        >
+            <RiMicFill
+                size={17}
+            />
+        </button>
     );
 }
 

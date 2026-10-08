@@ -1160,112 +1160,98 @@ export default function AppNavbar({
 }
 
 
-// MARK: Notification item
 
 function NotificationItem({
     notification,
     onClick,
 }) {
-    const meta =
-        getNotificationMeta(
-            notification.type,
-        );
-
-    const Icon =
-        meta.icon;
+    const meta = getNotificationMeta(notification.type);
+    const Icon = meta.icon;
+    const isUnread = !notification.isRead;
+    const hasOrder = Boolean(notification.workOrderId);
 
     return (
         <button
             type="button"
-            onClick={
-                onClick
-            }
+            onClick={onClick}
             className={`
-                relative
-                flex
-                w-full
-                items-start
-                gap-3
-                px-4
-                py-3.5
-                text-left
-                transition
-
+                group relative flex w-full items-start gap-3
+                px-4 py-4 text-left transition-colors duration-200
+                focus-visible:outline-none
+                focus-visible:ring-2 focus-visible:ring-inset
+                focus-visible:ring-blue-500
                 ${
-                    notification.isRead
-                        ? "bg-white hover:bg-gray-50"
-                        : "bg-blue-50/40 hover:bg-blue-50/70"
+                    isUnread
+                        ? "bg-blue-50/50 hover:bg-blue-50"
+                        : "bg-white hover:bg-slate-50"
                 }
             `}
         >
-            {!notification.isRead && (
-                <span className="absolute left-1.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-blue-600" />
-            )}
-
+            {/* MARK: Event icon */}
             <div
                 className={`
-                    flex
-                    h-9
-                    w-9
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-xl
-
+                    flex h-10 w-10 shrink-0 items-center
+                    justify-center rounded-xl
                     ${meta.iconClass}
                 `}
             >
-                <Icon
-                    size={
-                        17
-                    }
-                />
+                <Icon size={19} />
             </div>
 
+            {/* MARK: Content */}
             <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2">
                     <p
                         className={`
-                            line-clamp-1
-                            text-sm
-                            text-gray-900
-
+                            min-w-0 flex-1 text-[13px]
+                            leading-[19px] text-slate-900
                             ${
-                                notification.isRead
-                                    ? "font-medium"
-                                    : "font-bold"
+                                isUnread
+                                    ? "font-bold"
+                                    : "font-semibold"
                             }
                         `}
                     >
-                        {notification.title ||
-                            "Уведомление"}
+                        {notification.title || "Уведомление"}
                     </p>
 
-                    <span className="shrink-0 text-[10px] text-gray-400">
-                        {formatNotificationTime(
-                            notification.createdAt,
-                        )}
-                    </span>
-                </div>
-
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-gray-500">
-                    {notification.message ||
-                        ""}
-                </p>
-
-                <div className="mt-2 flex items-center gap-2">
-                    <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-500">
-                        {
-                            notification.type
-                        }
-                    </span>
-
-                    {notification.workOrderId && (
-                        <span className="text-[10px] font-semibold text-blue-600">
-                            Открыть наряд →
+                    {/* MARK: Time and unread indicator */}
+                    <div className="flex shrink-0 items-center gap-2 pt-0.5">
+                        <span className="whitespace-nowrap text-[10px] font-medium text-slate-400">
+                            {formatNotificationTime(
+                                notification.createdAt
+                            )}
                         </span>
-                    )}
+
+                        {isUnread && (
+                            <span
+                                className="h-[7px] w-[7px] shrink-0 rounded-full bg-blue-600 ring-[3px] ring-blue-100"
+                                title="Не прочитано"
+                                aria-label="Не прочитано"
+                            />
+                        )}
+                    </div>
                 </div>
+
+                {/* MARK: Message */}
+                {notification.message && (
+                    <p className="mt-1.5 line-clamp-2 text-[12px] leading-[19px] text-slate-500">
+                        {notification.message}
+                    </p>
+                )}
+
+                {/* MARK: Order action */}
+                {hasOrder && (
+                    <div className="mt-2.5 flex items-center">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 transition-colors group-hover:text-blue-700">
+                            <RiFileList3Line size={13} />
+                            Открыть наряд
+                            <span className="transition-transform duration-200 group-hover:translate-x-0.5">
+                                →
+                            </span>
+                        </span>
+                    </div>
+                )}
             </div>
         </button>
     );

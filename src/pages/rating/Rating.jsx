@@ -2,11 +2,9 @@ import {
     useMemo,
     useState,
 } from "react";
-
 import {
     useNavigate,
 } from "react-router-dom";
-
 import {
     RiBarChartBoxLine,
     RiCheckboxCircleLine,
@@ -14,6 +12,7 @@ import {
     RiFilter3Line,
     RiLoader4Line,
     RiMedalLine,
+    RiRefreshLine,
     RiSearchLine,
     RiShieldCheckLine,
     RiSparkling2Line,
@@ -21,24 +20,20 @@ import {
     RiTeamLine,
     RiTrophyLine,
 } from "react-icons/ri";
-
+import Chart from "react-apexcharts";
 import SmartTable from "../../react-components/SmartTable/SmartTable.jsx";
 import GlideSelect from "../../react-components/GlideSelect/GlideSelect.jsx";
-
 import {
     useAuth,
 } from "../../auth/AuthProvider.jsx";
-
 import {
     useBrigadeRatings,
     useMyRating,
     useRatings,
 } from "../../hooks/useReports.js";
-
 import {
     useAreas,
 } from "../../hooks/useReferences.js";
-
 
 // MARK: Config
 
@@ -57,7 +52,6 @@ const PERIODS = [
     },
 ];
 
-
 // MARK: Helpers
 
 function asArray(value) {
@@ -74,32 +68,27 @@ function asObject(value) {
     ) {
         return value;
     }
-
     if (
         Array.isArray(value) &&
         value.length > 0
     ) {
         return value[0];
     }
-
     return null;
 }
 
 function percent(value) {
     const number =
         Number(value);
-
     if (
         !Number.isFinite(number)
     ) {
         return "—";
     }
-
     const normalized =
         number <= 1
             ? number * 100
             : number;
-
     return `${Math.round(normalized)}%`;
 }
 
@@ -109,26 +98,22 @@ function numberValue(
 ) {
     const number =
         Number(value);
-
     if (
         !Number.isFinite(number)
     ) {
         return "—";
     }
-
     return number.toFixed(digits);
 }
 
 function scoreValue(value) {
     const number =
         Number(value);
-
     if (
         !Number.isFinite(number)
     ) {
         return "—";
     }
-
     return Math.round(number * 10) / 10;
 }
 
@@ -140,30 +125,24 @@ function getErrorMessage(error) {
     );
 }
 
-
 // MARK: Page
 
 export default function Rating() {
     const navigate =
         useNavigate();
-
     const auth =
         useAuth();
-
     const role =
         auth?.role ??
         auth?.user?.role;
-
     const isExecutor =
         role === "EXECUTOR";
-
     const [
         mode,
         setMode,
     ] = useState(
         "executors",
     );
-
     const [
         filters,
         setFilters,
@@ -173,7 +152,6 @@ export default function Rating() {
         specialty: "",
         period: "month",
     });
-
     function updateFilter(
         field,
         value,
@@ -185,13 +163,11 @@ export default function Rating() {
             }),
         );
     }
-
     const reportParams =
         useMemo(
             () => ({
                 period:
                     filters.period,
-
                 ...(filters.areaId
                     ? {
                         areaId:
@@ -206,7 +182,6 @@ export default function Rating() {
                 filters.areaId,
             ],
         );
-
     const ratingsQuery =
         useRatings(
             reportParams,
@@ -215,7 +190,6 @@ export default function Rating() {
                     !isExecutor,
             },
         );
-
     const brigadesQuery =
         useBrigadeRatings(
             reportParams,
@@ -224,7 +198,6 @@ export default function Rating() {
                     !isExecutor,
             },
         );
-
     const myRatingQuery =
         useMyRating(
             {
@@ -236,10 +209,8 @@ export default function Rating() {
                     isExecutor,
             },
         );
-
     const areasQuery =
         useAreas();
-
     if (isExecutor) {
         return (
             <MyRatingView
@@ -260,22 +231,18 @@ export default function Rating() {
             />
         );
     }
-
     const employees =
         asArray(
             ratingsQuery.data,
         );
-
     const brigades =
         asArray(
             brigadesQuery.data,
         );
-
     const areas =
         asArray(
             areasQuery.data,
         );
-
     function resetFilters() {
         setFilters(
             (previous) => ({
@@ -286,7 +253,6 @@ export default function Rating() {
             }),
         );
     }
-
     const specialties =
         useMemo(
             () => [
@@ -301,7 +267,6 @@ export default function Rating() {
             ].sort(),
             [employees],
         );
-
     const areaOptions =
         useMemo(
             () => [
@@ -322,7 +287,6 @@ export default function Rating() {
             ],
             [areas],
         );
-
     const specialtyOptions =
         useMemo(
             () => [
@@ -342,14 +306,12 @@ export default function Rating() {
             ],
             [specialties],
         );
-
     const filteredEmployees =
         useMemo(() => {
             const search =
                 filters.search
                     .trim()
                     .toLowerCase();
-
             return employees
                 .filter(
                     (employee) => {
@@ -371,12 +333,10 @@ export default function Rating() {
                                 .includes(
                                     search,
                                 );
-
                         const matchSpecialty =
                             !filters.specialty ||
                             employee.specialty ===
                                 filters.specialty;
-
                         return (
                             matchSearch &&
                             matchSpecialty
@@ -397,14 +357,12 @@ export default function Rating() {
             filters.search,
             filters.specialty,
         ]);
-
     const filteredBrigades =
         useMemo(() => {
             const search =
                 filters.search
                     .trim()
                     .toLowerCase();
-
             return brigades
                 .filter(
                     (brigade) =>
@@ -431,7 +389,6 @@ export default function Rating() {
             brigades,
             filters.search,
         ]);
-
     const scoredEmployees =
         filteredEmployees.filter(
             (employee) =>
@@ -441,17 +398,14 @@ export default function Rating() {
                     ),
                 ),
         );
-
     const topEmployees =
         scoredEmployees.slice(
             0,
             3,
         );
-
     const bestEmployee =
         scoredEmployees[0] ??
         null;
-
     const averageRating =
         scoredEmployees.length
             ? scoredEmployees.reduce(
@@ -464,7 +418,6 @@ export default function Rating() {
             ) /
             scoredEmployees.length
             : 0;
-
     const averageOnTime =
         scoredEmployees.length
             ? scoredEmployees.reduce(
@@ -473,7 +426,6 @@ export default function Rating() {
                         Number(
                             employee.onTimeRate,
                         ) || 0;
-
                     return (
                         total +
                         (value <= 1
@@ -485,7 +437,6 @@ export default function Rating() {
             ) /
             scoredEmployees.length
             : 0;
-
     const totalClosed =
         employees.reduce(
             (total, employee) =>
@@ -496,13 +447,11 @@ export default function Rating() {
                 ),
             0,
         );
-
     const activeFiltersCount =
         [
             filters.areaId,
             filters.specialty,
         ].filter(Boolean).length;
-
     const employeeColumns = [
         {
             key: "place",
@@ -529,7 +478,6 @@ export default function Rating() {
                     <p className="font-semibold text-gray-900">
                         {employee.fullName}
                     </p>
-
                     <p className="mt-1 text-xs text-gray-400">
                         {employee.specialty ||
                             "Специальность не указана"}
@@ -618,7 +566,6 @@ export default function Rating() {
             minWidth: 100,
         },
     ];
-
     const brigadeColumns = [
         {
             field: "name",
@@ -631,12 +578,10 @@ export default function Rating() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                         <RiTeamLine />
                     </div>
-
                     <div>
                         <p className="font-semibold text-gray-900">
                             {brigade.name}
                         </p>
-
                         <p className="mt-1 text-xs text-gray-400">
                             Участников:{" "}
                             {Array.isArray(
@@ -703,7 +648,6 @@ export default function Rating() {
             minWidth: 110,
         },
     ];
-
     if (
         ratingsQuery.isLoading &&
         !ratingsQuery.data
@@ -712,7 +656,6 @@ export default function Rating() {
             <LoadingPage />
         );
     }
-
     return (
         <div className="mx-auto max-w-[1800px]">
             <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -720,14 +663,12 @@ export default function Rating() {
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                         Рейтинг
                     </h1>
-
                     <p className="mt-1 text-sm text-gray-500">
                         Оценка качества,
                         сроков и эффективности
                         исполнителей
                     </p>
                 </div>
-
                 <PeriodSwitch
                     value={
                         filters.period
@@ -742,7 +683,6 @@ export default function Rating() {
                     }
                 />
             </div>
-
             {ratingsQuery.isError && (
                 <ErrorBox
                     text={
@@ -752,7 +692,6 @@ export default function Rating() {
                     }
                 />
             )}
-
             <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <StatCard
                     label="Лучший рейтинг"
@@ -769,7 +708,6 @@ export default function Rating() {
                     }
                     tone="gold"
                 />
-
                 <StatCard
                     label="Средний рейтинг"
                     value={
@@ -785,7 +723,6 @@ export default function Rating() {
                     }
                     tone="blue"
                 />
-
                 <StatCard
                     label="Выполнено в срок"
                     value={`${Math.round(
@@ -797,7 +734,6 @@ export default function Rating() {
                     }
                     tone="green"
                 />
-
                 <StatCard
                     label="Закрыто нарядов"
                     value={
@@ -810,7 +746,6 @@ export default function Rating() {
                     tone="violet"
                 />
             </div>
-
             {topEmployees.length >
                 0 && (
                 <section className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -819,19 +754,16 @@ export default function Rating() {
                             <h2 className="text-base font-semibold text-gray-900">
                                 Лидеры
                             </h2>
-
                             <p className="mt-1 text-xs text-gray-500">
                                 Лучшие исполнители
                                 за выбранный период
                             </p>
                         </div>
-
                         <div className="hidden items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 sm:flex">
                             <RiMedalLine />
                             TOP 3
                         </div>
                     </div>
-
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         {topEmployees.map(
                             (
@@ -859,7 +791,6 @@ export default function Rating() {
                     </div>
                 </section>
             )}
-
             <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
                     <div className="relative flex-1">
@@ -867,7 +798,6 @@ export default function Rating() {
                             size={18}
                             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                         />
-
                         <input
                             value={
                                 filters.search
@@ -889,7 +819,6 @@ export default function Rating() {
                             className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:bg-white"
                         />
                     </div>
-
                     <GlideSelect
                         options={
                             areaOptions
@@ -908,7 +837,6 @@ export default function Rating() {
                         className="glide-select--filter"
                         menuWidth={240}
                     />
-
                     {mode ===
                         "executors" && (
                         <GlideSelect
@@ -931,19 +859,16 @@ export default function Rating() {
                         />
                     )}
                 </div>
-
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                         <RiFilter3Line />
                         В рейтинге
-
                         <span className="font-semibold text-gray-900">
                             {mode ===
                             "executors"
                                 ? filteredEmployees.length
                                 : filteredBrigades.length}
                         </span>
-
                         {activeFiltersCount >
                             0 && (
                             <button
@@ -958,7 +883,6 @@ export default function Rating() {
                             </button>
                         )}
                     </div>
-
                     <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
                         <button
                             type="button"
@@ -976,7 +900,6 @@ export default function Rating() {
                         >
                             Исполнители
                         </button>
-
                         <button
                             type="button"
                             onClick={() =>
@@ -996,7 +919,6 @@ export default function Rating() {
                     </div>
                 </div>
             </div>
-
             {mode ===
             "executors" ? (
                 <SmartTable
@@ -1045,7 +967,6 @@ export default function Rating() {
                     emptyDescription="За выбранный период нет данных"
                 />
             )}
-
             {bestEmployee && (
                 <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
                     <FormulaSection
@@ -1053,7 +974,6 @@ export default function Rating() {
                             bestEmployee
                         }
                     />
-
                     <ExplanationSection
                         rating={
                             bestEmployee
@@ -1068,209 +988,104 @@ export default function Rating() {
     );
 }
 
-
 // MARK: My rating
 
-function MyRatingView({
-    period,
-    onPeriodChange,
-    query,
-}) {
-    const rating =
-        asObject(
-            query.data,
-        );
-
-    if (
-        query.isLoading &&
-        !query.data
-    ) {
-        return (
-            <LoadingPage />
-        );
-    }
-
+function MyRatingView({ period, onPeriodChange, query }) {
+    const rating = asObject(query.data);
+    const score = Number(rating?.score);
+    const validScore = rating?.score != null && Number.isFinite(score);
+    const boundedScore = validScore ? Math.max(0, Math.min(100, score)) : 0;
+    // MARK: ApexCharts — только визуализация готового балла с backend
+    const chartOptions = useMemo(() => ({
+        chart: {
+            type: "radialBar",
+            sparkline: { enabled: true },
+            animations: { enabled: true, speed: 450 },
+        },
+        colors: ["#2563eb"],
+        stroke: { lineCap: "round" },
+        plotOptions: {
+            radialBar: {
+                startAngle: -125,
+                endAngle: 125,
+                hollow: { size: "72%" },
+                track: { background: "#eef2f7", strokeWidth: "100%" },
+                dataLabels: {
+                    name: { show: false },
+                    value: {
+                        show: true,
+                        offsetY: 10,
+                        fontSize: "36px",
+                        fontWeight: 750,
+                        color: "#0f172a",
+                        formatter: () => validScore ? String(scoreValue(score)) : "—",
+                    },
+                },
+            },
+        },
+        tooltip: { enabled: false },
+    }), [score, validScore]);
+    if (query.isLoading && !query.data) return <LoadingPage />;
+    const metrics = rating ? [
+        { label: "Качество", value: numberValue(rating.quality), icon: RiStarFill, tone: "blue" },
+        { label: "В срок", value: percent(rating.onTimeRate), icon: RiCheckboxCircleLine, tone: "green" },
+        { label: "Доработки", value: percent(rating.reworkRate), icon: RiRefreshLine, tone: "amber" },
+        { label: "Повторные отказы", value: percent(rating.repeatFailureRate), icon: RiBarChartBoxLine, tone: "rose" },
+        { label: "Возвраты", value: percent(rating.returnRate), icon: RiCloseLine, tone: "amber" },
+        { label: "Производительность", value: numberValue(rating.productivity), icon: RiBarChartBoxLine, tone: "blue" },
+        { label: "Необосн. отказы", value: rating.unjustifiedRejects ?? "—", icon: RiShieldCheckLine, tone: "rose" },
+        { label: "Закрыто нарядов", value: rating.closed ?? 0, icon: RiCheckboxCircleLine, tone: "green" },
+    ] : [];
     return (
-        <div className="mx-auto max-w-[1500px]">
-            <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div className="mx-auto max-w-[1500px] pb-8">
+            {/* MARK: Header */}
+            <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
-                    <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                        <RiTrophyLine />
-                        Мой рейтинг
+                    <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                        <RiTrophyLine size={13} /> Мой рейтинг
                     </div>
-
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                        Мои результаты
-                    </h1>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                        Персональная оценка качества,
-                        сроков и эффективности
-                    </p>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Мои результаты</h1>
+                    <p className="mt-1 text-sm text-slate-500">Персональная оценка качества, сроков и эффективности</p>
                 </div>
-
-                <PeriodSwitch
-                    value={
-                        period
-                    }
-                    onChange={
-                        onPeriodChange
-                    }
-                />
+                <PeriodSwitch value={period} onChange={onPeriodChange} />
             </div>
-
-            {query.isError && (
-                <ErrorBox
-                    text={
-                        getErrorMessage(
-                            query.error,
-                        )
-                    }
-                />
-            )}
-
-            {!query.isError &&
-            !rating ? (
-                <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
-                    <RiTrophyLine
-                        size={36}
-                        className="mx-auto text-gray-300"
-                    />
-
-                    <h2 className="mt-4 text-base font-semibold text-gray-900">
-                        Пока нет данных
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                        За выбранный период рейтинг
-                        ещё не рассчитан.
-                    </p>
+            {query.isError && <ErrorBox text={getErrorMessage(query.error)} />}
+            {!query.isError && !rating && (
+                <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+                    <RiTrophyLine size={32} className="mx-auto text-slate-300" />
+                    <h2 className="mt-3 text-sm font-semibold text-slate-900">Пока нет данных</h2>
+                    <p className="mt-1 text-sm text-slate-500">За выбранный период рейтинг ещё не рассчитан.</p>
                 </div>
-            ) : null}
-
+            )}
             {rating && (
                 <>
-                    <section className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                        <div className="grid gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
-                            <div className="flex flex-col justify-between bg-gray-950 p-6 text-white">
-                                <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
-                                        Итоговый балл
-                                    </p>
-
-                                    <div className="mt-4 flex items-end gap-2">
-                                        <span className="text-6xl font-bold tracking-tight">
-                                            {scoreValue(
-                                                rating.score,
-                                            )}
-                                        </span>
-
-                                        <span className="pb-2 text-sm text-gray-400">
-                                            /100
-                                        </span>
-                                    </div>
+                    {/* MARK: Compact score + metrics */}
+                    <section className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="grid lg:grid-cols-[285px_minmax(0,1fr)]">
+                            <div className="flex flex-col items-center justify-center border-b border-slate-100 px-5 py-5 lg:border-b-0 lg:border-r">
+                                <div className="w-full text-left">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Итоговый балл</p>
                                 </div>
-
-                                <div className="mt-8">
-                                    <p className="text-sm font-semibold text-white">
-                                        {rating.fullName ||
-                                            "Ваш результат"}
-                                    </p>
-
-                                    <p className="mt-1 text-xs text-gray-400">
-                                        {rating.specialty ||
-                                            "Исполнитель"}
-                                    </p>
+                                <div className="relative mt-1 h-[190px] w-[230px] max-w-full">
+                                    <Chart type="radialBar" height={190} width="100%" series={[boundedScore]} options={chartOptions} />
+                                    <span className="pointer-events-none absolute bottom-[27px] left-1/2 -translate-x-1/2 text-[11px] font-medium text-slate-400">из 100</span>
+                                </div>
+                                <div className="w-full border-t border-slate-100 pt-3">
+                                    <p className="truncate text-sm font-semibold text-slate-900">{rating.fullName || "Ваш результат"}</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">{rating.specialty || "Исполнитель"}</p>
                                 </div>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-px bg-gray-100 md:grid-cols-4">
-                                <MyMetric
-                                    label="Качество"
-                                    value={
-                                        numberValue(
-                                            rating.quality,
-                                        )
-                                    }
-                                />
-
-                                <MyMetric
-                                    label="В срок"
-                                    value={
-                                        percent(
-                                            rating.onTimeRate,
-                                        )
-                                    }
-                                />
-
-                                <MyMetric
-                                    label="Доработки"
-                                    value={
-                                        percent(
-                                            rating.reworkRate,
-                                        )
-                                    }
-                                />
-
-                                <MyMetric
-                                    label="Повторные отказы"
-                                    value={
-                                        percent(
-                                            rating.repeatFailureRate,
-                                        )
-                                    }
-                                />
-
-                                <MyMetric
-                                    label="Возвраты"
-                                    value={
-                                        percent(
-                                            rating.returnRate,
-                                        )
-                                    }
-                                />
-
-                                <MyMetric
-                                    label="Производительность"
-                                    value={
-                                        numberValue(
-                                            rating.productivity,
-                                        )
-                                    }
-                                />
-
-                                <MyMetric
-                                    label="Необосн. отказы"
-                                    value={
-                                        rating.unjustifiedRejects ??
-                                        "—"
-                                    }
-                                />
-
-                                <MyMetric
-                                    label="Закрыто нарядов"
-                                    value={
-                                        rating.closed ??
-                                        0
-                                    }
-                                />
+                            <div className="grid grid-cols-2 sm:grid-cols-4">
+                                {metrics.map((metric, index) => (
+                                    <MyMetric key={metric.label} {...metric} index={index} />
+                                ))}
                             </div>
                         </div>
                     </section>
-
-                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-                        <FormulaSection
-                            rating={
-                                rating
-                            }
-                        />
-
-                        <ExplanationSection
-                            rating={
-                                rating
-                            }
-                            subtitle="Что влияет на ваш результат"
-                        />
+                    {/* MARK: Formula and explanation — original backend data */}
+                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+                        <FormulaSection rating={rating} />
+                        <ExplanationSection rating={rating} subtitle="Что влияет на ваш результат" compactResult />
                     </div>
                 </>
             )}
@@ -1278,25 +1093,27 @@ function MyRatingView({
     );
 }
 
-function MyMetric({
-    label,
-    value,
-}) {
+function MyMetric({ label, value, icon: Icon, tone = "blue", index }) {
+    const tones = {
+        blue: "bg-blue-50 text-blue-600",
+        green: "bg-emerald-50 text-emerald-600",
+        amber: "bg-amber-50 text-amber-600",
+        rose: "bg-rose-50 text-rose-600",
+    };
     return (
-        <div className="bg-white p-5">
-            <p className="text-xs font-medium text-gray-500">
-                {label}
-            </p>
-
-            <p className="mt-2 text-2xl font-bold text-gray-900">
-                {value}
-            </p>
+        <div className={`min-w-0 px-4 py-4 sm:px-5 sm:py-5 ${index >= 4 ? "border-t border-slate-100" : ""} ${index % 4 !== 0 ? "sm:border-l sm:border-slate-100" : ""} ${index % 2 !== 0 ? "border-l border-slate-100 sm:border-l" : ""}`}>
+            <div className="flex items-center gap-2">
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tones[tone] || tones.blue}`}>
+                    <Icon size={15} />
+                </span>
+                <p className="min-w-0 text-[11px] leading-4 text-slate-500">{label}</p>
+            </div>
+            <p className="mt-3 text-[23px] font-bold leading-none tracking-tight text-slate-900">{value}</p>
         </div>
     );
 }
 
-
-// MARK: Shared rating sections
+// MARK: Shared rating sections*
 
 function FormulaSection({
     rating,
@@ -1308,18 +1125,15 @@ function FormulaSection({
                     <h2 className="text-[15px] font-semibold text-gray-900">
                         Формула рейтинга
                     </h2>
-
                     <p className="mt-1 text-xs text-gray-500">
                         Баллы рассчитаны backend
                     </p>
                 </div>
-
                 <RiShieldCheckLine
                     size={19}
                     className="text-blue-600"
                 />
             </div>
-
             <div className="grid grid-cols-2 gap-3 p-5 md:grid-cols-3">
                 <PointCard
                     title="Качество"
@@ -1327,35 +1141,30 @@ function FormulaSection({
                         rating.points?.quality
                     }
                 />
-
                 <PointCard
                     title="Сроки"
                     value={
                         rating.points?.onTime
                     }
                 />
-
                 <PointCard
                     title="Без возвратов"
                     value={
                         rating.points?.noReturns
                     }
                 />
-
                 <PointCard
                     title="Объём"
                     value={
                         rating.points?.volume
                     }
                 />
-
                 <PointCard
                     title="Сложность"
                     value={
                         rating.points?.complexity
                     }
                 />
-
                 <PointCard
                     title="Отказы"
                     value={
@@ -1363,7 +1172,6 @@ function FormulaSection({
                     }
                 />
             </div>
-
             {rating.complexityBonus != null && (
                 <div className="border-t border-gray-100 px-5 py-4 text-xs text-gray-500">
                     Бонус за сложность:{" "}
@@ -1379,6 +1187,7 @@ function FormulaSection({
 function ExplanationSection({
     rating,
     subtitle,
+    compactResult = false,
 }) {
     return (
         <section className="overflow-hidden rounded-xl border border-violet-200 bg-white shadow-sm">
@@ -1387,24 +1196,21 @@ function ExplanationSection({
                     <h2 className="text-[15px] font-semibold text-gray-900">
                         Объяснение
                     </h2>
-
                     <p className="mt-1 text-xs text-gray-500">
                         {subtitle}
                     </p>
                 </div>
-
                 <RiSparkling2Line
                     size={19}
                     className="text-violet-600"
                 />
             </div>
-
             <div className="p-5">
+                {!compactResult && (
                 <div className="rounded-xl border border-green-100 bg-green-50 p-4">
                     <p className="text-xs font-semibold uppercase text-green-600">
                         Результат
                     </p>
-
                     <p className="mt-2 text-3xl font-bold text-gray-900">
                         {scoreValue(
                             rating.score,
@@ -1412,12 +1218,11 @@ function ExplanationSection({
                         /100
                     </p>
                 </div>
-
+                )}
                 <p className="mt-4 text-sm leading-6 text-gray-600">
                     {rating.explanation ||
                         "Пояснение отсутствует"}
                 </p>
-
                 {rating.formula && (
                     <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs leading-5 text-gray-500">
                         {rating.formula}
@@ -1427,7 +1232,6 @@ function ExplanationSection({
         </section>
     );
 }
-
 
 // MARK: UI helpers
 
@@ -1481,23 +1285,19 @@ function StatCard({
         violet:
             "bg-violet-50 text-violet-600",
     };
-
     return (
         <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="min-w-0">
                 <p className="text-xs font-medium text-gray-500">
                     {label}
                 </p>
-
                 <p className="mt-1 text-2xl font-bold text-gray-900">
                     {value}
                 </p>
-
                 <p className="mt-1 truncate text-[11px] text-gray-400">
                     {helper}
                 </p>
             </div>
-
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                 tones[tone] ||
                 tones.blue
@@ -1520,7 +1320,6 @@ function LeaderCard({
         2: "border-slate-200 bg-slate-50",
         3: "border-orange-200 bg-orange-50/40",
     };
-
     return (
         <button
             type="button"
@@ -1536,35 +1335,29 @@ function LeaderCard({
                     <p className="text-xs font-bold text-gray-400">
                         #{place}
                     </p>
-
                     <p className="mt-2 text-sm font-bold text-gray-900">
                         {employee.fullName}
                     </p>
-
                     <p className="mt-1 text-xs text-gray-500">
                         {employee.specialty ||
                             "Специальность не указана"}
                     </p>
                 </div>
-
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
                     <RiTrophyLine
                         size={19}
                     />
                 </div>
             </div>
-
             <div className="mt-4 flex items-end justify-between">
                 <div>
                     <p className="text-3xl font-bold text-gray-900">
                         {employee.score}
                     </p>
-
                     <p className="text-[10px] text-gray-400">
                         из 100
                     </p>
                 </div>
-
                 <p className="text-xs font-semibold text-gray-500">
                     {employee.closed}{" "}
                     закрыто
@@ -1579,10 +1372,8 @@ function ScoreBadge({
 }) {
     const value =
         Number(score);
-
     let className =
         "bg-gray-100 text-gray-700";
-
     if (value >= 85) {
         className =
             "bg-green-50 text-green-700";
@@ -1600,7 +1391,6 @@ function ScoreBadge({
         className =
             "bg-red-50 text-red-700";
     }
-
     return (
         <span className={`inline-flex min-w-[62px] justify-center rounded-full px-2.5 py-1 text-xs font-bold ${className}`}>
             {Number.isFinite(value)
@@ -1619,12 +1409,10 @@ function PointCard({
             <p className="text-xs text-gray-500">
                 {title}
             </p>
-
             <p className="mt-2 text-xl font-bold text-gray-900">
                 {value ??
                     "—"}
             </p>
-
             <p className="mt-1 text-[10px] text-gray-400">
                 баллов
             </p>

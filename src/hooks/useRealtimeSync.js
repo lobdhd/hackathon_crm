@@ -27,6 +27,10 @@ import {
     notificationKeys,
 } from "./useNotifications.js";
 
+import {
+    flushWorkOrderOfflineQueue,
+} from "../offline/workOrderOfflineProcessor.js";
+
 
 // MARK: Helpers
 
@@ -125,6 +129,67 @@ export function useRealtimeSync() {
     ]);
 
 
+    // MARK: Offline queue
+
+    useEffect(() => {
+        if (
+            !isAuthenticated ||
+            !user?.id
+        ) {
+            return undefined;
+        }
+
+        const flush = () => {
+            if (
+                typeof navigator !==
+                    "undefined" &&
+                navigator.onLine ===
+                    false
+            ) {
+                return;
+            }
+
+            flushWorkOrderOfflineQueue({
+                userId:
+                    user.id,
+
+                queryClient,
+            }).catch(
+                () => {
+                    /*
+                     * Processor сам оставляет
+                     * временно неотправленное
+                     * действие в очереди.
+                     */
+                },
+            );
+        };
+
+        /*
+         * Если пользователь вошёл уже
+         * с восстановленным интернетом,
+         * не ждём следующего online event.
+         */
+        flush();
+
+        window.addEventListener(
+            "online",
+            flush,
+        );
+
+        return () => {
+            window.removeEventListener(
+                "online",
+                flush,
+            );
+        };
+    }, [
+        isAuthenticated,
+        user?.id,
+        queryClient,
+    ]);
+
+
     // MARK: Socket
 
     useEffect(() => {
@@ -180,6 +245,22 @@ export function useRealtimeSync() {
         socket.on(
             "connect",
             () => {
+                /*
+                 * Socket connect — хороший
+                 * дополнительный сигнал того,
+                 * что backend снова доступен.
+                 * Lock внутри processor не даст
+                 * запустить два flush одновременно.
+                 */
+                flushWorkOrderOfflineQueue({
+                    userId:
+                        user.id,
+
+                    queryClient,
+                }).catch(
+                    () => {},
+                );
+
                 /*
                  * На первом подключении
                  * обычные queries и так
@@ -288,7 +369,6 @@ export function useRealtimeSync() {
                     }),
                 );
 
-
                 /*
                  * Перезапрашиваем:
                  * - таблицу;
@@ -341,7 +421,7 @@ export function useRealtimeSync() {
 
                 if (
                     message !==
-                    "unauthorized" ||
+                        "unauthorized" ||
                     unauthorizedRef.current
                 ) {
                     return;

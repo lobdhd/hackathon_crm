@@ -1,11 +1,10 @@
+import Chart from "react-apexcharts";
 import {
     useMemo,
 } from "react";
-
 import {
     useNavigate,
 } from "react-router-dom";
-
 import {
     RiAlarmWarningLine,
     RiArrowRightLine,
@@ -18,30 +17,22 @@ import {
     RiToolsLine,
     RiUserLine,
 } from "react-icons/ri";
-
 import SmartTable from "../../react-components/SmartTable/SmartTable.jsx";
-
 import {
     useAnalyticsAnomalies,
     useAnalyticsDashboard,
     useFailureForecast,
 } from "../../hooks/useAnalytics.js";
-
 import {
     useExecutors,
 } from "../../hooks/useReferences.js";
-
 import {
     useWorkOrders,
 } from "../../hooks/useWorkOrders.js";
-
 import {
     useI18n,
 } from "../../i18n/index.js";
-
-
 // MARK: Config
-
 const ACTIVE_STATUSES = [
     "ISSUED",
     "QUEUED",
@@ -50,105 +41,75 @@ const ACTIVE_STATUSES = [
     "PAUSED",
     "REWORK",
 ];
-
 const STATUS_LABELS = {
     ISSUED:
         "Выдан",
-
     QUEUED:
         "В очереди",
-
     ACCEPTED:
         "Принят",
-
     IN_PROGRESS:
         "В работе",
-
     PAUSED:
         "Приостановлен",
-
     COMPLETED:
         "Выполнен",
-
     AI_REVIEW:
         "На проверке",
-
     REWORK:
         "На доработке",
-
     CLOSED:
         "Закрыт",
-
     REJECTED:
         "Отклонён",
-
     CANCELLED:
         "Отменён",
 };
-
 const PRIORITY_LABELS = {
     EMERGENCY:
         "Аварийный",
-
     HIGH:
         "Высокий",
-
     NORMAL:
         "Обычный",
-
     PLANNED:
         "Плановый",
 };
-
 const EXECUTOR_STATUS = {
     AVAILABLE: {
         label:
             "Свободен",
-
         className:
             "bg-green-50 text-green-700",
-
         dot:
             "bg-green-500",
     },
-
     BUSY: {
         label:
             "В работе",
-
         className:
             "bg-amber-50 text-amber-700",
-
         dot:
             "bg-amber-500",
     },
-
     QUEUED: {
         label:
             "Есть очередь",
-
         className:
             "bg-blue-50 text-blue-700",
-
         dot:
             "bg-blue-500",
     },
-
     OFF_SHIFT: {
         label:
             "Не на смене",
-
         className:
             "bg-gray-100 text-gray-600",
-
         dot:
             "bg-gray-400",
     },
 };
-
-
 // MARK: Helpers
-
 function asArray(
     value,
 ) {
@@ -158,7 +119,6 @@ function asArray(
         ? value
         : [];
 }
-
 function formatMinutes(
     value,
 ) {
@@ -171,32 +131,25 @@ function formatMinutes(
                 ) || 0,
             ),
         );
-
     if (minutes < 60) {
         return `${minutes} мин`;
     }
-
     const hours =
         Math.floor(
             minutes / 60,
         );
-
     const rest =
         minutes % 60;
-
     if (!rest) {
         return `${hours} ч`;
     }
-
     return `${hours} ч ${rest} мин`;
 }
-
 function formatPercent(
     value,
 ) {
     const number =
         Number(value);
-
     if (
         !Number.isFinite(
             number,
@@ -204,12 +157,10 @@ function formatPercent(
     ) {
         return "—";
     }
-
     return `${Math.round(
         number * 100,
     )}%`;
 }
-
 function getInitials(
     name = "",
 ) {
@@ -224,7 +175,6 @@ function getInitials(
         .join("")
         .toUpperCase();
 }
-
 function extractError(
     error,
 ) {
@@ -235,7 +185,6 @@ function extractError(
         "Не удалось загрузить данные"
     );
 }
-
 function equipmentName(
     item,
 ) {
@@ -246,7 +195,6 @@ function equipmentName(
     ) {
         return item.equipment;
     }
-
     return (
         item?.equipment
             ?.name ||
@@ -254,67 +202,49 @@ function equipmentName(
         `Оборудование #${item?.equipmentId ?? "—"}`
     );
 }
-
-
 // MARK: Dashboard
-
 export default function Dashboard() {
     useI18n();
-
     const navigate =
         useNavigate();
-
     const dashboardQuery =
         useAnalyticsDashboard();
-
     const forecastQuery =
         useFailureForecast(
             30,
         );
-
     const anomaliesQuery =
         useAnalyticsAnomalies();
-
     const executorsQuery =
         useExecutors();
-
     const ordersQuery =
         useWorkOrders({
             status:
                 ACTIVE_STATUSES,
-
             compact: true,
-
-            limit: 12,
-
+            limit: 24,
             offset: 0,
         });
-
     const dashboard =
         dashboardQuery.data ??
         {};
-
     const forecasts =
         asArray(
             forecastQuery.data,
         );
-
     const anomalies =
         asArray(
             anomaliesQuery.data,
         );
-
     const executors =
         asArray(
             executorsQuery.data,
         );
-
     const orders =
         asArray(
             ordersQuery.data
                 ?.items,
         );
-
     const onShiftExecutors =
         useMemo(
             () =>
@@ -335,13 +265,11 @@ export default function Dashboard() {
                                 "AVAILABLE"
                                     ? 0
                                     : 1;
-
                             const bStatus =
                                 b.employeeStatus ===
                                 "AVAILABLE"
                                     ? 0
                                     : 1;
-
                             if (
                                 aStatus !==
                                 bStatus
@@ -351,7 +279,6 @@ export default function Dashboard() {
                                     bStatus
                                 );
                             }
-
                             return String(
                                 a.fullName,
                             ).localeCompare(
@@ -370,6 +297,9 @@ export default function Dashboard() {
                 executors,
             ],
         );
+    // At desktop width, align the bottom of the orders table with the
+    // executors card when it contains enough rows to be useful.
+    const alignOrdersToExecutors = onShiftExecutors.length >= 4;
 
     const sortedForecasts =
         useMemo(
@@ -395,7 +325,6 @@ export default function Dashboard() {
                 forecasts,
             ],
         );
-
     const importantAnomaly =
         useMemo(() => {
             if (
@@ -404,7 +333,6 @@ export default function Dashboard() {
             ) {
                 return null;
             }
-
             return [
                 ...anomalies,
             ].sort(
@@ -422,42 +350,32 @@ export default function Dashboard() {
         }, [
             anomalies,
         ]);
-
     const stats = [
         {
             title:
                 "Активные наряды",
-
             value:
                 Number(
                     dashboard.active,
                 ) || 0,
-
             description:
                 "Текущие работы",
-
             icon:
                 RiToolsLine,
-
             tone:
                 "blue",
         },
-
         {
             title:
                 "Просрочено",
-
             value:
                 Number(
                     dashboard.overdue,
                 ) || 0,
-
             description:
                 "Требуют внимания",
-
             icon:
                 RiAlarmWarningLine,
-
             tone:
                 Number(
                     dashboard.overdue,
@@ -465,22 +383,17 @@ export default function Dashboard() {
                     ? "red"
                     : "green",
         },
-
         {
             title:
                 "Оборудование в простое",
-
             value:
                 Number(
                     dashboard.equipmentInDowntime,
                 ) || 0,
-
             description:
                 "Сейчас",
-
             icon:
                 RiTimeLine,
-
             tone:
                 Number(
                     dashboard.equipmentInDowntime,
@@ -488,42 +401,33 @@ export default function Dashboard() {
                     ? "orange"
                     : "green",
         },
-
         {
             title:
                 "Средняя реакция",
-
             value:
                 formatMinutes(
                     dashboard.averageReactionMinutes,
                 ),
-
             description:
                 `Выполнение: ${formatMinutes(
                     dashboard.averageCompletionMinutes,
                 )}`,
-
             icon:
                 RiFlashlightLine,
-
             tone:
                 "violet",
         },
     ];
-
     const orderColumns =
         useMemo(
             () => [
                 {
                     field:
                         "number",
-
                     header:
                         "Наряд",
-
                     minWidth:
                         190,
-
                     render:
                         (
                             order,
@@ -534,7 +438,6 @@ export default function Dashboard() {
                                         order.number
                                     }
                                 </div>
-
                                 <div className="mt-1 max-w-[260px] truncate text-xs text-gray-400">
                                     {
                                         order.description
@@ -543,17 +446,13 @@ export default function Dashboard() {
                             </div>
                         ),
                 },
-
                 {
                     key:
                         "equipment",
-
                     header:
                         "Оборудование",
-
                     minWidth:
                         220,
-
                     sortValue:
                         (
                             order,
@@ -562,7 +461,6 @@ export default function Dashboard() {
                                 .equipment
                                 ?.name ??
                             "",
-
                     render:
                         (
                             order,
@@ -574,7 +472,6 @@ export default function Dashboard() {
                                         ?.name ||
                                         "—"}
                                 </div>
-
                                 <div className="mt-1 text-xs text-gray-400">
                                     {order
                                         .equipment
@@ -584,17 +481,13 @@ export default function Dashboard() {
                             </div>
                         ),
                 },
-
                 {
                     key:
                         "assignee",
-
                     header:
                         "Исполнитель",
-
                     minWidth:
                         210,
-
                     sortValue:
                         (
                             order,
@@ -603,7 +496,6 @@ export default function Dashboard() {
                                 .assignee
                                 ?.fullName ??
                             "",
-
                     render:
                         (
                             order,
@@ -613,17 +505,13 @@ export default function Dashboard() {
                                 ?.fullName ||
                             "Не назначен",
                 },
-
                 {
                     field:
                         "priority",
-
                     header:
                         "Приоритет",
-
                     minWidth:
                         135,
-
                     render:
                         (
                             order,
@@ -635,17 +523,13 @@ export default function Dashboard() {
                             />
                         ),
                 },
-
                 {
                     field:
                         "status",
-
                     header:
                         "Статус",
-
                     minWidth:
                         135,
-
                     render:
                         (
                             order,
@@ -660,17 +544,14 @@ export default function Dashboard() {
             ],
         [],
     );
-
     const loading =
         dashboardQuery.isLoading ||
         executorsQuery.isLoading ||
         ordersQuery.isLoading;
-
     const mainError =
         dashboardQuery.isError
             ? dashboardQuery.error
             : null;
-
     async function refreshAll() {
         await Promise.all([
             dashboardQuery.refetch(),
@@ -680,7 +561,6 @@ export default function Dashboard() {
             ordersQuery.refetch(),
         ]);
     }
-
     if (
         loading &&
         !dashboardQuery.data
@@ -689,7 +569,6 @@ export default function Dashboard() {
             <PageLoader />
         );
     }
-
     if (
         mainError &&
         !dashboardQuery.data
@@ -707,17 +586,14 @@ export default function Dashboard() {
             />
         );
     }
-
     return (
         <div className="mx-auto max-w-[1800px]">
             {/* HEADER */}
-
             <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                         Панель смены
                     </h1>
-
                     <p className="mt-1 text-sm text-gray-500">
                         Текущее состояние
                         производства,
@@ -725,7 +601,6 @@ export default function Dashboard() {
                         оборудования
                     </p>
                 </div>
-
                 <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
@@ -739,10 +614,8 @@ export default function Dashboard() {
                                 18
                             }
                         />
-
                         Обновить
                     </button>
-
                     <button
                         type="button"
                         onClick={() =>
@@ -753,7 +626,6 @@ export default function Dashboard() {
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                     >
                         Наряды
-
                         <RiArrowRightLine
                             size={
                                 18
@@ -762,10 +634,7 @@ export default function Dashboard() {
                     </button>
                 </div>
             </div>
-
-
             {/* KPI */}
-
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {stats.map(
                     (
@@ -780,15 +649,10 @@ export default function Dashboard() {
                     ),
                 )}
             </div>
-
-
             {/* MAIN */}
-
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[370px_minmax(0,1fr)]">
-
                 {/* EXECUTORS */}
-
-                <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <section className="self-start overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                     <SectionHeader
                         title="Исполнители смены"
                         description={`${executors.filter(
@@ -801,7 +665,6 @@ export default function Dashboard() {
                             RiUserLine
                         }
                     />
-
                     <div className="divide-y divide-gray-100">
                         {onShiftExecutors.length >
                         0 ? (
@@ -832,7 +695,6 @@ export default function Dashboard() {
                             </div>
                         )}
                     </div>
-
                     <button
                         type="button"
                         onClick={() =>
@@ -844,15 +706,12 @@ export default function Dashboard() {
                     >
                         Все
                         исполнители
-
                         <RiArrowRightLine />
                     </button>
                 </section>
-
-
                 {/* ORDERS */}
-
-                <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="min-w-0 xl:relative xl:min-h-0">
+                <section className={`flex h-[620px] min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ${alignOrdersToExecutors ? "xl:absolute xl:inset-0 xl:h-full" : "xl:h-[660px]"}`}>
                     <SectionHeader
                         title="Активные наряды"
                         description={`${ordersQuery.data?.total ?? orders.length} активных`}
@@ -860,9 +719,9 @@ export default function Dashboard() {
                             RiToolsLine
                         }
                     />
-
-                    <div className="p-4">
+                    <div className="flex min-h-0 flex-1 flex-col p-4">
                         <SmartTable
+                            className="flex h-full min-h-0 flex-col [&_.smart-table__scroll]:min-h-0 [&_.smart-table__scroll]:flex-1 [&_.smart-table__table]:h-full"
                             data={
                                 orders
                             }
@@ -877,7 +736,7 @@ export default function Dashboard() {
                             minWidth={
                                 950
                             }
-                            scrollHeight="340px"
+                            scrollHeight="100%"
                             rowClassName={() =>
                                 "cursor-pointer"
                             }
@@ -893,15 +752,11 @@ export default function Dashboard() {
                         />
                     </div>
                 </section>
+                </div>
             </div>
-
-
             {/* TOPS */}
-
             <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
-
                 {/* EQUIPMENT */}
-
                 <DashboardSection
                     title="Проблемное оборудование"
                     subtitle="По аварийным нарядам за 30 дней"
@@ -930,10 +785,7 @@ export default function Dashboard() {
                         emptyText="Данных пока нет"
                     />
                 </DashboardSection>
-
-
                 {/* AREAS */}
-
                 <DashboardSection
                     title="Участки"
                     subtitle="Аварийность на единицу оборудования"
@@ -967,10 +819,7 @@ export default function Dashboard() {
                         emptyText="Данных пока нет"
                     />
                 </DashboardSection>
-
-
                 {/* EXECUTORS TOP */}
-
                 <DashboardSection
                     title="Лучшие исполнители"
                     subtitle="Средняя оценка за 30 дней"
@@ -1004,14 +853,9 @@ export default function Dashboard() {
                     />
                 </DashboardSection>
             </div>
-
-
             {/* FORECAST + AI */}
-
             <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
-
                 {/* FORECAST */}
-
                 <DashboardSection
                     title="Прогноз отказов"
                     subtitle="Вероятность отказа на горизонте 30 дней"
@@ -1024,6 +868,8 @@ export default function Dashboard() {
                     ) : sortedForecasts.length >
                       0 ? (
                         <div className="space-y-4">
+<div className="mb-1 text-[11px] text-gray-400">Профиль риска · оборудование по убыванию вероятности</div>
+                            <ForecastChart items={sortedForecasts} height={190} />
                             {sortedForecasts.map(
                                 (
                                     item,
@@ -1043,10 +889,7 @@ export default function Dashboard() {
                         <EmptyBlock text="Прогноз пока не сформирован" />
                     )}
                 </DashboardSection>
-
-
                 {/* ANOMALY */}
-
                 <DashboardSection
                     title="AI-контроль"
                     subtitle="Самая важная найденная аномалия"
@@ -1077,13 +920,11 @@ export default function Dashboard() {
                                         }
                                     />
                                 </div>
-
                                 <p className="mt-3 text-sm font-semibold text-green-900">
                                     Критичных
                                     аномалий
                                     нет
                                 </p>
-
                                 <p className="mt-1 text-xs text-green-700">
                                     Система
                                     не обнаружила
@@ -1099,10 +940,7 @@ export default function Dashboard() {
         </div>
     );
 }
-
-
 // MARK: Stat Card
-
 function StatCard({
     title,
     value,
@@ -1114,48 +952,37 @@ function StatCard({
         blue: {
             icon:
                 "bg-blue-50 text-blue-600",
-
             value:
                 "text-gray-900",
         },
-
         red: {
             icon:
                 "bg-red-50 text-red-600",
-
             value:
                 "text-red-700",
         },
-
         orange: {
             icon:
                 "bg-orange-50 text-orange-600",
-
             value:
                 "text-orange-700",
         },
-
         green: {
             icon:
                 "bg-green-50 text-green-600",
-
             value:
                 "text-gray-900",
         },
-
         violet: {
             icon:
                 "bg-violet-50 text-violet-600",
-
             value:
                 "text-gray-900",
         },
     };
-
     const theme =
         tones[tone] ??
         tones.blue;
-
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-4">
@@ -1163,12 +990,10 @@ function StatCard({
                     <p className="text-sm font-medium text-gray-500">
                         {title}
                     </p>
-
                     <p className={`mt-2 text-3xl font-bold tracking-tight ${theme.value}`}>
                         {value}
                     </p>
                 </div>
-
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${theme.icon}`}>
                     <Icon
                         size={
@@ -1177,7 +1002,6 @@ function StatCard({
                     />
                 </div>
             </div>
-
             <p className="mt-4 text-xs text-gray-500">
                 {
                     description
@@ -1186,10 +1010,7 @@ function StatCard({
         </div>
     );
 }
-
-
 // MARK: Section Header
-
 function SectionHeader({
     title,
     description,
@@ -1201,14 +1022,12 @@ function SectionHeader({
                 <h2 className="font-semibold text-gray-900">
                     {title}
                 </h2>
-
                 <p className="mt-0.5 text-xs text-gray-500">
                     {
                         description
                     }
                 </p>
             </div>
-
             <Icon
                 size={20}
                 className="shrink-0 text-gray-400"
@@ -1216,10 +1035,7 @@ function SectionHeader({
         </div>
     );
 }
-
-
 // MARK: Executor
-
 function ExecutorRow({
     employee,
     onClick,
@@ -1229,11 +1045,9 @@ function ExecutorRow({
             employee.employeeStatus
         ] ??
         EXECUTOR_STATUS.OFF_SHIFT;
-
     const statusText =
         employee.statusText ||
         status.label;
-
     return (
         <button
             type="button"
@@ -1246,25 +1060,21 @@ function ExecutorRow({
                         employee.fullName,
                     )}
                 </div>
-
                 <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-gray-900">
                         {
                             employee.fullName
                         }
                     </p>
-
                     <p className="mt-1 truncate text-xs text-gray-500">
                         {employee.specialty ||
                             "Специальность не указана"}
-
                         {employee.grade
                             ? ` • ${employee.grade} разряд`
                             : ""}
                     </p>
                 </div>
             </div>
-
             <div
                 className={`max-w-[135px] shrink-0 rounded-lg px-2.5 py-1.5 text-right text-[11px] font-semibold ${status.className}`}
                 title={
@@ -1275,7 +1085,6 @@ function ExecutorRow({
                     <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${status.dot}`}
                     />
-
                     <span className="truncate">
                         {
                             statusText
@@ -1286,10 +1095,7 @@ function ExecutorRow({
         </button>
     );
 }
-
-
 // MARK: Dashboard Section
-
 function DashboardSection({
     title,
     subtitle,
@@ -1303,14 +1109,12 @@ function DashboardSection({
                     <h2 className="text-sm font-semibold text-gray-900">
                         {title}
                     </h2>
-
                     <p className="mt-1 text-xs text-gray-500">
                         {
                             subtitle
                         }
                     </p>
                 </div>
-
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
                     <Icon
                         size={
@@ -1319,17 +1123,13 @@ function DashboardSection({
                     />
                 </div>
             </div>
-
             <div className="p-5">
                 {children}
             </div>
         </section>
     );
 }
-
-
 // MARK: Ranking
-
 function RankingList({
     items,
     getTitle,
@@ -1347,7 +1147,6 @@ function RankingList({
             />
         );
     }
-
     const max =
         Math.max(
             ...items.map(
@@ -1358,14 +1157,12 @@ function RankingList({
                         getValue(
                             item,
                         );
-
                     const parsed =
                         parseFloat(
                             String(
                                 raw,
                             ),
                         );
-
                     return Number.isFinite(
                         parsed,
                     )
@@ -1375,7 +1172,6 @@ function RankingList({
             ),
             1,
         );
-
     return (
         <div className="space-y-3">
             {items.map(
@@ -1387,14 +1183,12 @@ function RankingList({
                         getValue(
                             item,
                         );
-
                     const numeric =
                         parseFloat(
                             String(
                                 value,
                             ),
                         );
-
                     const width =
                         Number.isFinite(
                             numeric,
@@ -1411,7 +1205,6 @@ function RankingList({
                                 ),
                             )
                             : 30;
-
                     return (
                         <div
                             key={
@@ -1428,21 +1221,18 @@ function RankingList({
                                         {index +
                                             1}
                                     </span>
-
                                     <p className="truncate text-sm font-semibold text-gray-800">
                                         {getTitle(
                                             item,
                                         )}
                                     </p>
                                 </div>
-
                                 <span className="shrink-0 text-xs font-semibold text-gray-600">
                                     {
                                         value
                                     }
                                 </span>
                             </div>
-
                             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-200">
                                 <div
                                     className="h-full rounded-full bg-blue-600"
@@ -1459,10 +1249,7 @@ function RankingList({
         </div>
     );
 }
-
-
 // MARK: Forecast
-
 function ForecastRow({
     item,
 }) {
@@ -1470,21 +1257,17 @@ function ForecastRow({
         Number(
             item.probability,
         ) || 0;
-
     const percent =
         Math.round(
             probability *
                 100,
         );
-
     const dangerous =
         probability >=
         0.65;
-
     const moderate =
         probability >=
         0.4;
-
     return (
         <div className="rounded-xl border border-gray-200 p-4">
             <div className="flex items-start justify-between gap-4">
@@ -1494,21 +1277,17 @@ function ForecastRow({
                             item,
                         )}
                     </p>
-
                     <p className="mt-1 text-xs text-gray-500">
                         Последние
                         отказы:{" "}
                         {item.recentFailures ??
                             0}
-
                         {" • "}
-
                         Было:{" "}
                         {item.previousFailures ??
                             0}
                     </p>
                 </div>
-
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
                     dangerous
                         ? "bg-red-50 text-red-700"
@@ -1521,7 +1300,6 @@ function ForecastRow({
                     )}
                 </span>
             </div>
-
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
                 <div
                     className={`h-full rounded-full ${
@@ -1537,7 +1315,6 @@ function ForecastRow({
                     }}
                 />
             </div>
-
             {item.growth !==
                 undefined &&
                 item.growth !==
@@ -1550,7 +1327,6 @@ function ForecastRow({
                     ) > 0
                         ? "+"
                         : ""}
-
                     {
                         item.growth
                     }
@@ -1559,10 +1335,7 @@ function ForecastRow({
         </div>
     );
 }
-
-
 // MARK: Anomaly
-
 function AnomalyCard({
     anomaly,
     onOpen,
@@ -1571,7 +1344,6 @@ function AnomalyCard({
         Number(
             anomaly.severity,
         ) || 1;
-
     return (
         <div className="rounded-xl border border-red-100 bg-red-50/50 p-4">
             <div className="flex items-start justify-between gap-4">
@@ -1584,27 +1356,23 @@ function AnomalyCard({
                             }
                             /5
                         </span>
-
                         <span className="text-[11px] font-semibold text-gray-400">
                             {
                                 anomaly.type
                             }
                         </span>
                     </div>
-
                     <h3 className="mt-3 text-sm font-bold leading-5 text-gray-900">
                         {
                             anomaly.title
                         }
                     </h3>
-
                     <p className="mt-2 text-sm leading-6 text-gray-600">
                         {
                             anomaly.description
                         }
                     </p>
                 </div>
-
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
                     <RiSparkling2Line
                         size={
@@ -1613,13 +1381,11 @@ function AnomalyCard({
                     />
                 </div>
             </div>
-
             {anomaly.recommendation && (
                 <div className="mt-4 rounded-lg border border-white bg-white/80 p-3">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
                         Рекомендация
                     </p>
-
                     <p className="mt-1 text-sm leading-5 text-gray-700">
                         {
                             anomaly.recommendation
@@ -1627,7 +1393,6 @@ function AnomalyCard({
                     </p>
                 </div>
             )}
-
             <div className="mt-4 flex items-center justify-between gap-3">
                 <div className="min-w-0 text-xs text-gray-500">
                     {anomaly.area
@@ -1640,7 +1405,6 @@ function AnomalyCard({
                             }
                         </span>
                     )}
-
                     {anomaly.equipment
                         ?.name && (
                         <span>
@@ -1648,7 +1412,6 @@ function AnomalyCard({
                                 ?.name
                                 ? " • "
                                 : ""}
-
                             {
                                 anomaly
                                     .equipment
@@ -1657,7 +1420,6 @@ function AnomalyCard({
                         </span>
                     )}
                 </div>
-
                 <button
                     type="button"
                     onClick={
@@ -1671,27 +1433,20 @@ function AnomalyCard({
         </div>
     );
 }
-
-
 // MARK: Badges
-
 function PriorityBadge({
     value,
 }) {
     const styles = {
         EMERGENCY:
             "bg-red-50 text-red-700",
-
         HIGH:
             "bg-orange-50 text-orange-700",
-
         NORMAL:
             "bg-blue-50 text-blue-700",
-
         PLANNED:
             "bg-gray-100 text-gray-600",
     };
-
     return (
         <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
             styles[value] ||
@@ -1703,30 +1458,23 @@ function PriorityBadge({
         </span>
     );
 }
-
 function StatusBadge({
     value,
 }) {
     const styles = {
         ISSUED:
             "bg-blue-50 text-blue-700",
-
         QUEUED:
             "bg-slate-100 text-slate-700",
-
         ACCEPTED:
             "bg-indigo-50 text-indigo-700",
-
         IN_PROGRESS:
             "bg-green-50 text-green-700",
-
         PAUSED:
             "bg-amber-50 text-amber-700",
-
         REWORK:
             "bg-orange-50 text-orange-700",
     };
-
     return (
         <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
             styles[value] ||
@@ -1738,10 +1486,7 @@ function StatusBadge({
         </span>
     );
 }
-
-
 // MARK: States
-
 function EmptyBlock({
     text,
 }) {
@@ -1751,7 +1496,6 @@ function EmptyBlock({
         </div>
     );
 }
-
 function InlineLoader() {
     return (
         <div className="flex min-h-[170px] items-center justify-center">
@@ -1762,7 +1506,6 @@ function InlineLoader() {
         </div>
     );
 }
-
 function PageLoader() {
     return (
         <div className="flex min-h-[500px] items-center justify-center">
@@ -1773,7 +1516,6 @@ function PageLoader() {
         </div>
     );
 }
-
 function PageError({
     text,
     onRetry,
@@ -1784,17 +1526,14 @@ function PageError({
                 size={36}
                 className="text-red-500"
             />
-
             <h2 className="mt-4 text-lg font-bold text-gray-900">
                 Не удалось
                 загрузить
                 Dashboard
             </h2>
-
             <p className="mt-2 max-w-lg text-sm text-gray-500">
                 {text}
             </p>
-
             <button
                 type="button"
                 onClick={
@@ -1803,9 +1542,34 @@ function PageError({
                 className="mt-5 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700"
             >
                 <RiRefreshLine />
-
                 Повторить
             </button>
         </div>
     );
+}
+
+
+// MARK: Forecast chart — распределение риска по оборудованию (не временной ряд)
+function ForecastChart({ items, height = 200 }) {
+    const selected = items.slice(0, 8);
+    if (!selected.length) return null;
+    const names = selected.map((item) => equipmentName(item));
+    const values = selected.map((item) => {
+        const n = Number(item.probability);
+        return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * (n <= 1 ? 100 : 1)))) : 0;
+    });
+    const options = {
+        chart: { type: "area", toolbar: { show: false }, zoom: { enabled: false }, fontFamily: "inherit", animations: { enabled: true, speed: 450 } },
+        colors: ["#4f46e5"],
+        stroke: { curve: "smooth", width: 2.5 },
+        fill: { type: "gradient", gradient: { shadeIntensity: 0, opacityFrom: 0.24, opacityTo: 0.015, stops: [0, 95, 100] } },
+        markers: { size: 4, colors: ["#fff"], strokeColors: "#4f46e5", strokeWidth: 2, hover: { size: 6 } },
+        dataLabels: { enabled: false },
+        xaxis: { categories: names.map((_, i) => `№${i + 1}`), labels: { style: { colors: "#94a3b8", fontSize: "10px" } }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
+        yaxis: { min: 0, max: 100, tickAmount: 4, labels: { formatter: (v) => `${Math.round(v)}%`, style: { colors: "#94a3b8", fontSize: "10px" } } },
+        grid: { borderColor: "#f1f5f9", strokeDashArray: 4, padding: { top: 5, right: 12, left: 4, bottom: 0 } },
+        tooltip: { x: { formatter: (_, opts) => names[opts.dataPointIndex] || "Оборудование" }, y: { formatter: (v) => `${Math.round(v)}%` } },
+        legend: { show: false }
+    };
+    return <Chart type="area" height={height} width="100%" options={options} series={[{ name: "Риск отказа", data: values }]} />;
 }

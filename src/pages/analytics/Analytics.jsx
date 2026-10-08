@@ -1,8 +1,8 @@
+import Chart from "react-apexcharts";
 import {
     useMemo,
     useState,
 } from "react";
-
 import {
     RiAlarmWarningLine,
     RiBarChartBoxLine,
@@ -16,32 +16,24 @@ import {
     RiTimeLine,
     RiToolsLine,
 } from "react-icons/ri";
-
 import SmartTable from "../../react-components/SmartTable/SmartTable.jsx";
-
 import {
     useAnalyticsAnomalies,
     useAnalyticsDashboard,
     useFailureForecast,
     useRunAnalyticsAnomalies,
 } from "../../hooks/useAnalytics.js";
-
 import {
     useDowntimeReport,
     useShiftReport,
 } from "../../hooks/useReports.js";
-
 import {
     useAreas,
 } from "../../hooks/useReferences.js";
-
 import {
     useI18n,
 } from "../../i18n/index.js";
-
-
 // MARK: Config
-
 const PERIODS = [
     {
         value: "shift",
@@ -64,7 +56,6 @@ const PERIODS = [
         days: 30,
     },
 ];
-
 const ANOMALY_TYPES = [
     {
         value: "",
@@ -117,10 +108,7 @@ const ANOMALY_TYPES = [
             "Повтор после бригады",
     },
 ];
-
-
 // MARK: Helpers
-
 function asArray(value) {
     return Array.isArray(
         value,
@@ -128,7 +116,6 @@ function asArray(value) {
         ? value
         : [];
 }
-
 function formatMinutes(
     value,
 ) {
@@ -141,32 +128,25 @@ function formatMinutes(
                 ) || 0,
             ),
         );
-
     if (minutes < 60) {
         return `${minutes} мин`;
     }
-
     const hours =
         Math.floor(
             minutes / 60,
         );
-
     const rest =
         minutes % 60;
-
     if (!rest) {
         return `${hours} ч`;
     }
-
     return `${hours} ч ${rest} мин`;
 }
-
 function formatPercent(
     value,
 ) {
     const number =
         Number(value);
-
     if (
         !Number.isFinite(
             number,
@@ -174,12 +154,10 @@ function formatPercent(
     ) {
         return "—";
     }
-
     return `${Math.round(
         number * 100,
     )}%`;
 }
-
 function extractError(
     error,
 ) {
@@ -190,18 +168,15 @@ function extractError(
         "Ошибка загрузки данных"
     );
 }
-
 function createPeriodRange(
     period,
 ) {
     const now =
         new Date();
-
     const from =
         new Date(
             now,
         );
-
     if (
         period ===
         "shift"
@@ -232,45 +207,34 @@ function createPeriodRange(
                 30,
         );
     }
-
     return {
         from:
             from.toISOString(),
-
         to:
             now.toISOString(),
     };
 }
-
-
 // MARK: Page
-
 export default function Analytics() {
     useI18n();
-
     const [
         period,
         setPeriod,
     ] = useState(
         "week",
     );
-
     const [
         areaId,
         setAreaId,
     ] = useState("");
-
     const [
         anomalyType,
         setAnomalyType,
     ] = useState("");
-
     const areasQuery =
         useAreas();
-
     const dashboardQuery =
         useAnalyticsDashboard();
-
     const currentPeriod =
         PERIODS.find(
             (item) =>
@@ -278,12 +242,10 @@ export default function Analytics() {
                 period,
         ) ??
         PERIODS[2];
-
     const reportParams =
         useMemo(
             () => ({
                 period,
-
                 ...(areaId
                     ? {
                         areaId:
@@ -298,22 +260,18 @@ export default function Analytics() {
                 areaId,
             ],
         );
-
     const shiftQuery =
         useShiftReport(
             reportParams,
         );
-
     const downtimeQuery =
         useDowntimeReport(
             reportParams,
         );
-
     const forecastQuery =
         useFailureForecast(
             currentPeriod.days,
         );
-
     const anomaliesQuery =
         useAnalyticsAnomalies({
             ...(areaId
@@ -324,7 +282,6 @@ export default function Analytics() {
                         ),
                 }
                 : {}),
-
             ...(anomalyType
                 ? {
                     type:
@@ -332,37 +289,29 @@ export default function Analytics() {
                 }
                 : {}),
         });
-
     const runMutation =
         useRunAnalyticsAnomalies();
-
     const areas =
         asArray(
             areasQuery.data,
         );
-
     const dashboard =
         dashboardQuery.data ??
         {};
-
     const shift =
         shiftQuery.data ??
         {};
-
     const downtime =
         downtimeQuery.data ??
         {};
-
     const forecasts =
         asArray(
             forecastQuery.data,
         );
-
     const anomalies =
         asArray(
             anomaliesQuery.data,
         );
-
     const sortedForecast =
         useMemo(
             () =>
@@ -382,7 +331,6 @@ export default function Analytics() {
                 forecasts,
             ],
         );
-
     const sortedAnomalies =
         useMemo(
             () =>
@@ -402,29 +350,23 @@ export default function Analytics() {
                 anomalies,
             ],
         );
-
     const downtimeEquipment =
         asArray(
             downtime.byEquipment,
         );
-
     const aiResult =
         runMutation.data
             ?.ai;
-
     const downtimeColumns =
         useMemo(
             () => [
                 {
                     key:
                         "equipment",
-
                     header:
                         "Оборудование",
-
                     minWidth:
                         220,
-
                     sortValue:
                         (
                             row,
@@ -433,7 +375,6 @@ export default function Analytics() {
                                 ?.name ??
                             row.equipment ??
                             "",
-
                     render:
                         (
                             row,
@@ -446,7 +387,6 @@ export default function Analytics() {
                                         row.equipment ||
                                         "—"}
                                 </p>
-
                                 <p className="mt-1 text-xs text-gray-400">
                                     {row.area
                                         ?.name ||
@@ -455,28 +395,21 @@ export default function Analytics() {
                             </div>
                         ),
                 },
-
                 {
                     field:
                         "count",
-
                     header:
                         "Событий",
-
                     minWidth:
                         100,
                 },
-
                 {
                     field:
                         "minutes",
-
                     header:
                         "Простой",
-
                     minWidth:
                         130,
-
                     sortValue:
                         (
                             row,
@@ -484,7 +417,6 @@ export default function Analytics() {
                             Number(
                                 row.minutes,
                             ),
-
                     render:
                         (
                             row,
@@ -493,17 +425,13 @@ export default function Analytics() {
                                 row.minutes,
                             ),
                 },
-
                 {
                     field:
                         "plannedMinutes",
-
                     header:
                         "Плановый",
-
                     minWidth:
                         130,
-
                     render:
                         (
                             row,
@@ -512,17 +440,13 @@ export default function Analytics() {
                                 row.plannedMinutes,
                             ),
                 },
-
                 {
                     field:
                         "unplannedMinutes",
-
                     header:
                         "Аварийный",
-
                     minWidth:
                         130,
-
                     render:
                         (
                             row,
@@ -534,17 +458,13 @@ export default function Analytics() {
                             </span>
                         ),
                 },
-
                 {
                     field:
                         "ongoing",
-
                     header:
                         "Сейчас",
-
                     minWidth:
                         100,
-
                     render:
                         (
                             row,
@@ -564,7 +484,6 @@ export default function Analytics() {
             ],
         [],
     );
-
     async function refreshAll() {
         await Promise.all([
             dashboardQuery.refetch(),
@@ -574,17 +493,14 @@ export default function Analytics() {
             anomaliesQuery.refetch(),
         ]);
     }
-
     async function recalculate() {
         const range =
             createPeriodRange(
                 period,
             );
-
         try {
             await runMutation.mutateAsync({
                 ...range,
-
                 ...(areaId
                     ? {
                         areaId:
@@ -595,31 +511,25 @@ export default function Analytics() {
                     : {}),
             });
         } catch {
-            // Ошибка отображается ниже.
+// Ошибка отображается ниже.
         }
     }
-
     const loading =
         shiftQuery.isLoading &&
         !shiftQuery.data;
-
     if (loading) {
         return (
             <PageLoader />
         );
     }
-
     return (
         <div className="mx-auto max-w-[1800px]">
-
             {/* HEADER */}
-
             <div className="mb-6 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                         Аналитика
                     </h1>
-
                     <p className="mt-1 text-sm text-gray-500">
                         Производственные
                         показатели,
@@ -628,7 +538,6 @@ export default function Analytics() {
                         и аномалии
                     </p>
                 </div>
-
                 <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
@@ -638,10 +547,8 @@ export default function Analytics() {
                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                     >
                         <RiRefreshLine />
-
                         Обновить
                     </button>
-
                     <button
                         type="button"
                         onClick={
@@ -659,17 +566,13 @@ export default function Analytics() {
                             : (
                                 <RiSparkling2Line />
                             )}
-
                         {runMutation.isPending
                             ? "AI анализирует..."
                             : "Пересчитать аномалии"}
                     </button>
                 </div>
             </div>
-
-
             {/* FILTERS */}
-
             <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex flex-wrap gap-2">
@@ -698,7 +601,6 @@ export default function Analytics() {
                             ),
                         )}
                     </div>
-
                     <div className="flex flex-col gap-2 sm:flex-row">
                         <select
                             value={
@@ -718,7 +620,6 @@ export default function Analytics() {
                             <option value="">
                                 Все участки
                             </option>
-
                             {areas.map(
                                 (
                                     area,
@@ -738,7 +639,6 @@ export default function Analytics() {
                                 ),
                             )}
                         </select>
-
                         <select
                             value={
                                 anomalyType
@@ -776,10 +676,7 @@ export default function Analytics() {
                     </div>
                 </div>
             </div>
-
-
             {/* ERRORS */}
-
             {(shiftQuery.isError ||
                 downtimeQuery.isError) && (
                 <ErrorBox
@@ -789,10 +686,7 @@ export default function Analytics() {
                     )}
                 />
             )}
-
-
             {/* KPI */}
-
             <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-5">
                 <KpiCard
                     label="Закрыто"
@@ -806,7 +700,6 @@ export default function Analytics() {
                     }
                     tone="green"
                 />
-
                 <KpiCard
                     label="В работе"
                     value={
@@ -819,7 +712,6 @@ export default function Analytics() {
                     }
                     tone="blue"
                 />
-
                 <KpiCard
                     label="Просрочено"
                     value={
@@ -832,7 +724,6 @@ export default function Analytics() {
                     }
                     tone="red"
                 />
-
                 <KpiCard
                     label="Общий простой"
                     value={formatMinutes(
@@ -845,7 +736,6 @@ export default function Analytics() {
                     }
                     tone="orange"
                 />
-
                 <KpiCard
                     label="Средняя реакция"
                     value={formatMinutes(
@@ -860,10 +750,7 @@ export default function Analytics() {
                     tone="violet"
                 />
             </div>
-
-
             {/* WORKLOAD */}
-
             <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <Section
                     title="Загрузка смены"
@@ -881,7 +768,6 @@ export default function Analytics() {
                                 0
                             }
                         />
-
                         <MiniStat
                             title="Заняты"
                             value={
@@ -890,7 +776,6 @@ export default function Analytics() {
                                 0
                             }
                         />
-
                         <MiniStat
                             title="Свободны"
                             value={
@@ -899,7 +784,6 @@ export default function Analytics() {
                                 0
                             }
                         />
-
                         <MiniStat
                             title="Оборудование в простое"
                             value={
@@ -909,7 +793,6 @@ export default function Analytics() {
                             }
                         />
                     </div>
-
                     <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
                         <ProgressMetric
                             label="Загрузка исполнителей"
@@ -931,7 +814,6 @@ export default function Analytics() {
                                     : 0
                             }
                         />
-
                         <ProgressMetric
                             label="Закрытые / выданные"
                             value={
@@ -951,7 +833,6 @@ export default function Analytics() {
                         />
                     </div>
                 </Section>
-
                 <Section
                     title="AI-сводка"
                     subtitle="Вывод сервера по периоду"
@@ -965,7 +846,6 @@ export default function Analytics() {
                             shift.aiSummary ||
                             "AI-сводка пока отсутствует."}
                     </p>
-
                     {asArray(
                         aiResult
                             ?.recommendations,
@@ -991,11 +871,9 @@ export default function Analytics() {
                     )}
                 </Section>
             </div>
-
-
             {/* FORECAST */}
-
             <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <div className="min-w-0">
                 <Section
                     title="Прогноз отказов"
                     subtitle={`Горизонт: ${currentPeriod.days} дн.`}
@@ -1008,6 +886,8 @@ export default function Analytics() {
                     ) : sortedForecast.length >
                       0 ? (
                         <div className="space-y-3">
+<p className="text-[11px] text-gray-400">Профиль риска по оборудованию, от большего к меньшему</p>
+                            <ForecastChart items={sortedForecast.slice(0, 8)} height={220} />
                             {sortedForecast
                                 .slice(
                                     0,
@@ -1032,19 +912,22 @@ export default function Analytics() {
                         <EmptyBlock text="Прогноз отсутствует" />
                     )}
                 </Section>
-
+                </div>
+                <div className="min-w-0 xl:relative xl:min-h-0">
+                    <div className={sortedForecast.length && !forecastQuery.isLoading ? "xl:absolute xl:inset-0" : ""}>
                 <Section
                     title="Аномалии"
                     subtitle={`${sortedAnomalies.length} найдено`}
-                    icon={
-                        RiSparkling2Line
-                    }
+                    icon={RiSparkling2Line}
+                    fillHeight
                 >
                     {anomaliesQuery.isLoading ? (
                         <InlineLoader />
                     ) : sortedAnomalies.length >
                       0 ? (
-                        <div className="max-h-[430px] space-y-3 overflow-y-auto pr-1">
+                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                            <div className="shrink-0"><SeverityChart items={sortedAnomalies} /></div>
+                            <div className={`min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1 ${sortedForecast.length && !forecastQuery.isLoading ? "max-h-[520px] xl:max-h-none" : "max-h-[520px]"}`}>
                             {sortedAnomalies.map(
                                 (
                                     item,
@@ -1060,15 +943,15 @@ export default function Analytics() {
                                 ),
                             )}
                         </div>
+</div>
                     ) : (
                         <EmptyBlock text="Аномалий не найдено" />
                     )}
                 </Section>
+                    </div>
+                </div>
             </div>
-
-
             {/* DOWNTIME */}
-
             <Section
                 title="Простой оборудования"
                 subtitle="Разбивка по оборудованию"
@@ -1076,6 +959,7 @@ export default function Analytics() {
                     RiTimeLine
                 }
             >
+                <div className="[&_.smart-table__table]:h-full">
                 <SmartTable
                     data={
                         downtimeEquipment
@@ -1091,15 +975,13 @@ export default function Analytics() {
                     minWidth={
                         900
                     }
-                    scrollHeight="420px"
+                    scrollHeight="clamp(500px, 61vh, 640px)"
                     emptyText="Простоев нет"
                     emptyDescription="За выбранный период простоев оборудования не зарегистрировано"
                 />
+                </div>
             </Section>
-
-
             {/* TOPS */}
-
             <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                 <Section
                     title="Проблемное оборудование"
@@ -1117,7 +999,6 @@ export default function Analytics() {
                         suffix="аварий"
                     />
                 </Section>
-
                 <Section
                     title="Проблемные участки"
                     subtitle="Аварийность на единицу оборудования"
@@ -1138,10 +1019,7 @@ export default function Analytics() {
         </div>
     );
 }
-
-
 // MARK: Period
-
 function PeriodButton({
     active,
     onClick,
@@ -1161,10 +1039,7 @@ function PeriodButton({
         </button>
     );
 }
-
-
 // MARK: KPI
-
 function KpiCard({
     label,
     value,
@@ -1184,23 +1059,19 @@ function KpiCard({
         violet:
             "bg-violet-50 text-violet-600",
     };
-
     return (
         <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="min-w-0">
                 <p className="truncate text-xs font-medium text-gray-500">
                     {label}
                 </p>
-
                 <p className="mt-1 truncate text-2xl font-bold text-gray-900">
                     {value}
                 </p>
-
                 <p className="mt-1 truncate text-[10px] text-gray-400">
                     {helper}
                 </p>
             </div>
-
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                 tones[tone] ||
                 tones.blue
@@ -1214,29 +1085,25 @@ function KpiCard({
         </div>
     );
 }
-
-
 // MARK: Section
-
 function Section({
     title,
     subtitle,
     icon: Icon,
     children,
+    fillHeight = false,
 }) {
     return (
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <section className={`${fillHeight ? "flex h-full min-h-0 flex-col" : ""} overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm`}>
             <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
                 <div>
                     <h2 className="text-[15px] font-semibold text-gray-900">
                         {title}
                     </h2>
-
                     <p className="mt-1 text-xs text-gray-500">
                         {subtitle}
                     </p>
                 </div>
-
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                     <Icon
                         size={
@@ -1245,17 +1112,13 @@ function Section({
                     />
                 </div>
             </div>
-
-            <div className="p-5">
+            <div className={fillHeight ? "flex min-h-0 flex-1 flex-col p-5" : "p-5"}>
                 {children}
             </div>
         </section>
     );
 }
-
-
 // MARK: Mini Stats
-
 function MiniStat({
     title,
     value,
@@ -1265,59 +1128,28 @@ function MiniStat({
             <p className="text-xs text-gray-500">
                 {title}
             </p>
-
             <p className="mt-1 text-2xl font-bold text-gray-900">
                 {value}
             </p>
         </div>
     );
 }
-
-function ProgressMetric({
-    label,
-    value,
-}) {
-    const percent =
-        Math.max(
-            0,
-            Math.min(
-                100,
-                Number(value) ||
-                    0,
-            ),
-        );
-
+function ProgressMetric({ label, value }) {
+    const percent = Math.max(0, Math.min(100, Number(value) || 0));
+    const options = {
+        chart: { type: "radialBar", sparkline: { enabled: true }, animations: { enabled: true, speed: 400 } },
+        colors: ["#2563eb"],
+        plotOptions: { radialBar: { hollow: { size: "68%" }, track: { background: "#eff3f8", strokeWidth: "100%" }, dataLabels: { name: { show: false }, value: { show: true, offsetY: 6, fontSize: "17px", fontWeight: 700, color: "#0f172a", formatter: (n) => `${Math.round(n)}%` } } } },
+        stroke: { lineCap: "round" }
+    };
     return (
-        <div className="rounded-xl border border-gray-100 p-4">
-            <div className="flex justify-between gap-3">
-                <span className="text-xs font-medium text-gray-500">
-                    {label}
-                </span>
-
-                <span className="text-xs font-bold text-gray-900">
-                    {Math.round(
-                        percent,
-                    )}
-                    %
-                </span>
-            </div>
-
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
-                <div
-                    className="h-full rounded-full bg-blue-600"
-                    style={{
-                        width:
-                            `${percent}%`,
-                    }}
-                />
-            </div>
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-4 py-2">
+            <span className="max-w-[140px] text-xs font-medium leading-5 text-gray-600">{label}</span>
+            <div className="shrink-0"><Chart type="radialBar" options={options} series={[percent]} width={106} height={106} /></div>
         </div>
     );
 }
-
-
 // MARK: Forecast
-
 function ForecastItem({
     item,
 }) {
@@ -1325,12 +1157,10 @@ function ForecastItem({
         Number(
             item.probability,
         ) || 0;
-
     const percent =
         Math.round(
             probability * 100,
         );
-
     return (
         <div className="rounded-xl border border-gray-200 p-4">
             <div className="flex items-start justify-between gap-4">
@@ -1341,22 +1171,18 @@ function ForecastItem({
                             item.equipment ||
                             `Оборудование #${item.equipmentId}`}
                     </p>
-
                     <p className="mt-1 text-xs text-gray-500">
                         Сейчас:{" "}
                         {
                             item.recentFailures
                         }
-
                         {" • "}
-
                         Ранее:{" "}
                         {
                             item.previousFailures
                         }
                     </p>
                 </div>
-
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
                     percent >= 65
                         ? "bg-red-50 text-red-700"
@@ -1369,7 +1195,6 @@ function ForecastItem({
                     )}
                 </span>
             </div>
-
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
                 <div
                     className="h-full rounded-full bg-blue-600"
@@ -1382,10 +1207,7 @@ function ForecastItem({
         </div>
     );
 }
-
-
 // MARK: Anomaly
-
 function AnomalyItem({
     item,
 }) {
@@ -1393,7 +1215,6 @@ function AnomalyItem({
         Number(
             item.severity,
         ) || 1;
-
     return (
         <div className="rounded-xl border border-gray-200 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -1403,14 +1224,12 @@ function AnomalyItem({
                             item.title
                         }
                     </p>
-
                     <p className="mt-1 text-xs leading-5 text-gray-500">
                         {
                             item.description
                         }
                     </p>
                 </div>
-
                 <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
                     severity >= 4
                         ? "bg-red-50 text-red-700"
@@ -1424,7 +1243,6 @@ function AnomalyItem({
                     /5
                 </span>
             </div>
-
             {item.recommendation && (
                 <div className="mt-3 rounded-lg bg-violet-50 px-3 py-2 text-xs leading-5 text-violet-800">
                     {
@@ -1435,10 +1253,7 @@ function AnomalyItem({
         </div>
     );
 }
-
-
 // MARK: Ranking
-
 function Ranking({
     items,
     titleKey,
@@ -1452,7 +1267,6 @@ function Ranking({
             <EmptyBlock text="Данных нет" />
         );
     }
-
     const max =
         Math.max(
             ...items.map(
@@ -1463,7 +1277,6 @@ function Ranking({
             ),
             1,
         );
-
     return (
         <div className="space-y-3">
             {items
@@ -1482,7 +1295,6 @@ function Ranking({
                                     valueKey
                                 ],
                             ) || 0;
-
                         return (
                             <div
                                 key={
@@ -1500,7 +1312,6 @@ function Ranking({
                                             ]
                                         }
                                     </span>
-
                                     <span className="shrink-0 text-xs font-semibold text-gray-500">
                                         {value.toFixed(
                                             value %
@@ -1513,7 +1324,6 @@ function Ranking({
                                         }
                                     </span>
                                 </div>
-
                                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100">
                                     <div
                                         className="h-full rounded-full bg-blue-600"
@@ -1535,10 +1345,7 @@ function Ranking({
         </div>
     );
 }
-
-
 // MARK: State
-
 function InlineLoader() {
     return (
         <div className="flex min-h-[180px] items-center justify-center">
@@ -1549,7 +1356,6 @@ function InlineLoader() {
         </div>
     );
 }
-
 function PageLoader() {
     return (
         <div className="flex min-h-[500px] items-center justify-center">
@@ -1560,7 +1366,6 @@ function PageLoader() {
         </div>
     );
 }
-
 function EmptyBlock({
     text,
 }) {
@@ -1570,7 +1375,6 @@ function EmptyBlock({
         </div>
     );
 }
-
 function ErrorBox({
     text,
 }) {
@@ -1579,4 +1383,47 @@ function ErrorBox({
             {text}
         </div>
     );
+}
+
+
+// MARK: Forecast chart — риск по оборудованию, отсортированному по вероятности
+function ForecastChart({ items, height = 200 }) {
+    const selected = items.slice(0, 8);
+    if (!selected.length) return null;
+    const names = selected.map((item) => typeof item.equipment === "string" ? item.equipment : item.equipment?.name || item.name || `#${item.equipmentId ?? "—"}`);
+    const values = selected.map((item) => {
+        const n = Number(item.probability);
+        return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * (n <= 1 ? 100 : 1)))) : 0;
+    });
+    const options = {
+        chart: { type: "area", toolbar: { show: false }, zoom: { enabled: false }, fontFamily: "inherit", animations: { enabled: true, speed: 450 } },
+        colors: ["#2563eb"], stroke: { curve: "smooth", width: 2.5 },
+        fill: { type: "gradient", gradient: { shadeIntensity: 0, opacityFrom: 0.27, opacityTo: 0.01, stops: [0, 95, 100] } },
+        markers: { size: 4, colors: ["#fff"], strokeColors: "#2563eb", strokeWidth: 2, hover: { size: 6 } },
+        dataLabels: { enabled: false },
+        xaxis: { categories: names.map((_, i) => `№${i + 1}`), labels: { style: { colors: "#94a3b8", fontSize: "10px" } }, axisBorder: { show: false }, axisTicks: { show: false } },
+        yaxis: { min: 0, max: 100, tickAmount: 4, labels: { formatter: (v) => `${Math.round(v)}%`, style: { colors: "#94a3b8", fontSize: "10px" } } },
+        grid: { borderColor: "#f1f5f9", strokeDashArray: 4, padding: { top: 5, right: 12, left: 4, bottom: 0 } },
+        tooltip: { x: { formatter: (_, opts) => names[opts.dataPointIndex] || "Оборудование" }, y: { formatter: (v) => `${Math.round(v)}%` } },
+        legend: { show: false }
+    };
+    return <Chart type="area" height={height} width="100%" options={options} series={[{ name: "Риск отказа", data: values }]} />;
+}
+
+// MARK: Severity chart — кольцевая диаграмма распределения критичности
+function SeverityChart({ items }) {
+    if (!items.length) return null;
+    const counts = [1, 2, 3, 4, 5].map((level) => items.filter((item) => Math.round(Number(item.severity)) === level).length);
+    const options = {
+        chart: { type: "donut", fontFamily: "inherit", animations: { enabled: true, speed: 400 } },
+        labels: ["1 · Низкая", "2 · Умеренная", "3 · Средняя", "4 · Высокая", "5 · Критическая"],
+        colors: ["#bfdbfe", "#60a5fa", "#fbbf24", "#fb923c", "#ef4444"],
+        stroke: { width: 3, colors: ["#fff"] },
+        plotOptions: { pie: { expandOnClick: false, donut: { size: "75%", labels: { show: true, name: { show: true, fontSize: "11px", color: "#94a3b8", offsetY: -7 }, value: { show: true, fontSize: "24px", fontWeight: 700, color: "#0f172a", offsetY: 5 }, total: { show: true, label: "Всего", formatter: () => String(items.length) } } } } },
+        dataLabels: { enabled: false },
+        legend: { show: true, position: "right", fontSize: "11px", labels: { colors: "#64748b" }, markers: { size: 7 }, itemMargin: { vertical: 5 } },
+        tooltip: { y: { formatter: (v) => `${v} событий` } },
+        responsive: [{ breakpoint: 550, options: { legend: { position: "bottom" }, chart: { height: 240 } } }]
+    };
+    return <Chart type="donut" height={210} width="100%" options={options} series={counts} />;
 }

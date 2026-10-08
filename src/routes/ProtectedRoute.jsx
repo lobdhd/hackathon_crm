@@ -1,62 +1,34 @@
-import {
-    Navigate,
-    Outlet,
-} from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-import {
-    RiLoader4Line,
-} from "react-icons/ri";
+import { RiLoader4Line } from "react-icons/ri";
 
-import {
-    useAuth,
-} from "../auth/AuthProvider.jsx";
+import { useAuth } from "../auth/AuthProvider.jsx";
 
-
-// MARK: Loader
 
 function AuthLoader() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50">
             <div className="flex flex-col items-center gap-3 text-gray-500">
-                <RiLoader4Line
-                    size={30}
-                    className="animate-spin text-blue-600"
-                />
-
-                <span className="text-sm">
-                    Проверяем сессию...
-                </span>
+                <RiLoader4Line size={30} className="animate-spin text-blue-600" />
+                <span className="text-sm">Проверяем сессию...</span>
             </div>
         </div>
     );
 }
 
 
-// MARK: Protected route
-
-export default function ProtectedRoute({
-    children,
-}) {
-    const {
-        isAuthenticated,
-        isBootstrapping,
-    } = useAuth();
+export default function ProtectedRoute({ children }) {
+    const { isAuthenticated, isBootstrapping } = useAuth();
+    const location = useLocation();
 
     if (isBootstrapping) {
         return <AuthLoader />;
     }
 
     if (!isAuthenticated) {
-        return (
-            <Navigate
-                to="/login"
-                replace
-            />
-        );
+        // В Login после успешного входа: navigate(location.state?.from?.pathname ?? getDefaultRoute(role))
+        return <Navigate to="/login" replace state={{ from: location }} />;
     }
 
-    return (
-        children ??
-        <Outlet />
-    );
+    return children ?? <Outlet />;
 }

@@ -20,6 +20,15 @@ import {
     referenceKeys,
 } from "./useReferences.js";
 
+import {
+    useAuth,
+} from "../auth/AuthProvider.jsx";
+
+import {
+    enqueueWorkOrderOfflineItem,
+    isOfflineQueueNetworkError,
+} from "../offline/workOrderOfflineQueue.js";
+
 
 // MARK: Keys
 
@@ -146,6 +155,43 @@ function setOrderFromResult(
     }
 
     return order;
+}
+
+
+function createClientActionId(
+    value,
+) {
+    const existing =
+        String(
+            value ?? "",
+        ).trim();
+
+    if (existing) {
+        return existing;
+    }
+
+    return crypto.randomUUID();
+}
+
+function queuedResult({
+    item,
+    orderId,
+}) {
+    return {
+        queuedOffline:
+            true,
+
+        orderId:
+            Number(
+                orderId,
+            ),
+
+        clientActionId:
+            item.clientActionId,
+
+        queueItem:
+            item,
+    };
 }
 
 
@@ -377,23 +423,85 @@ export function useAddWorkOrderComment() {
     const queryClient =
         useQueryClient();
 
+    const {
+        user,
+    } = useAuth();
+
     return useMutation({
-        mutationFn: ({
+        /*
+         * Комментарий идемпотентен
+         * через clientActionId, поэтому
+         * только его сетевую ошибку
+         * разрешено сохранять локально.
+         */
+        mutationFn: async ({
             id,
             comment,
             clientActionId,
-        }) =>
-            addWorkOrderComment(
-                id,
-                {
-                    comment,
-                    clientActionId,
-                },
-            ),
+        }) => {
+            const payload = {
+                comment,
+
+                clientActionId:
+                    createClientActionId(
+                        clientActionId,
+                    ),
+            };
+
+            try {
+                return await addWorkOrderComment(
+                    id,
+                    payload,
+                );
+            } catch (
+                error
+            ) {
+                if (
+                    !isOfflineQueueNetworkError(
+                        error,
+                    ) ||
+                    !user?.id
+                ) {
+                    throw error;
+                }
+
+                const item =
+                    enqueueWorkOrderOfflineItem({
+                        userId:
+                            user.id,
+
+                        type:
+                            "COMMENT",
+
+                        orderId:
+                            id,
+
+                        payload,
+                    });
+
+                return queuedResult({
+                    item,
+                    orderId:
+                        id,
+                });
+            }
+        },
+
+        retry:
+            0,
+
+        networkMode:
+            "always",
 
         onSuccess: async (
             result,
         ) => {
+            if (
+                result?.queuedOffline
+            ) {
+                return;
+            }
+
             const updated =
                 setOrderFromResult(
                     queryClient,
@@ -419,19 +527,88 @@ export function useWorkOrderAction() {
     const queryClient =
         useQueryClient();
 
+    const {
+        user,
+    } = useAuth();
+
     return useMutation({
-        mutationFn: ({
+        /*
+         * Все status actions содержат
+         * clientActionId и могут быть
+         * безопасно replay-нуты backend-ом.
+         *
+         * В queue попадает ТОЛЬКО сам action.
+         * Создание наряда и /api/uploads
+         * сюда никогда не попадают.
+         */
+        mutationFn: async ({
             id,
-            payload,
-        }) =>
-            performWorkOrderAction(
-                id,
-                payload,
-            ),
+            payload = {},
+        }) => {
+            const safePayload = {
+                ...payload,
+
+                clientActionId:
+                    createClientActionId(
+                        payload.clientActionId,
+                    ),
+            };
+
+            try {
+                return await performWorkOrderAction(
+                    id,
+                    safePayload,
+                );
+            } catch (
+                error
+            ) {
+                if (
+                    !isOfflineQueueNetworkError(
+                        error,
+                    ) ||
+                    !user?.id
+                ) {
+                    throw error;
+                }
+
+                const item =
+                    enqueueWorkOrderOfflineItem({
+                        userId:
+                            user.id,
+
+                        type:
+                            "ACTION",
+
+                        orderId:
+                            id,
+
+                        payload:
+                            safePayload,
+                    });
+
+                return queuedResult({
+                    item,
+                    orderId:
+                        id,
+                });
+            }
+        },
+
+        retry:
+            0,
+
+        networkMode:
+            "always",
 
         onSuccess: async (
             result,
         ) => {
+            if (
+                result?.queuedOffline
+            ) {
+                return;
+            }
+
             const updated =
                 setOrderFromResult(
                     queryClient,
@@ -449,3 +626,4 @@ export function useWorkOrderAction() {
         },
     });
 }
+
