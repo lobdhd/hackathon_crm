@@ -32,6 +32,7 @@ import {
 import {
     useI18n,
 } from "../../i18n/index.js";
+import { t as i18nT } from "../../i18n/index.js";
 // MARK: Config
 const ACTIVE_STATUSES = [
     "ISSUED",
@@ -78,7 +79,7 @@ const PRIORITY_LABELS = {
 const EXECUTOR_STATUS = {
     AVAILABLE: {
         label:
-            "Свободен",
+            i18nT("pages.dashboard.dashboard.0d91f1e"),
         className:
             "bg-green-50 text-green-700",
         dot:
@@ -86,7 +87,7 @@ const EXECUTOR_STATUS = {
     },
     BUSY: {
         label:
-            "В работе",
+            i18nT("status.inProgress"),
         className:
             "bg-amber-50 text-amber-700",
         dot:
@@ -94,7 +95,7 @@ const EXECUTOR_STATUS = {
     },
     QUEUED: {
         label:
-            "Есть очередь",
+            i18nT("pages.dashboard.dashboard.1b9a9fa"),
         className:
             "bg-blue-50 text-blue-700",
         dot:
@@ -102,7 +103,7 @@ const EXECUTOR_STATUS = {
     },
     OFF_SHIFT: {
         label:
-            "Не на смене",
+            i18nT("pages.dashboard.dashboard.02aef69"),
         className:
             "bg-gray-100 text-gray-600",
         dot:
@@ -353,13 +354,13 @@ export default function Dashboard() {
     const stats = [
         {
             title:
-                "Активные наряды",
+                i18nT("dashboard.activeOrders"),
             value:
                 Number(
                     dashboard.active,
                 ) || 0,
             description:
-                "Текущие работы",
+                i18nT("pages.dashboard.dashboard.6ba2f90"),
             icon:
                 RiToolsLine,
             tone:
@@ -367,13 +368,13 @@ export default function Dashboard() {
         },
         {
             title:
-                "Просрочено",
+                i18nT("kanban.overdue"),
             value:
                 Number(
                     dashboard.overdue,
                 ) || 0,
             description:
-                "Требуют внимания",
+                i18nT("pages.dashboard.dashboard.06745d6"),
             icon:
                 RiAlarmWarningLine,
             tone:
@@ -385,13 +386,13 @@ export default function Dashboard() {
         },
         {
             title:
-                "Оборудование в простое",
+                i18nT("pages.analytics.analytics.0f7ca97"),
             value:
                 Number(
                     dashboard.equipmentInDowntime,
                 ) || 0,
             description:
-                "Сейчас",
+                i18nT("pages.dashboard.dashboard.2c2777e"),
             icon:
                 RiTimeLine,
             tone:
@@ -403,7 +404,7 @@ export default function Dashboard() {
         },
         {
             title:
-                "Средняя реакция",
+                i18nT("pages.dashboard.dashboard.849a585"),
             value:
                 formatMinutes(
                     dashboard.averageReactionMinutes,
@@ -425,7 +426,7 @@ export default function Dashboard() {
                     field:
                         "number",
                     header:
-                        "Наряд",
+                        i18nT("ordersTable.order"),
                     minWidth:
                         190,
                     render:
@@ -450,7 +451,7 @@ export default function Dashboard() {
                     key:
                         "equipment",
                     header:
-                        "Оборудование",
+                        i18nT("sidebar.equipment"),
                     minWidth:
                         220,
                     sortValue:
@@ -485,7 +486,7 @@ export default function Dashboard() {
                     key:
                         "assignee",
                     header:
-                        "Исполнитель",
+                        i18nT("ordersTable.assignee"),
                     minWidth:
                         210,
                     sortValue:
@@ -509,7 +510,7 @@ export default function Dashboard() {
                     field:
                         "priority",
                     header:
-                        "Приоритет",
+                        i18nT("orderModal.priority"),
                     minWidth:
                         135,
                     render:
@@ -527,7 +528,7 @@ export default function Dashboard() {
                     field:
                         "status",
                     header:
-                        "Статус",
+                        i18nT("employeeModal.status"),
                     minWidth:
                         135,
                     render:
@@ -592,13 +593,10 @@ export default function Dashboard() {
             <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                        Панель смены
+                        {i18nT("pages.dashboard.dashboard.d76b1bb")}
                     </h1>
                     <p className="mt-1 text-sm text-gray-500">
-                        Текущее состояние
-                        производства,
-                        исполнителей и
-                        оборудования
+                        {i18nT("pages.dashboard.dashboard.08fe3eb")}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -614,7 +612,7 @@ export default function Dashboard() {
                                 18
                             }
                         />
-                        Обновить
+                        {i18nT("components.layout.appnavbar.dbe5444")}
                     </button>
                     <button
                         type="button"
@@ -625,7 +623,7 @@ export default function Dashboard() {
                         }
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                     >
-                        Наряды
+                        {i18nT("pages.dashboard.dashboard.1181a18")}
                         <RiArrowRightLine
                             size={
                                 18
@@ -654,7 +652,7 @@ export default function Dashboard() {
                 {/* EXECUTORS */}
                 <section className="self-start overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                     <SectionHeader
-                        title="Исполнители смены"
+                        title={i18nT("pages.dashboard.dashboard.f1bdaed")}
                         description={`${executors.filter(
                             (
                                 item,
@@ -689,9 +687,7 @@ export default function Dashboard() {
                             )
                         ) : (
                             <div className="px-5 py-12 text-center text-sm text-gray-400">
-                                Нет
-                                сотрудников
-                                на смене
+                                {i18nT("pages.dashboard.dashboard.b417908")}
                             </div>
                         )}
                     </div>
@@ -704,8 +700,7 @@ export default function Dashboard() {
                         }
                         className="flex w-full items-center justify-center gap-1 border-t border-gray-200 px-5 py-3 text-sm font-semibold text-blue-600 transition hover:bg-gray-50"
                     >
-                        Все
-                        исполнители
+                        {i18nT("pages.dashboard.dashboard.6fc64f4")}
                         <RiArrowRightLine />
                     </button>
                 </section>
@@ -713,7 +708,7 @@ export default function Dashboard() {
                 <div className="min-w-0 xl:relative xl:min-h-0">
                 <section className={`flex h-[620px] min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ${alignOrdersToExecutors ? "xl:absolute xl:inset-0 xl:h-full" : "xl:h-[660px]"}`}>
                     <SectionHeader
-                        title="Активные наряды"
+                        title={i18nT("dashboard.activeOrders")}
                         description={`${ordersQuery.data?.total ?? orders.length} активных`}
                         icon={
                             RiToolsLine
@@ -747,7 +742,7 @@ export default function Dashboard() {
                                     `/orders/${order.id}`,
                                 )
                             }
-                            emptyText="Активных нарядов нет"
+                            emptyText={i18nT("employeeDetails.noActiveOrders")}
                             emptyDescription="На текущий момент открытых работ нет"
                         />
                     </div>
@@ -758,7 +753,7 @@ export default function Dashboard() {
             <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
                 {/* EQUIPMENT */}
                 <DashboardSection
-                    title="Проблемное оборудование"
+                    title={i18nT("pages.analytics.analytics.101358d")}
                     subtitle="По аварийным нарядам за 30 дней"
                     icon={
                         RiToolsLine
@@ -787,7 +782,7 @@ export default function Dashboard() {
                 </DashboardSection>
                 {/* AREAS */}
                 <DashboardSection
-                    title="Участки"
+                    title={i18nT("ratingTable.areas")}
                     subtitle="Аварийность на единицу оборудования"
                     icon={
                         RiMapPinLine
@@ -821,7 +816,7 @@ export default function Dashboard() {
                 </DashboardSection>
                 {/* EXECUTORS TOP */}
                 <DashboardSection
-                    title="Лучшие исполнители"
+                    title={i18nT("pages.dashboard.dashboard.64823bc")}
                     subtitle="Средняя оценка за 30 дней"
                     icon={
                         RiUserLine
@@ -857,7 +852,7 @@ export default function Dashboard() {
             <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                 {/* FORECAST */}
                 <DashboardSection
-                    title="Прогноз отказов"
+                    title={i18nT("pages.analytics.analytics.b89121c")}
                     subtitle="Вероятность отказа на горизонте 30 дней"
                     icon={
                         RiFlashlightLine
@@ -868,7 +863,7 @@ export default function Dashboard() {
                     ) : sortedForecasts.length >
                       0 ? (
                         <div className="space-y-4">
-<div className="mb-1 text-[11px] text-gray-400">Профиль риска · оборудование по убыванию вероятности</div>
+<div className="mb-1 text-[11px] text-gray-400">{i18nT("pages.dashboard.dashboard.d653282")}</div>
                             <ForecastChart items={sortedForecasts} height={190} />
                             {sortedForecasts.map(
                                 (
@@ -891,7 +886,7 @@ export default function Dashboard() {
                 </DashboardSection>
                 {/* ANOMALY */}
                 <DashboardSection
-                    title="AI-контроль"
+                    title={i18nT("pages.dashboard.dashboard.33cd729")}
                     subtitle="Самая важная найденная аномалия"
                     icon={
                         RiSparkling2Line
@@ -921,16 +916,10 @@ export default function Dashboard() {
                                     />
                                 </div>
                                 <p className="mt-3 text-sm font-semibold text-green-900">
-                                    Критичных
-                                    аномалий
-                                    нет
+                                    {i18nT("pages.dashboard.dashboard.6480cd8")}
                                 </p>
                                 <p className="mt-1 text-xs text-green-700">
-                                    Система
-                                    не обнаружила
-                                    проблем,
-                                    требующих
-                                    внимания
+                                    {i18nT("pages.dashboard.dashboard.83fd28a")}
                                 </p>
                             </div>
                         </div>
@@ -1278,12 +1267,11 @@ function ForecastRow({
                         )}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                        Последние
-                        отказы:{" "}
+                        {i18nT("pages.dashboard.dashboard.2b29160")}{" "}
                         {item.recentFailures ??
                             0}
                         {" • "}
-                        Было:{" "}
+                        {i18nT("pages.dashboard.dashboard.aafef51")}{" "}
                         {item.previousFailures ??
                             0}
                     </p>
@@ -1320,8 +1308,7 @@ function ForecastRow({
                 item.growth !==
                     null && (
                 <p className="mt-2 text-[11px] text-gray-400">
-                    Изменение
-                    частоты:{" "}
+                    {i18nT("pages.dashboard.dashboard.02723a5")}{" "}
                     {Number(
                         item.growth,
                     ) > 0
@@ -1350,7 +1337,7 @@ function AnomalyCard({
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-bold uppercase text-red-700">
-                            Важность{" "}
+                            {i18nT("pages.dashboard.dashboard.e9ce0a4")}{" "}
                             {
                                 severity
                             }
@@ -1384,7 +1371,7 @@ function AnomalyCard({
             {anomaly.recommendation && (
                 <div className="mt-4 rounded-lg border border-white bg-white/80 p-3">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
-                        Рекомендация
+                        {i18nT("pages.dashboard.dashboard.0e742e9")}
                     </p>
                     <p className="mt-1 text-sm leading-5 text-gray-700">
                         {
@@ -1427,7 +1414,7 @@ function AnomalyCard({
                     }
                     className="shrink-0 text-xs font-bold text-blue-600 hover:text-blue-700"
                 >
-                    В аналитику →
+                    {i18nT("pages.dashboard.dashboard.4e00e5b")}
                 </button>
             </div>
         </div>
@@ -1527,9 +1514,7 @@ function PageError({
                 className="text-red-500"
             />
             <h2 className="mt-4 text-lg font-bold text-gray-900">
-                Не удалось
-                загрузить
-                Dashboard
+                {i18nT("pages.dashboard.dashboard.fc07e96")}
             </h2>
             <p className="mt-2 max-w-lg text-sm text-gray-500">
                 {text}
@@ -1542,7 +1527,7 @@ function PageError({
                 className="mt-5 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700"
             >
                 <RiRefreshLine />
-                Повторить
+                {i18nT("components.layout.appnavbar.b914bbb")}
             </button>
         </div>
     );

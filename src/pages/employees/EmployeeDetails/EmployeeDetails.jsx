@@ -173,7 +173,7 @@ export default function EmployeeDetails() {
                     RiLoader4Line
                 }
                 spin
-                title="Загружаем сотрудника"
+                title={i18nT("pages.employees.employeedetails.employeedetails.fa1b991")}
                 text="Получаем актуальные данные"
             />
         );
@@ -187,7 +187,7 @@ export default function EmployeeDetails() {
                 icon={
                     RiUserLine
                 }
-                title="Не удалось загрузить сотрудника"
+                title={i18nT("pages.employees.employeedetails.employeedetails.723df7a")}
                 text={
                     executorsQuery
                         .error
@@ -207,7 +207,7 @@ export default function EmployeeDetails() {
                                 17
                             }
                         />
-                        Повторить
+                        {i18nT("components.layout.appnavbar.b914bbb")}
                     </button>
                 }
             />
@@ -307,7 +307,7 @@ export default function EmployeeDetails() {
                                         {
                                             employee.grade
                                         }{" "}
-                                        разряд
+                                        {i18nT("employeeModal.gradeLower")}
                                     </span>
                                 )}
                             </div>
@@ -336,13 +336,13 @@ export default function EmployeeDetails() {
 
                         <div>
                             <p className="text-xs text-gray-500">
-                                Смена
+                                {i18nT("reportModal.shift")}
                             </p>
 
                             <p className="text-sm font-bold text-gray-900">
                                 {employee.isOnShift
-                                    ? "На смене"
-                                    : "Не на смене"}
+                                    ? i18nT("pages.admin.admin.admin.958b816")
+                                    : i18nT("employeeModal.offShift")}
                             </p>
                         </div>
                     </div>
@@ -386,7 +386,7 @@ export default function EmployeeDetails() {
                         />
 
                         <SmallKpi
-                            label="Просроченные"
+                            label={i18nT("pages.orders.orders.orders.97a53e1")}
                             value={
                                 overdueOrders.length
                             }
@@ -458,7 +458,7 @@ export default function EmployeeDetails() {
                                 {ordersQuery
                                     .error
                                     ?.message ||
-                                    "Не удалось загрузить наряды"}
+                                    i18nT("pages.orders.orders.orders.ac0c6fb")}
                             </div>
                         ) : employeeOrders.length >
                           0 ? (
@@ -468,23 +468,23 @@ export default function EmployeeDetails() {
                                         <thead className="bg-gray-50">
                                             <tr className="text-xs uppercase text-gray-400">
                                                 <th className="px-4 py-3 font-semibold">
-                                                    Наряд
+                                                    {i18nT("pages.employees.employeedetails.employeedetails.5072957")}
                                                 </th>
 
                                                 <th className="px-4 py-3 font-semibold">
-                                                    Оборудование
+                                                    {i18nT("sidebar.equipment")}
                                                 </th>
 
                                                 <th className="px-4 py-3 font-semibold">
-                                                    Приоритет
+                                                    {i18nT("pages.employees.employeedetails.employeedetails.a0f9f1a")}
                                                 </th>
 
                                                 <th className="px-4 py-3 font-semibold">
-                                                    Статус
+                                                    {i18nT("employeeModal.status")}
                                                 </th>
 
                                                 <th className="px-4 py-3 font-semibold">
-                                                    Срок
+                                                    {i18nT("pages.employees.employeedetails.employeedetails.bae913f")}
                                                 </th>
                                             </tr>
                                         </thead>
@@ -529,7 +529,7 @@ export default function EmployeeDetails() {
                         tone="green"
                     >
                         <p className="text-xs text-gray-500">
-                            Статус
+                            {i18nT("employeeModal.status")}
                         </p>
 
                         <div className="mt-2">
@@ -588,7 +588,7 @@ export default function EmployeeDetails() {
                         />
 
                         <InfoRow
-                            label="Специальность"
+                            label={i18nT("components.employees.createemployeemodal.500aacb")}
                             value={
                                 employee.specialty ||
                                 "—"
@@ -607,7 +607,7 @@ export default function EmployeeDetails() {
                         />
 
                         <InfoRow
-                            label="На смене"
+                            label={i18nT("pages.admin.admin.admin.958b816")}
                             value={
                                 employee.isOnShift
                                     ? "Да"
@@ -616,7 +616,7 @@ export default function EmployeeDetails() {
                         />
 
                         <InfoRow
-                            label="Статус"
+                            label={i18nT("employeeModal.status")}
                             value={employeeStatusLabel(
                                 employee.employeeStatus,
                             )}
@@ -696,7 +696,7 @@ function HistoryRow({
                     order,
                 ) ? (
                     <span className="font-semibold text-red-600">
-                        Просрочен
+                        {i18nT("pages.assistant.assistant.assistant.0a04820")}
                     </span>
                 ) : (
                     <span className="text-gray-600">
@@ -771,11 +771,11 @@ function OrderRow({
                     order,
                 ) ? (
                     <span className="text-sm font-semibold text-red-600">
-                        Просрочен
+                        {i18nT("pages.assistant.assistant.assistant.0a04820")}
                     </span>
                 ) : (
                     <span className="text-xs text-gray-500">
-                        до{" "}
+                        {i18nT("pages.employees.employeedetails.employeedetails.538dc63")}{" "}
                         {formatDate(
                             order.deadline,
                         )}
@@ -947,7 +947,7 @@ function InlineLoading() {
                 className="animate-spin"
             />
 
-            Загрузка...
+            {i18nT("pages.employees.employeedetails.employeedetails.43e40d4")}
         </div>
     );
 }

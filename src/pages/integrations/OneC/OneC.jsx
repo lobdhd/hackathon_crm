@@ -31,6 +31,7 @@ import {
     useRetryOneCJob,
     useRunOneCQueue,
 } from "../../../hooks/useOneC.js";
+import { t as i18nT } from "../../../i18n/index.js";
 
 
 // MARK: Config
@@ -40,42 +41,42 @@ const STATUS_OPTIONS = [
         value:
             "",
         label:
-            "Все статусы",
+            i18nT("employeesPage.allStatuses"),
     },
 
     {
         value:
             "PENDING",
         label:
-            "В очереди",
+            i18nT("pages.integrations.onec.onec.b69f8c6"),
     },
 
     {
         value:
             "PROCESSING",
         label:
-            "Отправляется",
+            i18nT("pages.integrations.onec.onec.239ce90"),
     },
 
     {
         value:
             "SUCCESS",
         label:
-            "Доставлено",
+            i18nT("pages.integrations.onec.onec.f5cce37"),
     },
 
     {
         value:
             "FAILED",
         label:
-            "Ошибка",
+            i18nT("pages.integrations.onec.onec.c6fd3c6"),
     },
 
     {
         value:
             "DEAD",
         label:
-            "Попытки исчерпаны",
+            i18nT("pages.integrations.onec.onec.daf4c7b"),
     },
 ];
 
@@ -84,21 +85,21 @@ const DIRECTION_OPTIONS = [
         value:
             "",
         label:
-            "Все направления",
+            i18nT("pages.integrations.onec.onec.42154f9"),
     },
 
     {
         value:
             "OUTBOUND",
         label:
-            "НарядAI → 1С",
+            i18nT("pages.integrations.onec.onec.e06c0ff"),
     },
 
     {
         value:
             "INBOUND",
         label:
-            "1С → НарядAI",
+            i18nT("pages.integrations.onec.onec.cdc2a62"),
     },
 ];
 
@@ -107,28 +108,28 @@ const LIMIT_OPTIONS = [
         value:
             "50",
         label:
-            "50 записей",
+            i18nT("pages.integrations.onec.onec.912f0fa"),
     },
 
     {
         value:
             "100",
         label:
-            "100 записей",
+            i18nT("pages.integrations.onec.onec.2f21414"),
     },
 
     {
         value:
             "200",
         label:
-            "200 записей",
+            i18nT("pages.integrations.onec.onec.bf9d4b4"),
     },
 
     {
         value:
             "500",
         label:
-            "500 записей",
+            i18nT("pages.integrations.onec.onec.733ea90"),
     },
 ];
 
@@ -137,14 +138,14 @@ const PUSH_MODE_OPTIONS = [
         value:
             "IDS",
         label:
-            "По ID нарядов",
+            i18nT("pages.integrations.onec.onec.ade6488"),
     },
 
     {
         value:
             "SINCE",
         label:
-            "Изменённые с даты",
+            i18nT("pages.integrations.onec.onec.3215adf"),
     },
 ];
 
@@ -817,7 +818,7 @@ export default function OneC() {
                         "warning",
 
                     text:
-                        "Интеграция 1С отключена на backend.",
+                        i18nT("pages.integrations.onec.onec.71a464d"),
                 });
 
                 return;
@@ -957,18 +958,11 @@ export default function OneC() {
 
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                                Интеграция
-                                с 1С
+                                {i18nT("pages.integrations.onec.onec.e82f03b")}
                             </h1>
 
                             <p className="mt-1 text-sm text-gray-500">
-                                Мониторинг
-                                обмена,
-                                ошибки,
-                                повторные
-                                отправки и
-                                ручная
-                                синхронизация
+                                {i18nT("pages.integrations.onec.onec.e1ee112")}
                             </p>
                         </div>
                     </div>
@@ -986,8 +980,7 @@ export default function OneC() {
                     >
                         <RiUploadCloud2Line />
 
-                        Выгрузить
-                        наряды
+                        {i18nT("pages.integrations.onec.onec.43f4374")}
                     </button>
 
                     <button
@@ -1006,8 +999,7 @@ export default function OneC() {
                             <RiPlayCircleLine />
                         )}
 
-                        Запустить
-                        обмен
+                        {i18nT("pages.integrations.onec.onec.cb4e4a2")}
                     </button>
                 </div>
             </div>
@@ -1033,7 +1025,7 @@ export default function OneC() {
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <MetricCard
-                    title="В очереди"
+                    title={i18nT("pages.integrations.onec.onec.b69f8c6")}
                     value={
                         stats.pending
                     }
@@ -1044,7 +1036,7 @@ export default function OneC() {
                 />
 
                 <MetricCard
-                    title="Отправляется"
+                    title={i18nT("pages.integrations.onec.onec.239ce90")}
                     value={
                         stats.processing
                     }
@@ -1055,7 +1047,7 @@ export default function OneC() {
                 />
 
                 <MetricCard
-                    title="Доставлено"
+                    title={i18nT("pages.integrations.onec.onec.f5cce37")}
                     value={
                         stats.success
                     }
@@ -1066,7 +1058,7 @@ export default function OneC() {
                 />
 
                 <MetricCard
-                    title="С ошибками"
+                    title={i18nT("pages.integrations.onec.onec.058d8bc")}
                     value={
                         stats.failed
                     }
@@ -1097,8 +1089,7 @@ export default function OneC() {
                             )
                         }
                     >
-                        Задания
-                        обмена
+                        {i18nT("pages.integrations.onec.onec.9ba82a4")}
                     </TabButton>
 
                     <TabButton
@@ -1112,8 +1103,7 @@ export default function OneC() {
                             )
                         }
                     >
-                        Соответствия
-                        1С
+                        {i18nT("pages.integrations.onec.onec.4e7ee7c")}
                     </TabButton>
 
                     <TabButton
@@ -1127,8 +1117,7 @@ export default function OneC() {
                             )
                         }
                     >
-                        Сверка
-                        нарядов
+                        {i18nT("pages.integrations.onec.onec.45b6f8e")}
                     </TabButton>
                 </div>
 
@@ -1444,7 +1433,7 @@ function JobsTab({
                                     .value,
                             )
                         }
-                        placeholder="Поиск по ID, сущности, событию, ошибке..."
+                        placeholder={i18nT("pages.integrations.onec.onec.bd2ee1c")}
                         className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 pl-9 pr-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                     />
                 </div>
@@ -1535,7 +1524,7 @@ function JobsTab({
             ) : jobs.length ===
                 0 ? (
                 <EmptyState
-                    title="Задания не найдены"
+                    title={i18nT("pages.integrations.onec.onec.6f15733")}
                     text="Для выбранных фильтров заданий обмена нет."
                 />
             ) : (
@@ -1551,19 +1540,19 @@ function JobsTab({
                                 </Th>
 
                                 <Th>
-                                    Статус
+                                    {i18nT("employeeModal.status")}
                                 </Th>
 
                                 <Th>
-                                    Направление
+                                    {i18nT("pages.integrations.onec.onec.e4de622")}
                                 </Th>
 
                                 <Th>
-                                    Сущность
+                                    {i18nT("pages.integrations.onec.onec.de2925f")}
                                 </Th>
 
                                 <Th>
-                                    Событие
+                                    {i18nT("pages.integrations.onec.onec.0153214")}
                                 </Th>
 
                                 <Th>
@@ -1575,20 +1564,19 @@ function JobsTab({
                                 </Th>
 
                                 <Th>
-                                    Попытки
+                                    {i18nT("pages.integrations.onec.onec.80c8855")}
                                 </Th>
 
                                 <Th>
-                                    Следующая
-                                    попытка
+                                    {i18nT("pages.integrations.onec.onec.55fcf8f")}
                                 </Th>
 
                                 <Th>
-                                    Обновлено
+                                    {i18nT("pages.integrations.onec.onec.d1227a4")}
                                 </Th>
 
                                 <Th align="right">
-                                    Действия
+                                    {i18nT("pages.integrations.onec.onec.fb3df31")}
                                 </Th>
                             </tr>
                         </thead>
@@ -1703,7 +1691,7 @@ function JobsTab({
                                                         }
                                                         className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                                                     >
-                                                        Повторить
+                                                        {i18nT("components.layout.appnavbar.b914bbb")}
                                                     </button>
                                                 ) : (
                                                     <span className="text-xs text-gray-300">
@@ -1745,8 +1733,7 @@ function MappingsTab({
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
                     <div className="min-w-0 flex-1">
                         <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                            Сущность
-                            1С
+                            {i18nT("pages.integrations.onec.onec.edd8fff")}
                         </label>
 
                         <input
@@ -1763,7 +1750,7 @@ function MappingsTab({
                                         .toUpperCase(),
                                 )
                             }
-                            placeholder="Например: EQUIPMENT"
+                            placeholder={i18nT("pages.integrations.onec.onec.bcaa832")}
                             className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 text-sm font-medium uppercase outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
@@ -1777,7 +1764,7 @@ function MappingsTab({
                         }
                         className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black"
                     >
-                        Применить
+                        {i18nT("pages.integrations.onec.onec.2cd8441")}
                     </button>
 
                     <div className="relative min-w-0 flex-[1.5]">
@@ -1798,7 +1785,7 @@ function MappingsTab({
                                         .value,
                                 )
                             }
-                            placeholder="Поиск в соответствиях..."
+                            placeholder={i18nT("pages.integrations.onec.onec.1a89234")}
                             className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 pl-9 pr-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
@@ -1824,15 +1811,11 @@ function MappingsTab({
                 </div>
 
                 <p className="mt-2 text-xs text-gray-400">
-                    В backend-документации
-                    гарантирован пример
-                    сущности{" "}
+                    {i18nT("pages.integrations.onec.onec.81cc281")}{" "}
                     <strong>
                         EQUIPMENT
                     </strong>
-                    . Другие значения
-                    здесь не
-                    захардкожены.
+                    {i18nT("pages.integrations.onec.onec.b9488ea")}
                 </p>
             </div>
 
@@ -1852,7 +1835,7 @@ function MappingsTab({
             ) : items.length ===
                 0 ? (
                 <EmptyState
-                    title="Соответствий нет"
+                    title={i18nT("pages.integrations.onec.onec.9f73c42")}
                     text={`Для сущности ${entity ||
                         "без фильтра"
                         } записей не найдено.`}
@@ -1870,7 +1853,7 @@ function MappingsTab({
                                 </Th>
 
                                 <Th>
-                                    Сущность
+                                    {i18nT("pages.integrations.onec.onec.de2925f")}
                                 </Th>
 
                                 <Th>
@@ -1878,16 +1861,15 @@ function MappingsTab({
                                 </Th>
 
                                 <Th>
-                                    External
-                                    ID 1С
+                                    {i18nT("pages.integrations.onec.onec.e978367")}
                                 </Th>
 
                                 <Th>
-                                    Создано
+                                    {i18nT("pages.integrations.onec.onec.342a6a5")}
                                 </Th>
 
                                 <Th>
-                                    Обновлено
+                                    {i18nT("pages.integrations.onec.onec.d1227a4")}
                                 </Th>
                             </tr>
                         </thead>
@@ -1972,8 +1954,7 @@ function ReconciliationTab({
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
                     <div>
                         <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                            Изменены
-                            после
+                            {i18nT("pages.integrations.onec.onec.68f5567")}
                         </label>
 
                         <input
@@ -2001,8 +1982,7 @@ function ReconciliationTab({
                         }
                         className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black"
                     >
-                        Получить
-                        изменения
+                        {i18nT("pages.integrations.onec.onec.9359cf8")}
                     </button>
 
                     <div className="relative min-w-0 flex-1">
@@ -2023,13 +2003,13 @@ function ReconciliationTab({
                                         .value,
                                 )
                             }
-                            placeholder="Поиск среди изменённых нарядов..."
+                            placeholder={i18nT("pages.integrations.onec.onec.a1d4727")}
                             className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 pl-9 pr-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
 
                     <div className="rounded-lg bg-gray-100 px-3 py-2.5 text-xs font-semibold text-gray-600">
-                        Получено:{" "}
+                        {i18nT("pages.integrations.onec.onec.a5cbbd1")}{" "}
                         {total}
                     </div>
                 </div>
@@ -2052,7 +2032,7 @@ function ReconciliationTab({
             ) : items.length ===
                 0 ? (
                 <EmptyState
-                    title="Изменений нет"
+                    title={i18nT("pages.integrations.onec.onec.c985d79")}
                     text="После указанной даты изменённых нарядов не найдено."
                 />
             ) : (
@@ -2068,31 +2048,31 @@ function ReconciliationTab({
                                 </Th>
 
                                 <Th>
-                                    Номер
+                                    {i18nT("pages.integrations.onec.onec.d6d264f")}
                                 </Th>
 
                                 <Th>
-                                    Статус
+                                    {i18nT("employeeModal.status")}
                                 </Th>
 
                                 <Th>
-                                    Описание
+                                    {i18nT("pages.integrations.onec.onec.38ca0af")}
                                 </Th>
 
                                 <Th>
-                                    Оборудование
+                                    {i18nT("sidebar.equipment")}
                                 </Th>
 
                                 <Th>
-                                    Участок
+                                    {i18nT("ordersTable.area")}
                                 </Th>
 
                                 <Th>
-                                    Исполнитель
+                                    {i18nT("ordersTable.assignee")}
                                 </Th>
 
                                 <Th>
-                                    Обновлено
+                                    {i18nT("pages.integrations.onec.onec.d1227a4")}
                                 </Th>
                             </tr>
                         </thead>
@@ -2305,16 +2285,11 @@ function PushOrdersModal({
                 <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                     <div>
                         <h2 className="text-lg font-bold text-gray-900">
-                            Выгрузить
-                            наряды
-                            в 1С
+                            {i18nT("pages.integrations.onec.onec.479eadb")}
                         </h2>
 
                         <p className="mt-1 text-xs text-gray-500">
-                            Принудительное
-                            создание
-                            заданий
-                            обмена
+                            {i18nT("pages.integrations.onec.onec.92320f3")}
                         </p>
                     </div>
 
@@ -2336,8 +2311,7 @@ function PushOrdersModal({
                 <div className="space-y-4 p-5">
                     <div>
                         <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                            Режим
-                            выгрузки
+                            {i18nT("pages.integrations.onec.onec.38557d2")}
                         </label>
 
                         <GlideSelect
@@ -2361,8 +2335,7 @@ function PushOrdersModal({
                         "IDS" ? (
                         <div>
                             <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                                ID
-                                нарядов
+                                {i18nT("pages.integrations.onec.onec.5f9d0b0")}
                             </label>
 
                             <textarea
@@ -2379,19 +2352,13 @@ function PushOrdersModal({
                                     )
                                 }
                                 rows={5}
-                                placeholder="Например: 12, 15, 18, 42"
+                                placeholder={i18nT("pages.integrations.onec.onec.ae88597")}
                                 className="w-full resize-none rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                             />
 
                             <div className="mt-1.5 flex justify-between text-[11px] text-gray-400">
                                 <span>
-                                    Через
-                                    запятую,
-                                    пробел
-                                    или
-                                    точку
-                                    с
-                                    запятой
+                                    {i18nT("pages.integrations.onec.onec.03c82fa")}
                                 </span>
 
                                 <span>
@@ -2405,10 +2372,7 @@ function PushOrdersModal({
                     ) : (
                         <div>
                             <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                                Выгрузить
-                                наряды,
-                                изменённые
-                                после
+                                {i18nT("pages.integrations.onec.onec.d360daf")}
                             </label>
 
                             <input
@@ -2441,19 +2405,7 @@ function PushOrdersModal({
                             <RiInformationLine className="mt-0.5 shrink-0 text-blue-600" />
 
                             <p className="text-xs leading-5 text-blue-700">
-                                Backend
-                                поставит
-                                выбранные
-                                наряды
-                                в очередь
-                                обмена.
-                                Фактическую
-                                отправку
-                                можно
-                                запустить
-                                кнопкой
-                                «Запустить
-                                обмен».
+                                {i18nT("pages.integrations.onec.onec.2ac6b84")}
                             </p>
                         </div>
                     </div>
@@ -2467,7 +2419,7 @@ function PushOrdersModal({
                         }
                         className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -2483,7 +2435,7 @@ function PushOrdersModal({
                             <RiUploadCloud2Line />
                         )}
 
-                        Выгрузить
+                        {i18nT("pages.integrations.onec.onec.7e3abea")}
                     </button>
                 </div>
             </form>
@@ -2513,8 +2465,7 @@ function JobDetailsModal({
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-lg font-bold text-gray-900">
-                                Задание
-                                #
+                                {i18nT("pages.integrations.onec.onec.4b58349")}
                                 {
                                     job.id
                                 }
@@ -2558,7 +2509,7 @@ function JobDetailsModal({
                     <div className="space-y-5 p-5">
                         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                             <DetailBox
-                                label="Направление"
+                                label={i18nT("pages.integrations.onec.onec.e4de622")}
                                 value={
                                     job.direction
                                 }
@@ -2579,7 +2530,7 @@ function JobDetailsModal({
                             />
 
                             <DetailBox
-                                label="Попытки"
+                                label={i18nT("pages.integrations.onec.onec.80c8855")}
                                 value={
                                     job.attempts ??
                                     0
@@ -2598,7 +2549,7 @@ function JobDetailsModal({
                             />
 
                             <DetailBox
-                                label="Следующая попытка"
+                                label={i18nT("pages.integrations.onec.onec.55fcf8f")}
                                 value={
                                     formatDate(
                                         job.nextAttemptAt,
@@ -2616,7 +2567,7 @@ function JobDetailsModal({
                             />
 
                             <DetailBox
-                                label="Создано"
+                                label={i18nT("pages.integrations.onec.onec.342a6a5")}
                                 value={
                                     formatDate(
                                         job.createdAt,
@@ -2640,8 +2591,7 @@ function JobDetailsModal({
                         {job.lastError && (
                             <div>
                                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-red-400">
-                                    Последняя
-                                    ошибка
+                                    {i18nT("pages.integrations.onec.onec.a8fc16e")}
                                 </p>
 
                                 <div className="whitespace-pre-wrap rounded-xl border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-700">
@@ -2660,7 +2610,7 @@ function JobDetailsModal({
                         />
 
                         <JsonBlock
-                            title="Ответ 1С"
+                            title={i18nT("pages.integrations.onec.onec.da13a4f")}
                             value={
                                 job.response
                             }
@@ -2670,7 +2620,7 @@ function JobDetailsModal({
 
                 <div className="flex justify-between gap-3 border-t border-gray-100 px-5 py-4">
                     <span className="text-xs text-gray-400">
-                        Обновлено:{" "}
+                        {i18nT("pages.integrations.onec.onec.ecb784d")}{" "}
                         {formatDate(
                             job.updatedAt,
                         )}
@@ -2693,8 +2643,7 @@ function JobDetailsModal({
                                 <RiLoader4Line className="animate-spin" />
                             )}
 
-                            Повторить
-                            отправку
+                            {i18nT("pages.integrations.onec.onec.951fc04")}
                         </button>
                     )}
                 </div>
@@ -2757,10 +2706,10 @@ function DirectionBadge({
             `}
         >
             {outbound
-                ? "НарядAI → 1С"
+                ? i18nT("pages.integrations.onec.onec.e06c0ff")
                 : direction ===
                     "INBOUND"
-                    ? "1С → НарядAI"
+                    ? i18nT("pages.integrations.onec.onec.cdc2a62")
                     : direction ||
                     "—"}
         </span>
@@ -2893,8 +2842,7 @@ function ErrorState({
                 />
 
                 <p className="mt-3 text-sm font-semibold text-gray-900">
-                    Ошибка
-                    загрузки
+                    {i18nT("pages.integrations.onec.onec.e0e3af6")}
                 </p>
 
                 <p className="mt-1 max-w-lg text-xs text-gray-500">
@@ -2908,7 +2856,7 @@ function ErrorState({
                     }
                     className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white"
                 >
-                    Повторить
+                    {i18nT("components.layout.appnavbar.b914bbb")}
                 </button>
             </div>
         </div>

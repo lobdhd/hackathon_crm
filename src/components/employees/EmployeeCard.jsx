@@ -123,7 +123,7 @@ export default function EmployeeCard({
                     />
 
                     <MiniStat
-                        label="Смена"
+                        label={i18nT("reportModal.shift")}
                         value={
                             employee.isOnShift
                                 ? "На смене"
@@ -148,8 +148,7 @@ export default function EmployeeCard({
                             <RiStackLine className="text-blue-600" />
 
                             <span className="text-xs font-medium text-blue-800">
-                                Активные
-                                наряды
+                                {i18nT("components.employees.employeecard.c74a439")}
                             </span>
                         </div>
 

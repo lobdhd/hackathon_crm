@@ -231,7 +231,7 @@ export default function Employees() {
     const columns = useMemo(() => [
         {
             field: "fullName",
-            header: "Исполнитель",
+            header: i18nT("ordersTable.assignee"),
             minWidth: 240,
             render: (employee) => (
                 <div className="min-w-0">
@@ -240,11 +240,11 @@ export default function Employees() {
                 </div>
             ),
         },
-        { field: "specialty", header: "Специальность", minWidth: 190, render: (employee) => employee.specialty || "—" },
-        { field: "grade", header: "Разряд", width: 100, align: "center", render: (employee) => employee.grade ?? "—" },
+        { field: "specialty", header: i18nT("components.employees.createemployeemodal.500aacb"), minWidth: 190, render: (employee) => employee.specialty || "—" },
+        { field: "grade", header: i18nT("employeeModal.grade"), width: 100, align: "center", render: (employee) => employee.grade ?? "—" },
         {
             field: "employeeStatus",
-            header: "Статус",
+            header: i18nT("employeeModal.status"),
             minWidth: 150,
             render: (employee) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[employee.employeeStatus] || "bg-gray-100 text-gray-600"}`}>
@@ -254,12 +254,12 @@ export default function Employees() {
         },
         {
             field: "isOnShift",
-            header: "Смена",
+            header: i18nT("reportModal.shift"),
             minWidth: 130,
             sortValue: (employee) => employee.isOnShift ? 1 : 0,
             render: (employee) => (
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${employee.isOnShift ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-                    {employee.isOnShift ? "На смене" : "Вне смены"}
+                    {employee.isOnShift ? i18nT("pages.admin.admin.admin.958b816") : i18nT("pages.employees.employees.employees.ece3411")}
                 </span>
             ),
         },
@@ -283,7 +283,7 @@ export default function Employees() {
                     RiLoader4Line
                 }
                 spin
-                title="Загружаем исполнителей"
+                title={i18nT("pages.employees.employees.employees.1ad9806")}
                 text="Получаем актуальные данные с сервера"
             />
         );
@@ -296,7 +296,7 @@ export default function Employees() {
                 icon={
                     RiTeamLine
                 }
-                title="Не удалось загрузить исполнителей"
+                title={i18nT("pages.employees.employees.employees.c52c210")}
                 text={
                     executorsQuery
                         .error
@@ -316,7 +316,7 @@ export default function Employees() {
                                 17
                             }
                         />
-                        Повторить
+                        {i18nT("components.layout.appnavbar.b914bbb")}
                     </button>
                 }
             />
@@ -333,10 +333,7 @@ export default function Employees() {
                             )}
                         </h1>
                         <p className="mt-1 text-sm text-gray-500">
-                            Исполнители,
-                            их текущий
-                            статус и
-                            загрузка
+                            {i18nT("pages.employees.employees.employees.1fe2e0c")}
                         </p>
                     </div>
                     {isAdmin && (
@@ -354,8 +351,7 @@ export default function Employees() {
                                     18
                                 }
                             />
-                            Добавить
-                            исполнителя
+                            {i18nT("components.employees.createemployeemodal.698e3c6")}
                         </button>
                     )}
                 </div>
@@ -371,7 +367,7 @@ export default function Employees() {
                         tone="blue"
                     />
                     <StatCard
-                        label="Свободны"
+                        label={i18nT("pages.analytics.analytics.f3fd6df")}
                         value={
                             stats.free
                         }
@@ -381,7 +377,7 @@ export default function Employees() {
                         tone="green"
                     />
                     <StatCard
-                        label="Заняты"
+                        label={i18nT("pages.analytics.analytics.90fc82e")}
                         value={
                             stats.busy
                         }
@@ -426,7 +422,7 @@ export default function Employees() {
                                             .value,
                                     )
                                 }
-                                placeholder="Поиск по ФИО, специальности или разряду"
+                                placeholder={i18nT("pages.employees.employees.employees.ce63a8a")}
                                 className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
@@ -447,8 +443,7 @@ export default function Employees() {
                             className="min-w-[190px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
                         >
                             <option value="">
-                                Все
-                                специальности
+                                {i18nT("pages.employees.employees.employees.a5503eb")}
                             </option>
                             {specialties.map(
                                 (
@@ -486,22 +481,19 @@ export default function Employees() {
                             className="min-w-[180px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
                         >
                             <option value="">
-                                Все
-                                статусы
+                                {i18nT("pages.employees.employees.employees.ac1bbd6")}
                             </option>
                             <option value="AVAILABLE">
-                                Свободен
+                                {i18nT("employeeModal.free")}
                             </option>
                             <option value="BUSY">
-                                В работе
+                                {i18nT("status.inProgress")}
                             </option>
                             <option value="QUEUED">
-                                Есть
-                                очередь
+                                {i18nT("employeeModal.hasQueue")}
                             </option>
                             <option value="OFF_SHIFT">
-                                Не на
-                                смене
+                                {i18nT("employeeModal.offShift")}
                             </option>
                         </select>
                         <select
@@ -521,14 +513,13 @@ export default function Employees() {
                             className="min-w-[170px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
                         >
                             <option value="">
-                                Любая
-                                смена
+                                {i18nT("pages.employees.employees.employees.e95141c")}
                             </option>
                             <option value="ON">
-                                На смене
+                                {i18nT("pages.admin.admin.admin.958b816")}
                             </option>
                             <option value="OFF">
-                                Вне смены
+                                {i18nT("pages.employees.employees.employees.ece3411")}
                             </option>
                         </select>
                     </div>
@@ -539,7 +530,7 @@ export default function Employees() {
                                     17
                                 }
                             />
-                            Найдено
+                            {i18nT("pages.employees.employees.employees.35dbd85")}
                             <span className="font-semibold text-gray-900">
                                 {
                                     filteredEmployees.length
@@ -559,7 +550,7 @@ export default function Employees() {
                                                 14
                                             }
                                         />
-                                        Сбросить
+                                        {i18nT("pages.employees.employees.employees.02d901c")}
                                     </button>
                                 )}
                         </div>
@@ -570,7 +561,7 @@ export default function Employees() {
                                 className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 transition hover:text-blue-600"
                             >
                                 <RiRefreshLine size={15} />
-                                Обновить
+                                {i18nT("components.layout.appnavbar.dbe5444")}
                             </button>
 
                             <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
@@ -580,7 +571,7 @@ export default function Employees() {
                                     className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === "cards" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
                                 >
                                     <RiLayoutGridLine size={17} />
-                                    Карточки
+                                    {i18nT("pages.employees.employees.employees.152beb3")}
                                 </button>
 
                                 <button
@@ -589,7 +580,7 @@ export default function Employees() {
                                     className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === "table" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
                                 >
                                     <RiListCheck2 size={17} />
-                                    Таблица
+                                    {i18nT("pages.employees.employees.employees.0f3bd19")}
                                 </button>
                             </div>
                         </div>
@@ -630,14 +621,11 @@ export default function Employees() {
                                     />
 
                                     <h3 className="mt-4 text-sm font-semibold text-gray-800">
-                                        Исполнители
-                                        не найдены
+                                        {i18nT("pages.employees.employees.employees.c132a70")}
                                     </h3>
 
                                     <p className="mt-1 text-sm text-gray-400">
-                                        Измените
-                                        параметры
-                                        фильтрации
+                                        {i18nT("pages.employees.employees.employees.82f00e1")}
                                     </p>
                                 </div>
                             </div>
@@ -653,8 +641,8 @@ export default function Employees() {
                         striped
                         scrollHeight={LIST_HEIGHT}
                         minWidth={1000}
-                        emptyText="Исполнители не найдены"
-                        emptyDescription="Измените параметры фильтрации"
+                        emptyText={i18nT("pages.employees.employees.employees.c132a70")}
+                        emptyDescription={i18nT("pages.employees.employees.employees.82f00e1")}
                         rowClassName={() => "cursor-pointer"}
                         onRowClick={(employee, _index, event) => {
                             if (event.target.closest("button, a, input, select, textarea")) return;

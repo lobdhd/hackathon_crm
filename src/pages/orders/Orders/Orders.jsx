@@ -55,6 +55,7 @@ import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
 import { useVoiceInput } from "../../../hooks/useVoiceInput.js";
 
 import { DROP_COLUMNS, canDrag, resolveMove } from "./kanbanMoves.js";
+import { t as i18nT } from "../../../i18n/index.js";
 
 
 // MARK: Config
@@ -106,35 +107,35 @@ const PRIORITY_STYLES = {
 };
 
 const BOARD_COLUMNS = [
-    { key: "issued", title: "Выданные" },
-    { key: "queued", title: "В очереди" },
-    { key: "accepted", title: "Принятые" },
-    { key: "inProgress", title: "В работе" },
-    { key: "completed", title: "Выполненные" },
-    { key: "overdue", title: "Просроченные", danger: true },
+    { key: "issued", title: i18nT("pages.orders.orders.orders.903b9d6") },
+    { key: "queued", title: i18nT("status.queued") },
+    { key: "accepted", title: i18nT("pages.orders.orders.orders.ec4dcec") },
+    { key: "inProgress", title: i18nT("status.inProgress") },
+    { key: "completed", title: i18nT("pages.orders.orders.orders.a6caf7e") },
+    { key: "overdue", title: i18nT("pages.orders.orders.orders.97a53e1"), danger: true },
 ];
 
 const TYPE_OPTIONS = [
-    { value: "", label: "Все типы" },
-    { value: "EMERGENCY", label: "Аварийный" },
-    { value: "PLANNED", label: "Плановый" },
+    { value: "", label: i18nT("pages.equipment.equipment.equipment.729d3f6") },
+    { value: "EMERGENCY", label: i18nT("priority.emergency") },
+    { value: "PLANNED", label: i18nT("priority.planned") },
 ];
 
 const PRIORITY_OPTIONS = [
-    { value: "", label: "Все приоритеты" },
+    { value: "", label: i18nT("pages.orders.orders.orders.32c1af4") },
     ...Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label })),
 ];
 
 const STATUS_OPTIONS = [
-    { value: "", label: "Все статусы" },
+    { value: "", label: i18nT("employeesPage.allStatuses") },
     ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
-    { value: "OVERDUE", label: "Просроченные" },
+    { value: "OVERDUE", label: i18nT("pages.orders.orders.orders.97a53e1") },
 ];
 
 const ASSIGNMENT_OPTIONS = [
-    { value: "executor", label: "Исполнитель" },
-    { value: "brigade", label: "Бригада" },
-    { value: "brigade_executor", label: "Бригада + исполнитель" },
+    { value: "executor", label: i18nT("ordersTable.assignee") },
+    { value: "brigade", label: i18nT("employeeModal.team") },
+    { value: "brigade_executor", label: i18nT("pages.orders.orders.orders.f5d91b1") },
 ];
 
 const EMPTY_FILTERS = {
@@ -399,7 +400,7 @@ export default function Orders() {
         () => [
             {
                 field: "number",
-                header: "Наряд",
+                header: i18nT("ordersTable.order"),
                 minWidth: 155,
                 render: (order) => (
                     <div className="min-w-0">
@@ -412,7 +413,7 @@ export default function Orders() {
             },
             {
                 key: "equipment",
-                header: "Оборудование",
+                header: i18nT("sidebar.equipment"),
                 minWidth: 210,
                 sortField: "equipmentName",
                 sortValue: (order) => order.equipment?.name ?? "",
@@ -432,7 +433,7 @@ export default function Orders() {
             },
             {
                 key: "assignee",
-                header: "Исполнитель",
+                header: i18nT("ordersTable.assignee"),
                 minWidth: 190,
                 sortField: "assigneeName",
                 sortValue: (order) => order.assignee?.fullName ?? "",
@@ -441,19 +442,19 @@ export default function Orders() {
             },
             {
                 field: "priority",
-                header: "Приоритет",
+                header: i18nT("orderModal.priority"),
                 minWidth: 135,
                 render: (order) => <PriorityBadge priority={order.priority} />,
             },
             {
                 field: "status",
-                header: "Статус",
+                header: i18nT("employeeModal.status"),
                 minWidth: 155,
                 render: (order) => <StatusBadge status={order.status} />,
             },
             {
                 field: "deadline",
-                header: "Срок",
+                header: i18nT("ordersTable.deadline"),
                 minWidth: 180,
                 sortValue: (order) =>
                     order.deadline ? new Date(order.deadline).getTime() : null,
@@ -507,13 +508,13 @@ export default function Orders() {
                 <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                            Наряды
+                            {i18nT("sidebar.orders")}
                         </h1>
 
                         <p className="mt-1 text-sm text-gray-500">
                             {isExecutor
-                                ? "Ваши наряды"
-                                : "Управление производственными работами"}
+                                ? i18nT("ordersPage.myOrders")
+                                : i18nT("ordersPage.productionManagement")}
                         </p>
                     </div>
 
@@ -524,7 +525,7 @@ export default function Orders() {
                             className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                         >
                             <RiRefreshLine size={18} />
-                            Обновить
+                            {i18nT("components.layout.appnavbar.dbe5444")}
                         </button>
 
                         {canCreate && (
@@ -534,7 +535,7 @@ export default function Orders() {
                                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                             >
                                 <RiAddLine size={19} />
-                                Создать наряд
+                                {i18nT("pages.orders.orders.orders.2538d5c")}
                             </button>
                         )}
                     </div>
@@ -542,10 +543,10 @@ export default function Orders() {
 
                 <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                     <SmallStat label="Выдано за смену" value={counters.issued ?? 0} />
-                    <SmallStat label="Выполнено за смену" value={counters.completed ?? 0} />
-                    <SmallStat label="Просрочено" value={counters.overdue ?? 0} danger />
+                    <SmallStat label={i18nT("dashboard.completedShift")} value={counters.completed ?? 0} />
+                    <SmallStat label={i18nT("kanban.overdue")} value={counters.overdue ?? 0} danger />
                     <SmallStat
-                        label="Оборудование в простое"
+                        label={i18nT("pages.analytics.analytics.0f7ca97")}
                         value={counters.equipmentInDowntime ?? 0}
                     />
                 </div>
@@ -563,7 +564,7 @@ export default function Orders() {
                                 onChange={(event) =>
                                     updateFilter("search", event.target.value)
                                 }
-                                placeholder="Номер, оборудование, участок, исполнитель..."
+                                placeholder={i18nT("pages.orders.orders.orders.431aa2f")}
                                 className="h-11 w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
@@ -572,7 +573,7 @@ export default function Orders() {
                             value={filters.areaId}
                             onChange={updateArea}
                             options={[
-                                { value: "", label: "Все участки" },
+                                { value: "", label: i18nT("reportModal.allAreas") },
                                 ...mapOptions(areas, (item) => item.name),
                             ]}
                             menuWidth={230}
@@ -583,7 +584,7 @@ export default function Orders() {
                             value={filters.equipmentId}
                             onChange={(value) => updateFilter("equipmentId", value)}
                             options={[
-                                { value: "", label: "Всё оборудование" },
+                                { value: "", label: i18nT("equipmentDetails.allEquipment") },
                                 ...mapOptions(
                                     equipment,
                                     (item) => item.name,
@@ -601,7 +602,7 @@ export default function Orders() {
                                     value={filters.assigneeId}
                                     onChange={(value) => updateFilter("assigneeId", value)}
                                     options={[
-                                        { value: "", label: "Все исполнители" },
+                                        { value: "", label: i18nT("employeeDetails.allEmployees") },
                                         ...mapOptions(
                                             executors,
                                             (item) => item.fullName,
@@ -616,7 +617,7 @@ export default function Orders() {
                                     value={filters.brigadeId}
                                     onChange={(value) => updateFilter("brigadeId", value)}
                                     options={[
-                                        { value: "", label: "Все бригады" },
+                                        { value: "", label: i18nT("pages.orders.orders.orders.b8b0a3b") },
                                         ...mapOptions(brigades, (item) => item.name),
                                     ]}
                                     menuWidth={230}
@@ -654,7 +655,7 @@ export default function Orders() {
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                             <RiFilter3Line size={17} />
-                            Найдено
+                            {i18nT("pages.employees.employees.employees.35dbd85")}
                             <span className="font-semibold text-gray-900">
                                 {view === "kanban"
                                     ? boardOrders.length
@@ -668,7 +669,7 @@ export default function Orders() {
                                     className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
                                 >
                                     <RiCloseLine size={14} />
-                                    Сбросить
+                                    {i18nT("employeesPage.reset")}
                                 </button>
                             )}
                         </div>
@@ -682,11 +683,10 @@ export default function Orders() {
                                     key={key}
                                     type="button"
                                     onClick={() => setView(key)}
-                                    className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                                        view === key
+                                    className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === key
                                             ? "bg-white text-gray-900 shadow-sm"
                                             : "text-gray-500 hover:text-gray-900"
-                                    }`}
+                                        }`}
                                 >
                                     <Icon size={17} />
                                     {label}
@@ -721,7 +721,7 @@ export default function Orders() {
                         striped
                         scrollHeight={LIST_HEIGHT}
                         minWidth={1180}
-                        emptyText="Наряды не найдены"
+                        emptyText={i18nT("ordersTable.empty")}
                         emptyDescription={
                             canCreate
                                 ? "Измените фильтры или создайте новый наряд"
@@ -877,27 +877,24 @@ function Kanban({ board, search, status, user, onChanged }) {
                                     )
                                 }
                                 onDrop={(event) => handleDrop(event, column)}
-                                className={`flex min-h-0 flex-col overflow-hidden rounded-xl border bg-gray-50/70 transition ${
-                                    highlighted
+                                className={`flex min-h-0 flex-col overflow-hidden rounded-xl border bg-gray-50/70 transition ${highlighted
                                         ? "border-blue-400 ring-2 ring-blue-200"
                                         : droppable
                                             ? "border-dashed border-blue-200"
                                             : column.danger
                                                 ? "border-red-200"
                                                 : "border-gray-200"
-                                } ${dragging && !droppable ? "opacity-60" : ""}`}
+                                    } ${dragging && !droppable ? "opacity-60" : ""}`}
                             >
                                 <div
-                                    className={`flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur ${
-                                        column.danger
+                                    className={`flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur ${column.danger
                                             ? "border-red-100 bg-red-50/80"
                                             : "border-gray-200 bg-gray-50/95"
-                                    }`}
+                                        }`}
                                 >
                                     <span
-                                        className={`text-sm font-semibold ${
-                                            column.danger ? "text-red-700" : "text-gray-800"
-                                        }`}
+                                        className={`text-sm font-semibold ${column.danger ? "text-red-700" : "text-gray-800"
+                                            }`}
                                     >
                                         {column.title}
                                     </span>
@@ -910,7 +907,7 @@ function Kanban({ board, search, status, user, onChanged }) {
                                 <ScrollArea axis="y" className="min-h-0 flex-1 p-3">
                                     {items.length === 0 ? (
                                         <div className="flex h-full min-h-[180px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-3 text-center text-xs text-gray-400">
-                                            {droppable ? "Отпустите здесь" : "Нет нарядов"}
+                                            {droppable ? "Отпустите здесь" : i18nT("kanban.empty")}
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
@@ -938,14 +935,13 @@ function Kanban({ board, search, status, user, onChanged }) {
 
             {interactive && user?.role !== "MANAGER" && (
                 <p className="mt-2 text-[11px] text-gray-400">
-                    Перетащите карточку в другую колонку, чтобы сменить статус.
-                    «Приостановить», «Отклонить» и «Закрыть» выполняются в карточке наряда.
+                    {i18nT("pages.orders.orders.orders.0aa695f")}
                 </p>
             )}
 
             {reasonFor && (
                 <ReasonModal
-                    title="Вернуть на доработку"
+                    title={i18nT("pages.orders.orders.orders.95f5bda")}
                     label="Что нужно исправить"
                     submitText="Вернуть"
                     busy={pendingId === reasonFor.order.id}
@@ -966,7 +962,7 @@ function ReasonModal({ title, label, submitText, busy, onClose, onSubmit }) {
     const valid = text.trim().length >= 3;
 
     return (
-        <Modal title={title} onClose={busy ? () => {} : onClose} width="520px">
+        <Modal title={title} onClose={busy ? () => { } : onClose} width="520px">
             <form
                 className="space-y-4"
                 onSubmit={(event) => {
@@ -983,13 +979,13 @@ function ReasonModal({ title, label, submitText, busy, onClose, onSubmit }) {
                         onChange={(event) => setText(event.target.value)}
                         rows={4}
                         autoFocus
-                        placeholder="Например: нет замера вибрации"
+                        placeholder={i18nT("pages.orders.orders.orders.f2081a3")}
                         className="input min-h-[110px] resize-none py-3"
                     />
                 </Field>
 
                 <p className="text-[11px] text-gray-400">
-                    Причина попадает в память AI и учитывается при проверке похожих отчётов.
+                    {i18nT("pages.orders.orders.orders.ce0438c")}
                 </p>
 
                 <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
@@ -999,7 +995,7 @@ function ReasonModal({ title, label, submitText, busy, onClose, onSubmit }) {
                         disabled={busy}
                         className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -1036,9 +1032,8 @@ function OrderCard({
                 onDragStart?.();
             }}
             onDragEnd={onDragEnd}
-            className={`relative ${
-                draggable ? "cursor-grab active:cursor-grabbing" : ""
-            } ${pending ? "opacity-60" : ""}`}
+            className={`relative ${draggable ? "cursor-grab active:cursor-grabbing" : ""
+                } ${pending ? "opacity-60" : ""}`}
         >
             {pending && (
                 <div className="absolute right-3 top-3 z-10">
@@ -1088,7 +1083,7 @@ function OrderCard({
                 </div>
 
                 <div className="mt-4 border-t border-gray-100 pt-3 text-[11px] text-gray-400">
-                    Срок: {formatDate(order.deadline)}
+                    {i18nT("pages.orders.orderdetails.orderdetails.57390a2")} {formatDate(order.deadline)}
                 </div>
             </Link>
         </div>
@@ -1458,12 +1453,12 @@ function CreateOrderModal({ onClose, onCreated }) {
     );
 
     return (
-        <Modal title="Создание наряда" onClose={handleClose} width="900px">
+        <Modal title={i18nT("pages.orders.orders.orders.0441fdc")} onClose={handleClose} width="900px">
             <form onSubmit={submit} className="space-y-5">
                 {error && <ErrorBox text={error} />}
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Field label="Тип">
+                    <Field label={i18nT("pages.admin.admin.admin.345805b")}>
                         <FieldSelect
                             value={form.type}
                             onChange={(value) => change("type", value)}
@@ -1472,7 +1467,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                         />
                     </Field>
 
-                    <Field label="Приоритет">
+                    <Field label={i18nT("orderModal.priority")}>
                         <FieldSelect
                             value={form.priority}
                             onChange={(value) => change("priority", value)}
@@ -1482,7 +1477,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                     </Field>
 
                     <div className="md:col-span-2">
-                        <Field label="Описание">
+                        <Field label={i18nT("pages.integrations.onec.onec.38ca0af")}>
                             <div className="relative">
                                 <textarea
                                     value={form.description}
@@ -1492,7 +1487,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                                     rows={4}
                                     minLength={3}
                                     required
-                                    placeholder="Опишите неисправность или необходимую работу..."
+                                    placeholder={i18nT("pages.orders.orders.orders.69e3718")}
                                     className="input min-h-[126px] resize-none py-3 pb-14 pr-16"
                                 />
 
@@ -1510,18 +1505,17 @@ function CreateOrderModal({ onClose, onCreated }) {
                             </div>
 
                             <p className="mt-2 text-[11px] text-gray-400">
-                                Можно ввести описание вручную или надиктовать его через
-                                микрофон.
+                                {i18nT("pages.orders.orders.orders.5820eec")}
                             </p>
                         </Field>
                     </div>
 
-                    <Field label="Участок">
+                    <Field label={i18nT("ordersTable.area")}>
                         <FieldSelect
                             value={form.areaId}
                             onChange={changeArea}
                             options={[
-                                { value: "", label: "Выберите участок" },
+                                { value: "", label: i18nT("orderModal.selectArea") },
                                 ...mapOptions(areas, (item) => item.name),
                             ]}
                             menuWidth={310}
@@ -1529,12 +1523,12 @@ function CreateOrderModal({ onClose, onCreated }) {
                         />
                     </Field>
 
-                    <Field label="Оборудование">
+                    <Field label={i18nT("sidebar.equipment")}>
                         <FieldSelect
                             value={form.equipmentId}
                             onChange={changeEquipment}
                             options={[
-                                { value: "", label: "Выберите оборудование" },
+                                { value: "", label: i18nT("pages.orders.orders.orders.2f6d5e0") },
                                 ...mapOptions(
                                     equipment,
                                     (item) => item.name,
@@ -1558,12 +1552,12 @@ function CreateOrderModal({ onClose, onCreated }) {
                     </Field>
 
                     {form.assignmentMode !== "executor" && (
-                        <Field label="Бригада">
+                        <Field label={i18nT("employeeModal.team")}>
                             <FieldSelect
                                 value={form.brigadeId}
                                 onChange={changeBrigade}
                                 options={[
-                                    { value: "", label: "Выберите бригаду" },
+                                    { value: "", label: i18nT("pages.orders.orders.orders.31bb0b9") },
                                     ...mapOptions(
                                         brigades,
                                         (item) => item.name,
@@ -1577,12 +1571,12 @@ function CreateOrderModal({ onClose, onCreated }) {
                     )}
 
                     {form.assignmentMode !== "brigade" && (
-                        <Field label="Исполнитель">
+                        <Field label={i18nT("ordersTable.assignee")}>
                             <FieldSelect
                                 value={form.assigneeId}
                                 onChange={(value) => change("assigneeId", value)}
                                 options={[
-                                    { value: "", label: "Выберите исполнителя" },
+                                    { value: "", label: i18nT("orderModal.selectAssignee") },
                                     ...mapOptions(
                                         assignmentExecutors,
                                         (item) => item.fullName,
@@ -1595,12 +1589,12 @@ function CreateOrderModal({ onClose, onCreated }) {
                         </Field>
                     )}
 
-                    <Field label="Норматив">
+                    <Field label={i18nT("pages.admin.admin.admin.63ed571")}>
                         <FieldSelect
                             value={form.normativeId}
                             onChange={(value) => change("normativeId", value)}
                             options={[
-                                { value: "", label: "Без норматива" },
+                                { value: "", label: i18nT("pages.orders.orders.orders.1fadb92") },
                                 ...mapOptions(
                                     normatives,
                                     (item) => item.name,
@@ -1613,7 +1607,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                         />
                     </Field>
 
-                    <Field label="Срок">
+                    <Field label={i18nT("ordersTable.deadline")}>
                         <input
                             type="datetime-local"
                             value={form.deadline}
@@ -1637,7 +1631,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                                 ) : (
                                     <RiUserStarLine />
                                 )}
-                                Подобрать исполнителя
+                                {i18nT("pages.orders.orders.orders.c8eba25")}
                             </button>
 
                             <button
@@ -1651,7 +1645,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                                 ) : (
                                     <RiSparkling2Line />
                                 )}
-                                Подобрать шифр и норматив
+                                {i18nT("pages.orders.orders.orders.9d29aab")}
                             </button>
                         </div>
                     </div>
@@ -1678,7 +1672,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                     )}
 
                     <div className="md:col-span-2">
-                        <Field label="Комментарий">
+                        <Field label={i18nT("orderModal.comment")}>
                             <textarea
                                 value={form.comment}
                                 onChange={(event) => change("comment", event.target.value)}
@@ -1700,7 +1694,7 @@ function CreateOrderModal({ onClose, onCreated }) {
 
                             {beforeFiles.length > 0 && (
                                 <p className="mt-2 text-xs text-gray-500">
-                                    Выбрано: {beforeFiles.length}
+                                    {i18nT("employeeModal.selected")} {beforeFiles.length}
                                 </p>
                             )}
                         </Field>
@@ -1714,7 +1708,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                         disabled={isSubmitting}
                         className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -1722,7 +1716,7 @@ function CreateOrderModal({ onClose, onCreated }) {
                         disabled={isSubmitting || createMutation.isPending}
                         className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        {isSubmitting ? "Создание..." : "Создать наряд"}
+                        {isSubmitting ? "Создание..." : i18nT("pages.orders.orders.orders.2538d5c")}
                     </button>
                 </div>
             </form>
@@ -1752,14 +1746,14 @@ function OrderDescriptionVoice({ onText, onError, disabled = false }) {
             <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full border border-red-200 bg-white p-1 shadow-sm">
                 <div className="flex items-center gap-1.5 px-2 text-[11px] font-semibold text-red-600">
                     <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                    Запись
+                    {i18nT("pages.orders.orderdetails.orderdetails.c805385")}
                 </div>
 
                 <button
                     type="button"
                     onClick={cancelRecording}
                     className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-red-50 hover:text-red-600"
-                    title="Отменить запись"
+                    title={i18nT("components.assistantinput.assistantpromptinput.0ddca6e")}
                 >
                     <RiCloseLine size={17} />
                 </button>
@@ -1768,7 +1762,7 @@ function OrderDescriptionVoice({ onText, onError, disabled = false }) {
                     type="button"
                     onClick={stopRecording}
                     className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700"
-                    title="Остановить и распознать"
+                    title={i18nT("components.assistantinput.assistantpromptinput.ef46d22")}
                 >
                     <RiCheckLine size={17} />
                 </button>
@@ -1780,7 +1774,7 @@ function OrderDescriptionVoice({ onText, onError, disabled = false }) {
         return (
             <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[11px] font-semibold text-blue-600 shadow-sm">
                 <RiLoader4Line size={15} className="animate-spin" />
-                Распознаём…
+                {i18nT("pages.orders.orderdetails.orderdetails.449d483")}
             </div>
         );
     }
@@ -1791,7 +1785,7 @@ function OrderDescriptionVoice({ onText, onError, disabled = false }) {
             onClick={startRecording}
             disabled={disabled}
             className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-            title="Надиктовать описание"
+            title={i18nT("pages.orders.orders.orders.ed51f86")}
         >
             <RiMicFill size={17} />
         </button>
@@ -1808,12 +1802,12 @@ function RecommendationCard({ suggestion, faultCode, normative, onApply }) {
                 <div className="min-w-0">
                     <div className="flex items-center gap-2 text-sm font-bold text-violet-900">
                         <RiSparkling2Line />
-                        Рекомендация AI
+                        {i18nT("pages.orders.orders.orders.ed27b8f")}
                     </div>
 
                     <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-3">
                         <div className="rounded-lg bg-white/80 p-3">
-                            <p className="text-gray-400">Шифр</p>
+                            <p className="text-gray-400">{i18nT("pages.admin.admin.admin.74308c4")}</p>
                             <p className="mt-1 font-semibold text-gray-800">
                                 {faultCode
                                     ? `${faultCode.code} — ${faultCode.name}`
@@ -1824,7 +1818,7 @@ function RecommendationCard({ suggestion, faultCode, normative, onApply }) {
                         </div>
 
                         <div className="rounded-lg bg-white/80 p-3">
-                            <p className="text-gray-400">Норматив</p>
+                            <p className="text-gray-400">{i18nT("pages.admin.admin.admin.63ed571")}</p>
                             <p className="mt-1 font-semibold text-gray-800">
                                 {normative
                                     ? normative.name
@@ -1835,7 +1829,7 @@ function RecommendationCard({ suggestion, faultCode, normative, onApply }) {
                         </div>
 
                         <div className="rounded-lg bg-white/80 p-3">
-                            <p className="text-gray-400">Оценка времени</p>
+                            <p className="text-gray-400">{i18nT("pages.orders.orders.orders.6798472")}</p>
                             <p className="mt-1 font-semibold text-gray-800">
                                 {suggestion.estimatedHours != null
                                     ? `${suggestion.estimatedHours} ч`
@@ -1857,7 +1851,7 @@ function RecommendationCard({ suggestion, faultCode, normative, onApply }) {
                     disabled={!suggestion.normativeId}
                     className="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
                 >
-                    Применить норматив
+                    {i18nT("pages.orders.orders.orders.407d21e")}
                 </button>
             </div>
         </div>
@@ -1870,7 +1864,7 @@ function ExecutorRecommendations({ items, selectedId, onSelect }) {
             <div className="mb-3 flex items-center gap-2">
                 <RiUserStarLine className="text-blue-600" />
                 <p className="text-sm font-bold text-gray-900">
-                    Рекомендуемые исполнители
+                    {i18nT("pages.orders.orders.orders.82a946c")}
                 </p>
             </div>
 
@@ -1883,11 +1877,10 @@ function ExecutorRecommendations({ items, selectedId, onSelect }) {
                             key={item.id}
                             type="button"
                             onClick={() => onSelect(item)}
-                            className={`rounded-xl border p-3 text-left transition ${
-                                selected
+                            className={`rounded-xl border p-3 text-left transition ${selected
                                     ? "border-blue-400 bg-white ring-2 ring-blue-100"
                                     : "border-blue-100 bg-white hover:border-blue-300"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
@@ -1906,8 +1899,8 @@ function ExecutorRecommendations({ items, selectedId, onSelect }) {
                             </div>
 
                             <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500">
-                                <span>Очередь: {item.queue ?? 0}</span>
-                                <span>Рейтинг: {item.equipmentRating ?? "—"}</span>
+                                <span>{i18nT("pages.orders.orders.orders.ffeb7d5")} {item.queue ?? 0}</span>
+                                <span>{i18nT("pages.orders.orders.orders.ec30e8c")} {item.equipmentRating ?? "—"}</span>
                             </div>
                         </button>
                     );
@@ -1950,9 +1943,8 @@ function FieldSelect(props) {
 function StatusBadge({ status }) {
     return (
         <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                STATUS_STYLES[status] || "bg-gray-100 text-gray-600"
-            }`}
+            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[status] || "bg-gray-100 text-gray-600"
+                }`}
         >
             {STATUS_LABELS[status] || status}
         </span>
@@ -1962,9 +1954,8 @@ function StatusBadge({ status }) {
 function PriorityBadge({ priority }) {
     return (
         <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                PRIORITY_STYLES[priority] || "bg-gray-100 text-gray-600"
-            }`}
+            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${PRIORITY_STYLES[priority] || "bg-gray-100 text-gray-600"
+                }`}
         >
             {PRIORITY_LABELS[priority] || priority}
         </span>
@@ -1977,9 +1968,8 @@ function SmallStat({ label, value, danger = false }) {
             <p className="text-xs font-medium text-gray-500">{label}</p>
 
             <p
-                className={`mt-1 text-xl font-bold ${
-                    danger ? "text-red-600" : "text-gray-900"
-                }`}
+                className={`mt-1 text-xl font-bold ${danger ? "text-red-600" : "text-gray-900"
+                    }`}
             >
                 {value}
             </p>
@@ -2050,7 +2040,7 @@ function InlineError({ text, onRetry }) {
             <RiAlarmWarningLine size={30} className="text-red-500" />
 
             <p className="mt-3 text-sm font-semibold text-gray-900">
-                Не удалось загрузить список
+                {i18nT("pages.orders.orders.orders.6d184fd")}
             </p>
 
             <p className="mt-1 max-w-lg text-sm text-gray-500">{text}</p>
@@ -2061,7 +2051,7 @@ function InlineError({ text, onRetry }) {
                 className="mt-4 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold"
             >
                 <RiRefreshLine />
-                Повторить
+                {i18nT("components.layout.appnavbar.b914bbb")}
             </button>
         </div>
     );
@@ -2081,7 +2071,7 @@ function PageError({ text, onRetry }) {
             <RiAlarmWarningLine size={34} className="text-red-500" />
 
             <p className="mt-3 text-sm font-semibold text-gray-900">
-                Не удалось загрузить наряды
+                {i18nT("pages.orders.orders.orders.ac0c6fb")}
             </p>
 
             <p className="mt-1 max-w-lg text-center text-sm text-gray-500">{text}</p>
@@ -2092,7 +2082,7 @@ function PageError({ text, onRetry }) {
                 className="mt-4 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold"
             >
                 <RiRefreshLine />
-                Повторить
+                {i18nT("components.layout.appnavbar.b914bbb")}
             </button>
         </div>
     );

@@ -54,13 +54,11 @@ export default function Register() {
                         </div>
 
                         <h1 className="mt-5 text-2xl font-bold tracking-tight text-gray-950">
-                            Получение доступа
+                            {i18nT("pages.auth.register.register.126d528")}
                         </h1>
 
                         <p className="mt-2 text-sm leading-6 text-gray-500">
-                            Самостоятельная
-                            регистрация в системе
-                            отключена.
+                            {i18nT("pages.auth.register.register.5ef2597")}
                         </p>
                     </div>
 
@@ -76,17 +74,11 @@ export default function Register() {
 
                             <div>
                                 <div className="text-sm font-semibold text-gray-800">
-                                    Аккаунт создаёт
-                                    администратор
+                                    {i18nT("pages.auth.register.register.3a2f078")}
                                 </div>
 
                                 <p className="mt-1 text-sm leading-6 text-gray-500">
-                                    Администратор
-                                    создаёт пользователя,
-                                    назначает роль,
-                                    специальность,
-                                    бригаду и выдаёт
-                                    начальный пароль.
+                                    {i18nT("pages.auth.register.register.240532a")}
                                 </p>
                             </div>
                         </div>
@@ -99,10 +91,7 @@ export default function Register() {
                             />
 
                             <p className="text-sm leading-6 text-blue-900">
-                                Если вам нужен доступ
-                                к НарядAI, обратитесь
-                                к администратору вашей
-                                организации.
+                                {i18nT("pages.auth.register.register.8561203")}
                             </p>
                         </div>
 
@@ -115,7 +104,7 @@ export default function Register() {
                                 size={17}
                             />
 
-                            Вернуться ко входу
+                            {i18nT("pages.auth.register.register.f1c7629")}
                         </Link>
 
                     </div>
@@ -123,7 +112,7 @@ export default function Register() {
 
 
                 <p className="mt-5 text-center text-xs text-gray-400">
-                    НарядAI · защищённый доступ
+                    {i18nT("pages.auth.register.register.0c0afc7")}
                 </p>
             </div>
         </div>

@@ -18,6 +18,7 @@ import {
 
 import LiveWaveform from "../AssistantInput/LiveWaveform.jsx";
 import VoiceTopGlow from "../AssistantInput/VoiceTopGlow.jsx";
+import { t as i18nT } from "../../i18n/index.js";
 
 
 function formatDuration(
@@ -260,7 +261,7 @@ export default function AssistantPromptInput({
                                 hover:bg-red-50
                                 hover:text-red-600
                             "
-                            title="Отменить запись"
+                            title={i18nT("components.assistantinput.assistantpromptinput.0ddca6e")}
                         >
                             <RiCloseLine
                                 size={
@@ -336,7 +337,7 @@ export default function AssistantPromptInput({
                                 hover:bg-blue-700
                                 active:scale-95
                             "
-                            title="Остановить и распознать"
+                            title={i18nT("components.assistantinput.assistantpromptinput.ef46d22")}
                         >
                             <RiCheckLine
                                 size={
@@ -359,8 +360,7 @@ export default function AssistantPromptInput({
 
                         <div>
                             <p className="text-sm font-semibold text-gray-800">
-                                Распознаём
-                                голос…
+                                {i18nT("components.assistantinput.assistantpromptinput.1bf7abe")}
                             </p>
 
                             <div className="mt-1 flex h-3 items-center gap-[3px]">
@@ -430,12 +430,7 @@ export default function AssistantPromptInput({
                         <div className="flex items-center justify-between gap-4 px-3 pb-3">
                             <div className="flex min-w-0 items-center gap-3">
                                 <span className="hidden text-[11px] text-gray-400 sm:inline">
-                                    Enter —
-                                    отправить
-                                    ·
-                                    Shift+Enter
-                                    — новая
-                                    строка
+                                    {i18nT("components.assistantinput.assistantpromptinput.f423d83")}
                                 </span>
                             </div>
 
@@ -515,7 +510,7 @@ export default function AssistantPromptInput({
                                             disabled:cursor-not-allowed
                                             disabled:opacity-40
                                         "
-                                        title="Отправить"
+                                        title={i18nT("components.assistantinput.assistantpromptinput.6da0f0a")}
                                     >
                                         <RiSendPlane2Line
                                             size={
@@ -548,7 +543,7 @@ export default function AssistantPromptInput({
                                             disabled:cursor-not-allowed
                                             disabled:opacity-40
                                         "
-                                        title="Голосовой ввод"
+                                        title={i18nT("components.assistantinput.assistantpromptinput.8c1a778")}
                                     >
                                         <RiMicFill
                                             size={

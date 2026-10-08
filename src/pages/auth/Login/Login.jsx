@@ -158,16 +158,15 @@ export default function Login() {
                     <div className="relative z-10 my-auto max-w-xl">
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300">
                             <RiShieldCheckLine size={16} className="text-blue-400" />
-                            Производственная система
+                            {i18nT("pages.auth.login.login.04bd1d8")}
                         </div>
 
                         <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-tight">
-                            Управление нарядами без лишней рутины
+                            {i18nT("pages.auth.login.login.8fe0dac")}
                         </h1>
 
                         <p className="mt-5 max-w-lg text-sm leading-7 text-gray-400">
-                            Контроль работ, исполнителей, оборудования, сроков и
-                            AI-проверок в одном интерфейсе.
+                            {i18nT("pages.auth.login.login.1991a6e")}
                         </p>
 
                         <div className="mt-10 grid max-w-lg grid-cols-2 gap-3">
@@ -190,7 +189,7 @@ export default function Login() {
                         </div>
                     </div>
 
-                    <div className="relative z-10 text-xs text-gray-600">НарядAI</div>
+                    <div className="relative z-10 text-xs text-gray-600">{i18nT("sidebar.brand")}</div>
                 </section>
 
 
@@ -211,12 +210,11 @@ export default function Login() {
 
                         <div className="mb-8">
                             <h2 className="text-[28px] font-bold tracking-tight text-gray-950">
-                                Вход в систему
+                                {i18nT("pages.auth.login.login.700a3f1")}
                             </h2>
 
                             <p className="mt-2 text-sm leading-6 text-gray-500">
-                                Используйте номер телефона и пароль, выданный
-                                администратором.
+                                {i18nT("pages.auth.login.login.5657149")}
                             </p>
                         </div>
 
@@ -312,10 +310,10 @@ export default function Login() {
                                 {isSubmitting ? (
                                     <>
                                         <RiLoader4Line size={19} className="animate-spin" />
-                                        Входим...
+                                        {i18nT("pages.auth.login.login.d1231f6")}
                                     </>
                                 ) : retryAfter > 0 ? (
-                                    <>Повторить через {formatRetryTime(retryAfter)}</>
+                                    <>{i18nT("pages.auth.login.login.dd74643")} {formatRetryTime(retryAfter)}</>
                                 ) : (
                                     <>
                                         {i18nT("login.signIn")}
@@ -336,12 +334,11 @@ export default function Login() {
 
                                 <div>
                                     <div className="text-sm font-medium text-gray-800">
-                                        Нет учётной записи?
+                                        {i18nT("pages.auth.login.login.d4d259d")}
                                     </div>
 
                                     <p className="mt-1 text-xs leading-5 text-gray-500">
-                                        Доступ создаёт администратор системы. Забыли пароль:
-                                        обратитесь к нему, пароль сбрасывается вручную.
+                                        {i18nT("pages.auth.login.login.f5ad1a4")}
                                     </p>
                                 </div>
                             </div>

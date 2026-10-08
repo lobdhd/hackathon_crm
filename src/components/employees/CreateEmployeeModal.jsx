@@ -265,15 +265,11 @@ export default function CreateEmployeeModal({
                         <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900">
-                                    Добавить
-                                    исполнителя
+                                    {i18nT("components.employees.createemployeemodal.698e3c6")}
                                 </h2>
 
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Будет создана
-                                    новая учётная
-                                    запись с ролью
-                                    исполнителя
+                                    {i18nT("components.employees.createemployeemodal.b5300f9")}
                                 </p>
                             </div>
 
@@ -313,12 +309,12 @@ export default function CreateEmployeeModal({
                                     icon={
                                         RiUserLine
                                     }
-                                    title="Основные данные"
+                                    title={i18nT("components.employees.createemployeemodal.019d557")}
                                 >
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div className="md:col-span-2">
                                             <FieldLabel>
-                                                ФИО
+                                                {i18nT("components.employees.createemployeemodal.72d974d")}
                                             </FieldLabel>
 
                                             <input
@@ -335,7 +331,7 @@ export default function CreateEmployeeModal({
                                                             .value,
                                                     )
                                                 }
-                                                placeholder="Ахметов Ерлан Серикович"
+                                                placeholder={i18nT("components.employees.createemployeemodal.f7cebee")}
                                                 className={inputClass(
                                                     errors.fullName,
                                                 )}
@@ -399,7 +395,7 @@ export default function CreateEmployeeModal({
 
                                         <div>
                                             <FieldLabel>
-                                                Язык
+                                                {i18nT("components.employees.createemployeemodal.0577df9")}
                                             </FieldLabel>
 
                                             <select
@@ -419,11 +415,11 @@ export default function CreateEmployeeModal({
                                                 className={inputClass()}
                                             >
                                                 <option value="ru">
-                                                    Русский
+                                                    {i18nT("components.employees.createemployeemodal.a5c072f")}
                                                 </option>
 
                                                 <option value="kk">
-                                                    Қазақша
+                                                    {i18nT("components.employees.createemployeemodal.8be1a8f")}
                                                 </option>
                                             </select>
                                         </div>
@@ -436,12 +432,12 @@ export default function CreateEmployeeModal({
                                     icon={
                                         RiLockPasswordLine
                                     }
-                                    title="Доступ"
+                                    title={i18nT("components.employees.createemployeemodal.dbf2fcc")}
                                 >
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
                                             <FieldLabel>
-                                                Пароль
+                                                {i18nT("components.employees.createemployeemodal.5ebe553")}
                                             </FieldLabel>
 
                                             <div className="relative">
@@ -516,8 +512,7 @@ export default function CreateEmployeeModal({
 
                                         <div>
                                             <FieldLabel>
-                                                Повторите
-                                                пароль
+                                                {i18nT("components.employees.createemployeemodal.9d86548")}
                                             </FieldLabel>
 
                                             <div className="relative">
@@ -571,12 +566,12 @@ export default function CreateEmployeeModal({
                                     icon={
                                         RiBriefcaseLine
                                     }
-                                    title="Рабочие данные"
+                                    title={i18nT("components.employees.createemployeemodal.aeab906")}
                                 >
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                         <div>
                                             <FieldLabel>
-                                                Специальность
+                                                {i18nT("components.employees.createemployeemodal.500aacb")}
                                             </FieldLabel>
 
                                             <input
@@ -593,7 +588,7 @@ export default function CreateEmployeeModal({
                                                             .value,
                                                     )
                                                 }
-                                                placeholder="Слесарь"
+                                                placeholder={i18nT("components.employees.createemployeemodal.18c7ca0")}
                                                 className={inputClass(
                                                     errors.specialty,
                                                 )}
@@ -610,7 +605,7 @@ export default function CreateEmployeeModal({
 
                                         <div>
                                             <FieldLabel>
-                                                Разряд
+                                                {i18nT("components.employees.createemployeemodal.02eb7b6")}
                                             </FieldLabel>
 
                                             <select
@@ -630,8 +625,7 @@ export default function CreateEmployeeModal({
                                                 className={inputClass()}
                                             >
                                                 <option value="">
-                                                    Не
-                                                    указан
+                                                    {i18nT("components.employees.createemployeemodal.cdded47")}
                                                 </option>
 
                                                 {GRADES.map(
@@ -649,7 +643,7 @@ export default function CreateEmployeeModal({
                                                             {
                                                                 grade
                                                             }{" "}
-                                                            разряд
+                                                            {i18nT("components.employees.createemployeemodal.a375226")}
                                                         </option>
                                                     ),
                                                 )}
@@ -658,7 +652,7 @@ export default function CreateEmployeeModal({
 
                                         <div>
                                             <FieldLabel>
-                                                Бригада
+                                                {i18nT("components.employees.createemployeemodal.bdb2096")}
                                             </FieldLabel>
 
                                             <div className="relative">
@@ -686,8 +680,7 @@ export default function CreateEmployeeModal({
                                                     className={iconInputClass()}
                                                 >
                                                     <option value="">
-                                                        Не
-                                                        указана
+                                                        {i18nT("components.employees.createemployeemodal.f75ffa9")}
                                                     </option>
 
                                                     {brigades.map(
@@ -725,18 +718,11 @@ export default function CreateEmployeeModal({
 
                                         <div>
                                             <p className="text-sm font-semibold text-blue-900">
-                                                Роль:
-                                                Исполнитель
+                                                {i18nT("components.employees.createemployeemodal.f1d7a0f")}
                                             </p>
 
                                             <p className="mt-1 text-xs leading-5 text-blue-700">
-                                                Пользователь
-                                                сможет
-                                                авторизоваться
-                                                по номеру
-                                                телефона и
-                                                выданному
-                                                паролю.
+                                                {i18nT("components.employees.createemployeemodal.3f59647")}
                                             </p>
                                         </div>
                                     </div>
@@ -754,7 +740,7 @@ export default function CreateEmployeeModal({
                                     }
                                     className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    Отмена
+                                    {i18nT("components.employees.createemployeemodal.987b33c")}
                                 </button>
 
                                 <button
@@ -781,7 +767,7 @@ export default function CreateEmployeeModal({
 
                                     {isSubmitting
                                         ? "Создание..."
-                                        : "Добавить"}
+                                        : i18nT("pages.admin.admin.admin.5eba283")}
                                 </button>
                             </div>
                         </form>

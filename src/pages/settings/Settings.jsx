@@ -28,6 +28,7 @@ import {
 import {
     useI18n,
 } from "../../i18n/index.js";
+import { t as i18nT } from "../../i18n/index.js";
 
 
 // MARK: Config
@@ -268,7 +269,7 @@ export default function Settings() {
             () => [
                 {
                     label:
-                        "Роль",
+                        i18nT("pages.admin.admin.admin.5d621b7"),
 
                     value:
                         roleLabel,
@@ -276,7 +277,7 @@ export default function Settings() {
 
                 {
                     label:
-                        "Логин 1С",
+                        i18nT("pages.settings.settings.e8c1cdc"),
 
                     value:
                         user?.login ||
@@ -285,7 +286,7 @@ export default function Settings() {
 
                 {
                     label:
-                        "Специальность",
+                        i18nT("components.employees.createemployeemodal.500aacb"),
 
                     value:
                         user?.specialty ||
@@ -294,7 +295,7 @@ export default function Settings() {
 
                 {
                     label:
-                        "Разряд",
+                        i18nT("employeeModal.grade"),
 
                     value:
                         user?.grade ??
@@ -303,7 +304,7 @@ export default function Settings() {
 
                 {
                     label:
-                        "Бригада",
+                        i18nT("employeeModal.team"),
 
                     value:
                         getBrigadeName(
@@ -771,14 +772,11 @@ export default function Settings() {
         <div className="mx-auto max-w-[1180px]">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                    Настройки
+                    {i18nT("sidebar.settings")}
                 </h1>
 
                 <p className="mt-1 text-sm text-gray-500">
-                    Профиль,
-                    язык интерфейса
-                    и безопасность
-                    аккаунта
+                    {i18nT("pages.settings.settings.a3953d0")}
                 </p>
             </div>
 
@@ -799,7 +797,7 @@ export default function Settings() {
                                 <div className="min-w-0">
                                     <p className="truncate text-base font-bold text-gray-900">
                                         {user?.fullName ||
-                                            "Пользователь"}
+                                            i18nT("pages.admin.admin.admin.f154d6c")}
                                     </p>
 
                                     <p className="mt-1 text-sm text-gray-500">
@@ -818,7 +816,7 @@ export default function Settings() {
                                         startProfileEdit
                                     }
                                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:bg-gray-50 hover:text-blue-600"
-                                    title="Редактировать профиль"
+                                    title={i18nT("pages.settings.settings.56ad2c7")}
                                 >
                                     <RiEdit2Line />
                                 </button>
@@ -846,7 +844,7 @@ export default function Settings() {
                             )}
 
                             <ProfileField
-                                label="ФИО"
+                                label={i18nT("register.fullName")}
                                 value={
                                     profileForm.fullName
                                 }
@@ -861,7 +859,7 @@ export default function Settings() {
                             />
 
                             <ProfileField
-                                label="Телефон"
+                                label={i18nT("pages.admin.admin.admin.2928e19")}
                                 value={
                                     profileForm.phone
                                 }
@@ -876,14 +874,14 @@ export default function Settings() {
                             />
 
                             <ReadonlyRow
-                                label="Роль"
+                                label={i18nT("pages.admin.admin.admin.5d621b7")}
                                 value={
                                     roleLabel
                                 }
                             />
 
                             <ReadonlyRow
-                                label="Логин 1С"
+                                label={i18nT("pages.settings.settings.e8c1cdc")}
                                 value={
                                     user?.login ||
                                     "—"
@@ -891,12 +889,7 @@ export default function Settings() {
                             />
 
                             <p className="text-[11px] leading-5 text-gray-400">
-                                Роль и логин 1С
-                                здесь намеренно
-                                не изменяются.
-                                Роли пользователей
-                                управляйте в разделе
-                                «Администрирование».
+                                {i18nT("pages.settings.settings.3d919ed")}
                             </p>
 
                             <div className="flex gap-2 pt-1">
@@ -912,7 +905,7 @@ export default function Settings() {
                                 >
                                     <RiCloseLine />
 
-                                    Отмена
+                                    {i18nT("employeeModal.cancel")}
                                 </button>
 
                                 <button
@@ -926,7 +919,7 @@ export default function Settings() {
 
                                     {profileSaving
                                         ? "Сохраняем..."
-                                        : "Сохранить"}
+                                        : i18nT("pages.admin.admin.admin.74ea58b")}
                                 </button>
                             </div>
                         </form>
@@ -944,7 +937,7 @@ export default function Settings() {
 
                             <div className="divide-y divide-gray-100">
                                 <ReadonlyRow
-                                    label="ФИО"
+                                    label={i18nT("register.fullName")}
                                     value={
                                         user?.fullName ||
                                         "—"
@@ -952,7 +945,7 @@ export default function Settings() {
                                 />
 
                                 <ReadonlyRow
-                                    label="Телефон"
+                                    label={i18nT("pages.admin.admin.admin.2928e19")}
                                     value={
                                         user?.phone ||
                                         "—"
@@ -1012,12 +1005,11 @@ export default function Settings() {
 
                             <div>
                                 <h2 className="text-[15px] font-bold text-gray-900">
-                                    Язык интерфейса
+                                    {i18nT("pages.settings.settings.b78b074")}
                                 </h2>
 
                                 <p className="mt-0.5 text-xs text-gray-500">
-                                    Выберите язык
-                                    web-панели
+                                    {i18nT("pages.settings.settings.59c7f9a")}
                                 </p>
                             </div>
                         </div>
@@ -1037,7 +1029,7 @@ export default function Settings() {
                                         language ===
                                         "ru"
                                     }
-                                    title="Русский"
+                                    title={i18nT("components.employees.createemployeemodal.a5c072f")}
                                     code="RU"
                                     disabled={
                                         languageSaving
@@ -1054,7 +1046,7 @@ export default function Settings() {
                                         language ===
                                         "kk"
                                     }
-                                    title="Қазақша"
+                                    title={i18nT("components.employees.createemployeemodal.8be1a8f")}
                                     code="ҚАЗ"
                                     disabled={
                                         languageSaving
@@ -1090,12 +1082,11 @@ export default function Settings() {
 
                             <div>
                                 <h2 className="text-[15px] font-bold text-gray-900">
-                                    Смена пароля
+                                    {i18nT("pages.settings.settings.e85a7a1")}
                                 </h2>
 
                                 <p className="mt-0.5 text-xs text-gray-500">
-                                    Доступно всем
-                                    авторизованным ролям
+                                    {i18nT("pages.settings.settings.12b6883")}
                                 </p>
                             </div>
                         </div>
@@ -1205,13 +1196,7 @@ export default function Settings() {
 
                             <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3">
                                 <p className="text-xs leading-5 text-gray-500">
-                                    Пароль должен
-                                    содержать от
-                                    6 до 128
-                                    символов. После
-                                    успешной смены
-                                    повторный вход
-                                    не требуется.
+                                    {i18nT("pages.settings.settings.a2dce4c")}
                                 </p>
                             </div>
 

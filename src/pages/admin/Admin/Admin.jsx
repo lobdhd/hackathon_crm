@@ -53,46 +53,47 @@ import {
 } from "../../../hooks/useReferences.js";
 
 import "./Admin.css";
+import { t as i18nT } from "../../../i18n/index.js";
 
 const TABS = [
     {
         id: "users",
-        label: "Пользователи",
+        label: i18nT("pages.admin.admin.admin.b8c4e70"),
         icon: RiUser3Line,
     },
     {
         id: "shifts",
-        label: "Смены",
+        label: i18nT("pages.admin.admin.admin.c4033ff"),
         icon: RiTimeLine,
     },
     {
         id: "areas",
-        label: "Участки",
+        label: i18nT("pages.admin.admin.admin.d5d9c26"),
         icon: RiMapPin2Line,
     },
     {
         id: "equipment",
-        label: "Оборудование",
+        label: i18nT("pages.admin.admin.admin.a135d09"),
         icon: RiToolsLine,
     },
     {
         id: "faultCodes",
-        label: "Шифры",
+        label: i18nT("pages.admin.admin.admin.0b529d3"),
         icon: RiErrorWarningLine,
     },
     {
         id: "materials",
-        label: "Материалы",
+        label: i18nT("pages.admin.admin.admin.79bfff8"),
         icon: RiStackLine,
     },
     {
         id: "brigades",
-        label: "Бригады",
+        label: i18nT("pages.admin.admin.admin.bfbd755"),
         icon: RiTeamLine,
     },
     {
         id: "normatives",
-        label: "Нормативы",
+        label: i18nT("pages.admin.admin.admin.2f5840c"),
         icon: RiFileList3Line,
     },
 ];
@@ -249,13 +250,11 @@ function ErrorState({
 
             <div>
                 <strong>
-                    Не удалось загрузить
-                    данные
+                    {i18nT("pages.admin.admin.admin.2502839")}
                 </strong>
 
                 <span>
-                    Проверьте соединение
-                    с сервером
+                    {i18nT("pages.admin.admin.admin.b992f12")}
                 </span>
             </div>
 
@@ -264,7 +263,7 @@ function ErrorState({
                 onClick={onRetry}
             >
                 <RiRefreshLine />
-                Повторить
+                {i18nT("components.layout.appnavbar.b914bbb")}
             </button>
         </div>
     );
@@ -491,7 +490,7 @@ function UserModal({
                 <div className="admin-form-grid">
                     <label className="admin-field admin-field--full">
                         <span>
-                            ФИО
+                            {i18nT("register.fullName")}
                         </span>
 
                         <input
@@ -508,14 +507,14 @@ function UserModal({
                                         .value,
                                 )
                             }
-                            placeholder="Иванов Иван Иванович"
+                            placeholder={i18nT("pages.admin.admin.admin.6d7a4fe")}
                             required
                         />
                     </label>
 
                     <label className="admin-field">
                         <span>
-                            Телефон
+                            {i18nT("pages.admin.admin.admin.2928e19")}
                         </span>
 
                         <input
@@ -557,14 +556,14 @@ function UserModal({
                                             .value,
                                     )
                                 }
-                                placeholder="Необязательно"
+                                placeholder={i18nT("pages.admin.admin.admin.0b68a0c")}
                             />
                         </label>
                     )}
 
                     <label className="admin-field">
                         <span>
-                            Роль
+                            {i18nT("pages.admin.admin.admin.5d621b7")}
                         </span>
 
                         <select
@@ -583,26 +582,26 @@ function UserModal({
                             }
                         >
                             <option value="EXECUTOR">
-                                Исполнитель
+                                {i18nT("pages.admin.admin.admin.1d3ab78")}
                             </option>
 
                             <option value="MASTER">
-                                Мастер
+                                {i18nT("pages.admin.admin.admin.2bb1fb2")}
                             </option>
 
                             <option value="MANAGER">
-                                Руководитель
+                                {i18nT("pages.admin.admin.admin.f1c7b10")}
                             </option>
 
                             <option value="ADMIN">
-                                Администратор
+                                {i18nT("pages.admin.admin.admin.2b93bb9")}
                             </option>
                         </select>
                     </label>
 
                     <label className="admin-field">
                         <span>
-                            Язык
+                            {i18nT("components.employees.createemployeemodal.0577df9")}
                         </span>
 
                         <select
@@ -621,11 +620,11 @@ function UserModal({
                             }
                         >
                             <option value="ru">
-                                Русский
+                                {i18nT("components.employees.createemployeemodal.a5c072f")}
                             </option>
 
                             <option value="kk">
-                                Қазақша
+                                {i18nT("components.employees.createemployeemodal.8be1a8f")}
                             </option>
                         </select>
                     </label>
@@ -634,7 +633,7 @@ function UserModal({
                         <span>
                             {isEdit
                                 ? "Новый пароль"
-                                : "Пароль"}
+                                : i18nT("login.password")}
                         </span>
 
                         <div className="admin-input-icon">
@@ -658,7 +657,7 @@ function UserModal({
                                 placeholder={
                                     isEdit
                                         ? "Оставьте пустым, если менять не нужно"
-                                        : "Минимум 6 символов"
+                                        : i18nT("register.passwordHint")
                                 }
                                 required={
                                     !isEdit
@@ -677,7 +676,7 @@ function UserModal({
                             <>
                                 <label className="admin-field">
                                     <span>
-                                        Специальность
+                                        {i18nT("components.employees.createemployeemodal.500aacb")}
                                     </span>
 
                                     <input
@@ -694,13 +693,13 @@ function UserModal({
                                                     .value,
                                             )
                                         }
-                                        placeholder="Слесарь"
+                                        placeholder={i18nT("components.employees.createemployeemodal.18c7ca0")}
                                     />
                                 </label>
 
                                 <label className="admin-field">
                                     <span>
-                                        Разряд
+                                        {i18nT("employeeModal.grade")}
                                     </span>
 
                                     <input
@@ -724,7 +723,7 @@ function UserModal({
 
                                 <label className="admin-field admin-field--full">
                                     <span>
-                                        Бригада
+                                        {i18nT("employeeModal.team")}
                                     </span>
 
                                     <select
@@ -743,8 +742,7 @@ function UserModal({
                                         }
                                     >
                                         <option value="">
-                                            Без
-                                            бригады
+                                            {i18nT("pages.admin.admin.admin.b99dc45")}
                                         </option>
 
                                         {brigades.map(
@@ -779,7 +777,7 @@ function UserModal({
                             onClose
                         }
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -792,8 +790,8 @@ function UserModal({
                         {mutation.isPending
                             ? "Сохранение..."
                             : isEdit
-                                ? "Сохранить"
-                                : "Создать"}
+                                ? i18nT("pages.admin.admin.admin.74ea58b")
+                                : i18nT("pages.admin.admin.admin.b059f7e")}
                     </button>
                 </div>
             </form>
@@ -868,7 +866,7 @@ function AreaModal({
 
                 <label className="admin-field">
                     <span>
-                        Название участка
+                        {i18nT("pages.admin.admin.admin.7871417")}
                     </span>
 
                     <input
@@ -896,7 +894,7 @@ function AreaModal({
                             onClose
                         }
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -906,7 +904,7 @@ function AreaModal({
                             mutation.isPending
                         }
                     >
-                        Сохранить
+                        {i18nT("pages.admin.admin.admin.74ea58b")}
                     </button>
                 </div>
             </form>
@@ -1002,7 +1000,7 @@ function EquipmentModal({
             title={
                 equipment
                     ? "Редактирование оборудования"
-                    : "Новое оборудование"
+                    : i18nT("equipmentModal.title")
             }
             onClose={onClose}
         >
@@ -1020,7 +1018,7 @@ function EquipmentModal({
                 <div className="admin-form-grid">
                     <label className="admin-field admin-field--full">
                         <span>
-                            Название
+                            {i18nT("pages.admin.admin.admin.602680e")}
                         </span>
 
                         <input
@@ -1043,8 +1041,7 @@ function EquipmentModal({
 
                     <label className="admin-field">
                         <span>
-                            Инвентарный
-                            номер
+                            {i18nT("pages.admin.admin.admin.ad8aabf")}
                         </span>
 
                         <input
@@ -1067,7 +1064,7 @@ function EquipmentModal({
 
                     <label className="admin-field">
                         <span>
-                            Тип
+                            {i18nT("pages.admin.admin.admin.345805b")}
                         </span>
 
                         <input
@@ -1090,7 +1087,7 @@ function EquipmentModal({
 
                     <label className="admin-field">
                         <span>
-                            Критичность
+                            {i18nT("pages.admin.admin.admin.a3d5884")}
                         </span>
 
                         <select
@@ -1131,7 +1128,7 @@ function EquipmentModal({
 
                     <label className="admin-field">
                         <span>
-                            Участок
+                            {i18nT("pages.admin.admin.admin.59d3fa6")}
                         </span>
 
                         <select
@@ -1151,8 +1148,7 @@ function EquipmentModal({
                             required
                         >
                             <option value="">
-                                Выберите
-                                участок
+                                {i18nT("pages.admin.admin.admin.b79ea47")}
                             </option>
 
                             {areas.map(
@@ -1185,7 +1181,7 @@ function EquipmentModal({
                             onClose
                         }
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -1195,7 +1191,7 @@ function EquipmentModal({
                             mutation.isPending
                         }
                     >
-                        Сохранить
+                        {i18nT("pages.admin.admin.admin.74ea58b")}
                     </button>
                 </div>
             </form>
@@ -1211,50 +1207,50 @@ function SimpleModal({
     const config = {
         faultCode: {
             title:
-                "Новый шифр неисправности",
+                i18nT("pages.admin.admin.admin.e589c2a"),
             fields: [
                 {
                     key: "code",
-                    label: "Код",
+                    label: i18nT("pages.admin.admin.admin.3f34a61"),
                 },
                 {
                     key: "name",
                     label:
-                        "Название",
+                        i18nT("pages.admin.admin.admin.602680e"),
                 },
                 {
                     key: "category",
                     label:
-                        "Категория",
+                        i18nT("pages.admin.admin.admin.c95a1e2"),
                 },
             ],
         },
 
         material: {
             title:
-                "Новый материал",
+                i18nT("pages.admin.admin.admin.fcb5523"),
             fields: [
                 {
                     key: "name",
                     label:
-                        "Название",
+                        i18nT("pages.admin.admin.admin.602680e"),
                 },
                 {
                     key: "unit",
                     label:
-                        "Единица измерения",
+                        i18nT("pages.admin.admin.admin.c6e5a29"),
                 },
             ],
         },
 
         brigade: {
             title:
-                "Новая бригада",
+                i18nT("pages.admin.admin.admin.19a9633"),
             fields: [
                 {
                     key: "name",
                     label:
-                        "Название",
+                        i18nT("pages.admin.admin.admin.602680e"),
                 },
             ],
         },
@@ -1367,7 +1363,7 @@ function SimpleModal({
                             onClose
                         }
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -1377,7 +1373,7 @@ function SimpleModal({
                             mutation.isPending
                         }
                     >
-                        Создать
+                        {i18nT("pages.admin.admin.admin.b059f7e")}
                     </button>
                 </div>
             </form>
@@ -1529,7 +1525,7 @@ function NormativeModal({
 
     return (
         <Modal
-            title="Новый норматив"
+            title={i18nT("pages.admin.admin.admin.93cc454")}
             subtitle="Норматив выполнения и расход материалов"
             onClose={onClose}
             width="760px"
@@ -1548,7 +1544,7 @@ function NormativeModal({
                 <div className="admin-form-grid">
                     <label className="admin-field admin-field--full">
                         <span>
-                            Название
+                            {i18nT("pages.admin.admin.admin.602680e")}
                         </span>
 
                         <input
@@ -1571,8 +1567,7 @@ function NormativeModal({
 
                     <label className="admin-field">
                         <span>
-                            Норматив,
-                            часов
+                            {i18nT("pages.admin.admin.admin.02807d5")}
                         </span>
 
                         <input
@@ -1598,8 +1593,7 @@ function NormativeModal({
 
                     <label className="admin-field">
                         <span>
-                            Тип
-                            оборудования
+                            {i18nT("pages.admin.admin.admin.b21456e")}
                         </span>
 
                         <input
@@ -1616,13 +1610,13 @@ function NormativeModal({
                                         .value,
                                 )
                             }
-                            placeholder="Необязательно"
+                            placeholder={i18nT("pages.admin.admin.admin.0b68a0c")}
                         />
                     </label>
 
                     <label className="admin-field">
                         <span>
-                            Оборудование
+                            {i18nT("pages.admin.admin.admin.a135d09")}
                         </span>
 
                         <select
@@ -1641,7 +1635,7 @@ function NormativeModal({
                             }
                         >
                             <option value="">
-                                Любое
+                                {i18nT("pages.admin.admin.admin.d0564fd")}
                             </option>
 
                             {equipment.map(
@@ -1667,8 +1661,7 @@ function NormativeModal({
 
                     <label className="admin-field">
                         <span>
-                            Шифр
-                            неисправности
+                            {i18nT("pages.admin.admin.admin.b88c90e")}
                         </span>
 
                         <select
@@ -1687,7 +1680,7 @@ function NormativeModal({
                             }
                         >
                             <option value="">
-                                Не указан
+                                {i18nT("components.employees.createemployeemodal.cdded47")}
                             </option>
 
                             {faultCodes.map(
@@ -1720,12 +1713,11 @@ function NormativeModal({
                     <div className="admin-material-editor__header">
                         <div>
                             <strong>
-                                Материалы
+                                {i18nT("pages.admin.admin.admin.79bfff8")}
                             </strong>
 
                             <span>
-                                Нормативный
-                                расход
+                                {i18nT("pages.admin.admin.admin.c5da469")}
                             </span>
                         </div>
 
@@ -1736,15 +1728,14 @@ function NormativeModal({
                             }
                         >
                             <RiAddLine />
-                            Добавить
+                            {i18nT("pages.admin.admin.admin.5eba283")}
                         </button>
                     </div>
 
                     {materialRows.length ===
                         0 ? (
                         <div className="admin-material-empty">
-                            Материалы
-                            не указаны
+                            {i18nT("pages.admin.admin.admin.6eeaa86")}
                         </div>
                     ) : (
                         <div className="admin-material-rows">
@@ -1775,7 +1766,7 @@ function NormativeModal({
                                             }
                                         >
                                             <option value="">
-                                                Материал
+                                                {i18nT("pages.admin.admin.admin.82f235b")}
                                             </option>
 
                                             {materials.map(
@@ -1821,7 +1812,7 @@ function NormativeModal({
                                                         .value,
                                                 )
                                             }
-                                            placeholder="Количество"
+                                            placeholder={i18nT("pages.admin.admin.admin.cb8bfd4")}
                                         />
 
                                         <button
@@ -1849,7 +1840,7 @@ function NormativeModal({
                             onClose
                         }
                     >
-                        Отмена
+                        {i18nT("employeeModal.cancel")}
                     </button>
 
                     <button
@@ -1859,7 +1850,7 @@ function NormativeModal({
                             mutation.isPending
                         }
                     >
-                        Создать
+                        {i18nT("pages.admin.admin.admin.b059f7e")}
                     </button>
                 </div>
             </form>
@@ -1898,7 +1889,7 @@ function DeleteModal({
 
     return (
         <Modal
-            title="Удаление"
+            title={i18nT("pages.admin.admin.admin.dd62fe0")}
             subtitle={
                 state.title
             }
@@ -1911,9 +1902,7 @@ function DeleteModal({
                 </div>
 
                 <p>
-                    Удалить запись
-                    без возможности
-                    восстановления?
+                    {i18nT("pages.admin.admin.admin.432549d")}
                 </p>
 
                 {error && (
@@ -1930,7 +1919,7 @@ function DeleteModal({
                     className="admin-button admin-button--secondary"
                     onClick={onClose}
                 >
-                    Отмена
+                    {i18nT("employeeModal.cancel")}
                 </button>
 
                 <button
@@ -2281,7 +2270,7 @@ export default function Admin() {
                     icon={
                         RiUser3Line
                     }
-                    title="Пользователей нет"
+                    title={i18nT("pages.admin.admin.admin.eb25bc7")}
                     text="Создайте первую учётную запись"
                 />
             );
@@ -2293,19 +2282,19 @@ export default function Admin() {
                     <thead>
                         <tr>
                             <th>
-                                Пользователь
+                                {i18nT("pages.admin.admin.admin.f154d6c")}
                             </th>
                             <th>
-                                Роль
+                                {i18nT("pages.admin.admin.admin.5d621b7")}
                             </th>
                             <th>
-                                Телефон
+                                {i18nT("pages.admin.admin.admin.2928e19")}
                             </th>
                             <th>
-                                Бригада
+                                {i18nT("employeeModal.team")}
                             </th>
                             <th>
-                                Статус
+                                {i18nT("pages.admin.admin.admin.7203f7a")}
                             </th>
                             <th />
                         </tr>
@@ -2406,7 +2395,7 @@ export default function Admin() {
                                         <div className="admin-row-actions">
                                             <button
                                                 type="button"
-                                                title="Редактировать"
+                                                title={i18nT("pages.admin.admin.admin.1706282")}
                                                 onClick={() =>
                                                     setModal(
                                                         {
@@ -2439,7 +2428,7 @@ export default function Admin() {
                     icon={
                         RiTimeLine
                     }
-                    title="Исполнителей нет"
+                    title={i18nT("pages.admin.admin.admin.8718879")}
                     text="Создайте исполнителя в разделе пользователей"
                 />
             );
@@ -2496,7 +2485,7 @@ export default function Admin() {
 
                                             <span>
                                                 {user.specialty ||
-                                                    "Исполнитель"}
+                                                    i18nT("pages.admin.admin.admin.1d3ab78")}
                                             </span>
                                         </div>
                                     </div>
@@ -2517,8 +2506,8 @@ export default function Admin() {
                                     <div>
                                         <strong>
                                             {user.isOnShift
-                                                ? "На смене"
-                                                : "Не на смене"}
+                                                ? i18nT("pages.admin.admin.admin.958b816")
+                                                : i18nT("employeeModal.offShift")}
                                         </strong>
 
                                         <span>
@@ -2566,7 +2555,7 @@ export default function Admin() {
                                 ID
                             </th>
                             <th>
-                                Название
+                                {i18nT("pages.admin.admin.admin.602680e")}
                             </th>
                             <th />
                         </tr>
@@ -2647,19 +2636,19 @@ export default function Admin() {
                     <thead>
                         <tr>
                             <th>
-                                Оборудование
+                                {i18nT("pages.admin.admin.admin.a135d09")}
                             </th>
                             <th>
-                                Инв. номер
+                                {i18nT("pages.admin.admin.admin.26315c0")}
                             </th>
                             <th>
-                                Тип
+                                {i18nT("pages.admin.admin.admin.345805b")}
                             </th>
                             <th>
-                                Критичность
+                                {i18nT("pages.admin.admin.admin.a3d5884")}
                             </th>
                             <th>
-                                Участок
+                                {i18nT("pages.admin.admin.admin.59d3fa6")}
                             </th>
                             <th />
                         </tr>
@@ -2776,7 +2765,7 @@ export default function Admin() {
                     icon={
                         RiFileList3Line
                     }
-                    title="Записей нет"
+                    title={i18nT("pages.admin.admin.admin.64916b7")}
                     text="Добавьте первую запись"
                 />
             );
@@ -2908,17 +2897,17 @@ export default function Admin() {
                         {
                             key: "code",
                             label:
-                                "Код",
+                                i18nT("pages.admin.admin.admin.3f34a61"),
                         },
                         {
                             key: "name",
                             label:
-                                "Название",
+                                i18nT("pages.admin.admin.admin.602680e"),
                         },
                         {
                             key: "category",
                             label:
-                                "Категория",
+                                i18nT("pages.admin.admin.admin.c95a1e2"),
                         },
                     ],
                     "faultCode",
@@ -2932,12 +2921,12 @@ export default function Admin() {
                         {
                             key: "name",
                             label:
-                                "Материал",
+                                i18nT("pages.admin.admin.admin.82f235b"),
                         },
                         {
                             key: "unit",
                             label:
-                                "Единица",
+                                i18nT("pages.admin.admin.admin.c0ffee8"),
                         },
                     ],
                     "material",
@@ -2951,12 +2940,12 @@ export default function Admin() {
                         {
                             key: "name",
                             label:
-                                "Бригада",
+                                i18nT("employeeModal.team"),
                         },
                         {
                             key: "members",
                             label:
-                                "Участников",
+                                i18nT("pages.admin.admin.admin.1c79d05"),
                             render:
                                 (
                                     item,
@@ -2978,22 +2967,22 @@ export default function Admin() {
                         {
                             key: "name",
                             label:
-                                "Норматив",
+                                i18nT("pages.admin.admin.admin.63ed571"),
                         },
                         {
                             key: "hours",
                             label:
-                                "Часы",
+                                i18nT("pages.admin.admin.admin.3df3157"),
                         },
                         {
                             key: "equipmentType",
                             label:
-                                "Тип оборудования",
+                                i18nT("pages.admin.admin.admin.b21456e"),
                         },
                         {
                             key: "faultCode",
                             label:
-                                "Шифр",
+                                i18nT("pages.admin.admin.admin.74308c4"),
                             render:
                                 (
                                     item,
@@ -3057,19 +3046,15 @@ export default function Admin() {
                 <div>
                     <div className="admin-page__eyebrow">
                         <RiAdminLine />
-                        Системное
-                        управление
+                        {i18nT("pages.admin.admin.admin.13bc085")}
                     </div>
 
                     <h1>
-                        Администрирование
+                        {i18nT("pages.admin.admin.admin.0dce296")}
                     </h1>
 
                     <p>
-                        Пользователи,
-                        смены и
-                        справочники
-                        НарядAI
+                        {i18nT("pages.admin.admin.admin.553b7db")}
                     </p>
                 </div>
 
@@ -3081,14 +3066,14 @@ export default function Admin() {
                     }
                 >
                     <RiRefreshLine />
-                    Обновить
+                    {i18nT("components.layout.appnavbar.dbe5444")}
                 </button>
             </div>
 
             <div className="admin-summary">
                 <div className="admin-summary-card">
                     <span>
-                        Пользователи
+                        {i18nT("pages.admin.admin.admin.b8c4e70")}
                     </span>
 
                     <strong>
@@ -3096,13 +3081,13 @@ export default function Admin() {
                     </strong>
 
                     <small>
-                        Всего аккаунтов
+                        {i18nT("pages.admin.admin.admin.9b96436")}
                     </small>
                 </div>
 
                 <div className="admin-summary-card">
                     <span>
-                        Исполнители
+                        {i18nT("pages.admin.admin.admin.db000ea")}
                     </span>
 
                     <strong>
@@ -3112,13 +3097,13 @@ export default function Admin() {
                     </strong>
 
                     <small>
-                        Зарегистрировано
+                        {i18nT("pages.admin.admin.admin.f2cb7ea")}
                     </small>
                 </div>
 
                 <div className="admin-summary-card">
                     <span>
-                        На смене
+                        {i18nT("pages.admin.admin.admin.958b816")}
                     </span>
 
                     <strong>
@@ -3133,13 +3118,13 @@ export default function Admin() {
                     </strong>
 
                     <small>
-                        Сейчас активно
+                        {i18nT("pages.admin.admin.admin.53b4b26")}
                     </small>
                 </div>
 
                 <div className="admin-summary-card">
                     <span>
-                        Оборудование
+                        {i18nT("pages.admin.admin.admin.a135d09")}
                     </span>
 
                     <strong>
@@ -3149,7 +3134,7 @@ export default function Admin() {
                     </strong>
 
                     <small>
-                        Единиц в системе
+                        {i18nT("pages.admin.admin.admin.d8929de")}
                     </small>
                 </div>
             </div>
@@ -3206,9 +3191,7 @@ export default function Admin() {
                             </h2>
 
                             <p>
-                                Управление
-                                данными
-                                раздела
+                                {i18nT("pages.admin.admin.admin.8bd9fbd")}
                             </p>
                         </div>
 
@@ -3225,7 +3208,7 @@ export default function Admin() {
                                         onChange={
                                             setSearch
                                         }
-                                        placeholder="Поиск..."
+                                        placeholder={i18nT("pages.admin.admin.admin.b84a8f8")}
                                     />
                                 )}
 
@@ -3238,7 +3221,7 @@ export default function Admin() {
                                     }
                                 >
                                     <RiAddLine />
-                                    Добавить
+                                    {i18nT("pages.admin.admin.admin.5eba283")}
                                 </button>
                             )}
                         </div>

@@ -31,6 +31,7 @@ import {
 } from "../../../hooks/useReferences.js";
 
 import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
+import { t as i18nT } from "../../../i18n/index.js";
 
 const LIST_HEIGHT = "clamp(360px, calc(100dvh - 430px), 640px)";
 
@@ -270,7 +271,7 @@ export default function Equipment() {
         ).length;
     const columns = useMemo(() => [
         {
-            field: "name", header: "Оборудование", minWidth: 240,
+            field: "name", header: i18nT("sidebar.equipment"), minWidth: 240,
             render: (item) => (
                 <div className="min-w-0">
                     <div className="truncate font-semibold text-gray-900">{item.name}</div>
@@ -278,9 +279,9 @@ export default function Equipment() {
             ),
         },
         { field: "inventoryNumber", header: "Инвентарный №", minWidth: 170 },
-        { field: "type", header: "Тип", minWidth: 180 },
+        { field: "type", header: i18nT("pages.admin.admin.admin.345805b"), minWidth: 180 },
         {
-            key: "area", header: "Участок", minWidth: 210, sortField: "areaName",
+            key: "area", header: i18nT("ordersTable.area"), minWidth: 210, sortField: "areaName",
             sortValue: (item) => areasById.get(Number(item.areaId))?.name ?? "",
             render: (item) => (
                 <div className="flex items-center gap-2 text-gray-600">
@@ -290,7 +291,7 @@ export default function Equipment() {
             ),
         },
         {
-            field: "criticality", header: "Критичность", minWidth: 160,
+            field: "criticality", header: i18nT("equipmentModal.criticality"), minWidth: 160,
             sortValue: (item) => Number(item.criticality),
             render: (item) => (
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${getCriticalityStyle(item.criticality)}`}>
@@ -307,8 +308,7 @@ export default function Equipment() {
         return (
             <div className="flex min-h-[500px] items-center justify-center">
                 <div className="text-sm text-gray-500">
-                    Загрузка
-                    оборудования...
+                    {i18nT("pages.equipment.equipment.equipment.f12ef70")}
                 </div>
             </div>
         );
@@ -323,9 +323,7 @@ export default function Equipment() {
                     className="text-red-400"
                 />
                 <h2 className="mt-4 text-lg font-bold text-gray-900">
-                    Не удалось
-                    загрузить
-                    оборудование
+                    {i18nT("pages.equipment.equipment.equipment.ed7658e")}
                 </h2>
                 <button
                     type="button"
@@ -335,7 +333,7 @@ export default function Equipment() {
                     className="mt-4 inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700"
                 >
                     <RiRefreshLine />
-                    Повторить
+                    {i18nT("components.layout.appnavbar.b914bbb")}
                 </button>
             </div>
         );
@@ -346,12 +344,10 @@ export default function Equipment() {
                 <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                            Оборудование
+                            {i18nT("sidebar.equipment")}
                         </h1>
                         <p className="mt-1 text-sm text-gray-500">
-                            Производственное
-                            оборудование и
-                            его история
+                            {i18nT("pages.equipment.equipment.equipment.0c76acb")}
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -365,7 +361,7 @@ export default function Equipment() {
                             <RiRefreshLine
                                 size={18}
                             />
-                            Обновить
+                            {i18nT("components.layout.appnavbar.dbe5444")}
                         </button>
                         {canCreate && (
                             <button
@@ -380,8 +376,7 @@ export default function Equipment() {
                                 <RiAddLine
                                     size={18}
                                 />
-                                Добавить
-                                оборудование
+                                {i18nT("pages.equipment.equipment.equipment.77e0765")}
                             </button>
                         )}
                     </div>
@@ -437,7 +432,7 @@ export default function Equipment() {
                                             .value,
                                     )
                                 }
-                                placeholder="Название, инвентарный номер, тип..."
+                                placeholder={i18nT("pages.equipment.equipment.equipment.6c29c39")}
                                 className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
@@ -458,7 +453,7 @@ export default function Equipment() {
                             className={selectClass}
                         >
                             <option value="">
-                                Все участки
+                                {i18nT("reportModal.allAreas")}
                             </option>
                             {areas.map(
                                 (
@@ -496,7 +491,7 @@ export default function Equipment() {
                             className={selectClass}
                         >
                             <option value="">
-                                Все типы
+                                {i18nT("pages.equipment.equipment.equipment.729d3f6")}
                             </option>
                             {types.map(
                                 (
@@ -534,8 +529,7 @@ export default function Equipment() {
                             className={selectClass}
                         >
                             <option value="">
-                                Любая
-                                критичность
+                                {i18nT("pages.equipment.equipment.equipment.daaa627")}
                             </option>
                             {[1, 2, 3, 4, 5].map(
                                 (
@@ -566,7 +560,7 @@ export default function Equipment() {
                             <RiFilter3Line
                                 size={17}
                             />
-                            Найдено
+                            {i18nT("pages.employees.employees.employees.35dbd85")}
                             <span className="font-semibold text-gray-900">
                                 {
                                     filteredEquipment.length
@@ -586,17 +580,17 @@ export default function Equipment() {
                                                 14
                                             }
                                         />
-                                        Сбросить
+                                        {i18nT("employeesPage.reset")}
                                     </button>
                                 )}
                         </div>
 
                         <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
                             <button type="button" onClick={() => setView("cards")} className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === "cards" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
-                                <RiLayoutGridLine size={17} />Карточки
+                                <RiLayoutGridLine size={17} />{i18nT("pages.employees.employees.employees.152beb3")}
                             </button>
                             <button type="button" onClick={() => setView("table")} className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === "table" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}>
-                                <RiListCheck2 size={17} />Таблица
+                                <RiListCheck2 size={17} />{i18nT("ordersPage.table")}
                             </button>
                         </div>
                     </div>
@@ -644,14 +638,11 @@ export default function Equipment() {
                                     />
 
                                     <h3 className="mt-4 text-sm font-semibold text-gray-800">
-                                        Оборудование
-                                        не найдено
+                                        {i18nT("pages.equipment.equipment.equipment.11a8e6f")}
                                     </h3>
 
                                     <p className="mt-1 text-sm text-gray-400">
-                                        Измените
-                                        параметры
-                                        фильтрации
+                                        {i18nT("pages.employees.employees.employees.82f00e1")}
                                     </p>
                                 </div>
                             </div>
@@ -667,8 +658,8 @@ export default function Equipment() {
                         striped
                         scrollHeight={LIST_HEIGHT}
                         minWidth={980}
-                        emptyText="Оборудование не найдено"
-                        emptyDescription="Измените параметры фильтрации"
+                        emptyText={i18nT("pages.equipment.equipment.equipment.11a8e6f")}
+                        emptyDescription={i18nT("pages.employees.employees.employees.82f00e1")}
                         rowClassName={() => "cursor-pointer"}
                         onRowClick={(item, _index, event) => {
                             if (event.target.closest("button, a, input, select, textarea")) return;
@@ -732,7 +723,7 @@ function EquipmentCard({
             <div className="mt-5 grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-gray-50 p-3">
                     <p className="text-[10px] font-semibold uppercase text-gray-400">
-                        Тип
+                        {i18nT("pages.admin.admin.admin.345805b")}
                     </p>
                     <p className="mt-1 truncate text-sm font-semibold text-gray-800">
                         {item.type ||
@@ -741,7 +732,7 @@ function EquipmentCard({
                 </div>
                 <div className="rounded-lg bg-gray-50 p-3">
                     <p className="text-[10px] font-semibold uppercase text-gray-400">
-                        Критичность
+                        {i18nT("equipmentModal.criticality")}
                     </p>
                     <p className="mt-1 truncate text-sm font-semibold text-gray-800">
                         {getCriticalityLabel(
@@ -847,12 +838,10 @@ function CreateEquipmentModal({
                 <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
                     <div>
                         <h2 className="text-lg font-bold text-gray-900">
-                            Новое
-                            оборудование
+                            {i18nT("pages.equipment.equipment.equipment.04d928c")}
                         </h2>
                         <p className="mt-1 text-xs text-gray-500">
-                            Добавление в
-                            справочник
+                            {i18nT("pages.equipment.equipment.equipment.c868176")}
                         </p>
                     </div>
                     <button
@@ -877,7 +866,7 @@ function CreateEquipmentModal({
                         </div>
                     )}
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <Field label="Название">
+                        <Field label={i18nT("pages.admin.admin.admin.602680e")}>
                             <input
                                 value={
                                     form.name
@@ -896,7 +885,7 @@ function CreateEquipmentModal({
                                 className="input"
                             />
                         </Field>
-                        <Field label="Инвентарный номер">
+                        <Field label={i18nT("pages.admin.admin.admin.ad8aabf")}>
                             <input
                                 value={
                                     form.inventoryNumber
@@ -915,7 +904,7 @@ function CreateEquipmentModal({
                                 className="input"
                             />
                         </Field>
-                        <Field label="Тип">
+                        <Field label={i18nT("pages.admin.admin.admin.345805b")}>
                             <input
                                 value={
                                     form.type
@@ -934,7 +923,7 @@ function CreateEquipmentModal({
                                 className="input"
                             />
                         </Field>
-                        <Field label="Критичность">
+                        <Field label={i18nT("equipmentModal.criticality")}>
                             <select
                                 value={
                                     form.criticality
@@ -976,7 +965,7 @@ function CreateEquipmentModal({
                             </select>
                         </Field>
                         <div className="md:col-span-2">
-                            <Field label="Участок">
+                            <Field label={i18nT("ordersTable.area")}>
                                 <select
                                     value={
                                         form.areaId
@@ -995,8 +984,7 @@ function CreateEquipmentModal({
                                     className="input"
                                 >
                                     <option value="">
-                                        Выберите
-                                        участок
+                                        {i18nT("orderModal.selectArea")}
                                     </option>
                                     {areas.map(
                                         (
@@ -1028,7 +1016,7 @@ function CreateEquipmentModal({
                             }
                             className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700"
                         >
-                            Отмена
+                            {i18nT("employeeModal.cancel")}
                         </button>
                         <button
                             type="submit"
@@ -1039,7 +1027,7 @@ function CreateEquipmentModal({
                         >
                             {mutation.isPending
                                 ? "Создание..."
-                                : "Создать"}
+                                : i18nT("pages.admin.admin.admin.b059f7e")}
                         </button>
                     </div>
                 </form>

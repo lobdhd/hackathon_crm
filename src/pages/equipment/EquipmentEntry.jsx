@@ -25,6 +25,7 @@ import {
 import {
     useEquipmentByQr,
 } from "../../hooks/useEquipment.js";
+import { t as i18nT } from "../../i18n/index.js";
 
 
 // MARK: Helpers
@@ -170,11 +171,11 @@ export default function EquipmentEntry() {
                     </div>
 
                     <h1 className="mt-4 text-xl font-bold text-gray-900">
-                        Некорректный QR-код
+                        {i18nT("pages.equipment.equipmententry.7b2ec75")}
                     </h1>
 
                     <p className="mt-2 text-sm leading-6 text-gray-500">
-                        В ссылке отсутствует токен оборудования.
+                        {i18nT("pages.equipment.equipmententry.740af76")}
                     </p>
 
                     <button
@@ -188,7 +189,7 @@ export default function EquipmentEntry() {
                     >
                         <RiArrowLeftLine />
 
-                        К оборудованию
+                        {i18nT("pages.equipment.equipmententry.5c7d798")}
                     </button>
                 </div>
             </div>
@@ -217,11 +218,11 @@ export default function EquipmentEntry() {
                     />
 
                     <p className="mt-3 text-sm font-semibold text-gray-700">
-                        Определяем оборудование...
+                        {i18nT("pages.equipment.equipmententry.e6c19b9")}
                     </p>
 
                     <p className="mt-1 text-xs text-gray-400">
-                        Проверяем QR-код в системе
+                        {i18nT("pages.equipment.equipmententry.99866a5")}
                     </p>
                 </div>
             </div>
@@ -244,7 +245,7 @@ export default function EquipmentEntry() {
                     </div>
 
                     <h1 className="mt-4 text-xl font-bold text-gray-900">
-                        QR-код не распознан
+                        {i18nT("pages.equipment.equipmententry.441f679")}
                     </h1>
 
                     <p className="mt-2 text-sm leading-6 text-gray-500">
@@ -273,7 +274,7 @@ export default function EquipmentEntry() {
                         >
                             <RiRefreshLine />
 
-                            Повторить
+                            {i18nT("components.layout.appnavbar.b914bbb")}
                         </button>
 
                         <button
@@ -287,7 +288,7 @@ export default function EquipmentEntry() {
                         >
                             <RiArrowLeftLine />
 
-                            К оборудованию
+                            {i18nT("pages.equipment.equipmententry.5c7d798")}
                         </button>
                     </div>
                 </div>

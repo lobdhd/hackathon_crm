@@ -34,21 +34,22 @@ import {
 import {
     useAreas,
 } from "../../hooks/useReferences.js";
+import { t as i18nT } from "../../i18n/index.js";
 
 // MARK: Config
 
 const PERIODS = [
     {
         value: "shift",
-        label: "Смена",
+        label: i18nT("reportModal.shift"),
     },
     {
         value: "week",
-        label: "Неделя",
+        label: i18nT("analyticsPage.week"),
     },
     {
         value: "month",
-        label: "Месяц",
+        label: i18nT("pages.rating.rating.aeb10f7"),
     },
 ];
 
@@ -272,7 +273,7 @@ export default function Rating() {
             () => [
                 {
                     value: "",
-                    label: "Все участки",
+                    label: i18nT("reportModal.allAreas"),
                 },
                 ...areas.map(
                     (area) => ({
@@ -293,7 +294,7 @@ export default function Rating() {
                 {
                     value: "",
                     label:
-                        "Все специальности",
+                        i18nT("employeesPage.allSpecialties"),
                 },
                 ...specialties.map(
                     (specialty) => ({
@@ -469,7 +470,7 @@ export default function Rating() {
         },
         {
             field: "fullName",
-            header: "Исполнитель",
+            header: i18nT("ordersTable.assignee"),
             minWidth: 250,
             render: (
                 employee,
@@ -487,7 +488,7 @@ export default function Rating() {
         },
         {
             field: "score",
-            header: "Рейтинг",
+            header: i18nT("pages.rating.rating.304ce2c"),
             minWidth: 120,
             sortValue: (
                 row,
@@ -507,7 +508,7 @@ export default function Rating() {
         },
         {
             field: "quality",
-            header: "Качество",
+            header: i18nT("pages.rating.rating.cfedc14"),
             minWidth: 110,
             render: (
                 row,
@@ -518,7 +519,7 @@ export default function Rating() {
         },
         {
             field: "onTimeRate",
-            header: "В срок",
+            header: i18nT("pages.rating.rating.a67436e"),
             minWidth: 110,
             render: (
                 row,
@@ -529,7 +530,7 @@ export default function Rating() {
         },
         {
             field: "reworkRate",
-            header: "Доработки",
+            header: i18nT("pages.rating.rating.399f7c5"),
             minWidth: 120,
             render: (
                 row,
@@ -540,7 +541,7 @@ export default function Rating() {
         },
         {
             field: "repeatFailureRate",
-            header: "Повторные отказы",
+            header: i18nT("pages.rating.rating.0a7f61c"),
             minWidth: 150,
             render: (
                 row,
@@ -551,7 +552,7 @@ export default function Rating() {
         },
         {
             field: "productivity",
-            header: "Производительность",
+            header: i18nT("pages.rating.rating.a12969d"),
             minWidth: 160,
             render: (
                 row,
@@ -562,14 +563,14 @@ export default function Rating() {
         },
         {
             field: "closed",
-            header: "Закрыто",
+            header: i18nT("ratingPodium.closed"),
             minWidth: 100,
         },
     ];
     const brigadeColumns = [
         {
             field: "name",
-            header: "Бригада",
+            header: i18nT("employeeModal.team"),
             minWidth: 230,
             render: (
                 brigade,
@@ -583,7 +584,7 @@ export default function Rating() {
                             {brigade.name}
                         </p>
                         <p className="mt-1 text-xs text-gray-400">
-                            Участников:{" "}
+                            {i18nT("pages.rating.rating.6cef7a4")}{" "}
                             {Array.isArray(
                                 brigade.members,
                             )
@@ -597,7 +598,7 @@ export default function Rating() {
         },
         {
             field: "score",
-            header: "Рейтинг",
+            header: i18nT("pages.rating.rating.304ce2c"),
             minWidth: 120,
             render: (
                 row,
@@ -611,7 +612,7 @@ export default function Rating() {
         },
         {
             field: "quality",
-            header: "Качество",
+            header: i18nT("pages.rating.rating.cfedc14"),
             minWidth: 120,
             render: (
                 row,
@@ -622,7 +623,7 @@ export default function Rating() {
         },
         {
             field: "onTimeRate",
-            header: "В срок",
+            header: i18nT("pages.rating.rating.a67436e"),
             minWidth: 120,
             render: (
                 row,
@@ -633,7 +634,7 @@ export default function Rating() {
         },
         {
             field: "repeatFailureRate",
-            header: "Повторные отказы",
+            header: i18nT("pages.rating.rating.0a7f61c"),
             minWidth: 150,
             render: (
                 row,
@@ -644,7 +645,7 @@ export default function Rating() {
         },
         {
             field: "closed",
-            header: "Закрыто",
+            header: i18nT("ratingPodium.closed"),
             minWidth: 110,
         },
     ];
@@ -661,12 +662,10 @@ export default function Rating() {
             <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                        Рейтинг
+                        {i18nT("pages.rating.rating.304ce2c")}
                     </h1>
                     <p className="mt-1 text-sm text-gray-500">
-                        Оценка качества,
-                        сроков и эффективности
-                        исполнителей
+                        {i18nT("pages.rating.rating.1bf7492")}
                     </p>
                 </div>
                 <PeriodSwitch
@@ -717,7 +716,7 @@ export default function Rating() {
                             )
                             : "—"
                     }
-                    helper="По исполнителям"
+                    helper={i18nT("pages.reports.reports.a3436b1")}
                     icon={
                         RiStarFill
                     }
@@ -735,7 +734,7 @@ export default function Rating() {
                     tone="green"
                 />
                 <StatCard
-                    label="Закрыто нарядов"
+                    label={i18nT("pages.rating.rating.54a16b9")}
                     value={
                         totalClosed
                     }
@@ -752,11 +751,10 @@ export default function Rating() {
                     <div className="mb-5 flex items-center justify-between">
                         <div>
                             <h2 className="text-base font-semibold text-gray-900">
-                                Лидеры
+                                {i18nT("pages.rating.rating.6fe16c2")}
                             </h2>
                             <p className="mt-1 text-xs text-gray-500">
-                                Лучшие исполнители
-                                за выбранный период
+                                {i18nT("pages.rating.rating.73799f5")}
                             </p>
                         </div>
                         <div className="hidden items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 sm:flex">
@@ -862,7 +860,7 @@ export default function Rating() {
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                         <RiFilter3Line />
-                        В рейтинге
+                        {i18nT("pages.rating.rating.8c063da")}
                         <span className="font-semibold text-gray-900">
                             {mode ===
                             "executors"
@@ -879,7 +877,7 @@ export default function Rating() {
                                 className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-600"
                             >
                                 <RiCloseLine />
-                                Сбросить
+                                {i18nT("employeesPage.reset")}
                             </button>
                         )}
                     </div>
@@ -898,7 +896,7 @@ export default function Rating() {
                                     : "text-gray-500"
                             }`}
                         >
-                            Исполнители
+                            {i18nT("sidebar.employees")}
                         </button>
                         <button
                             type="button"
@@ -914,7 +912,7 @@ export default function Rating() {
                                     : "text-gray-500"
                             }`}
                         >
-                            Бригады
+                            {i18nT("pages.admin.admin.admin.bfbd755")}
                         </button>
                     </div>
                 </div>
@@ -1027,14 +1025,14 @@ function MyRatingView({ period, onPeriodChange, query }) {
     }), [score, validScore]);
     if (query.isLoading && !query.data) return <LoadingPage />;
     const metrics = rating ? [
-        { label: "Качество", value: numberValue(rating.quality), icon: RiStarFill, tone: "blue" },
-        { label: "В срок", value: percent(rating.onTimeRate), icon: RiCheckboxCircleLine, tone: "green" },
-        { label: "Доработки", value: percent(rating.reworkRate), icon: RiRefreshLine, tone: "amber" },
-        { label: "Повторные отказы", value: percent(rating.repeatFailureRate), icon: RiBarChartBoxLine, tone: "rose" },
-        { label: "Возвраты", value: percent(rating.returnRate), icon: RiCloseLine, tone: "amber" },
-        { label: "Производительность", value: numberValue(rating.productivity), icon: RiBarChartBoxLine, tone: "blue" },
-        { label: "Необосн. отказы", value: rating.unjustifiedRejects ?? "—", icon: RiShieldCheckLine, tone: "rose" },
-        { label: "Закрыто нарядов", value: rating.closed ?? 0, icon: RiCheckboxCircleLine, tone: "green" },
+        { label: i18nT("pages.rating.rating.cfedc14"), value: numberValue(rating.quality), icon: RiStarFill, tone: "blue" },
+        { label: i18nT("pages.rating.rating.a67436e"), value: percent(rating.onTimeRate), icon: RiCheckboxCircleLine, tone: "green" },
+        { label: i18nT("pages.rating.rating.399f7c5"), value: percent(rating.reworkRate), icon: RiRefreshLine, tone: "amber" },
+        { label: i18nT("pages.rating.rating.0a7f61c"), value: percent(rating.repeatFailureRate), icon: RiBarChartBoxLine, tone: "rose" },
+        { label: i18nT("pages.rating.rating.ca8a107"), value: percent(rating.returnRate), icon: RiCloseLine, tone: "amber" },
+        { label: i18nT("pages.rating.rating.a12969d"), value: numberValue(rating.productivity), icon: RiBarChartBoxLine, tone: "blue" },
+        { label: i18nT("pages.rating.rating.86be933"), value: rating.unjustifiedRejects ?? "—", icon: RiShieldCheckLine, tone: "rose" },
+        { label: i18nT("pages.rating.rating.54a16b9"), value: rating.closed ?? 0, icon: RiCheckboxCircleLine, tone: "green" },
     ] : [];
     return (
         <div className="mx-auto max-w-[1500px] pb-8">
@@ -1042,10 +1040,10 @@ function MyRatingView({ period, onPeriodChange, query }) {
             <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
                     <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-                        <RiTrophyLine size={13} /> Мой рейтинг
+                        <RiTrophyLine size={13} /> {i18nT("pages.rating.rating.d3bb533")}
                     </div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Мои результаты</h1>
-                    <p className="mt-1 text-sm text-slate-500">Персональная оценка качества, сроков и эффективности</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">{i18nT("pages.rating.rating.34bfde9")}</h1>
+                    <p className="mt-1 text-sm text-slate-500">{i18nT("pages.rating.rating.df8f838")}</p>
                 </div>
                 <PeriodSwitch value={period} onChange={onPeriodChange} />
             </div>
@@ -1053,8 +1051,8 @@ function MyRatingView({ period, onPeriodChange, query }) {
             {!query.isError && !rating && (
                 <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
                     <RiTrophyLine size={32} className="mx-auto text-slate-300" />
-                    <h2 className="mt-3 text-sm font-semibold text-slate-900">Пока нет данных</h2>
-                    <p className="mt-1 text-sm text-slate-500">За выбранный период рейтинг ещё не рассчитан.</p>
+                    <h2 className="mt-3 text-sm font-semibold text-slate-900">{i18nT("pages.rating.rating.5cfc524")}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{i18nT("pages.rating.rating.93022fc")}</p>
                 </div>
             )}
             {rating && (
@@ -1064,15 +1062,15 @@ function MyRatingView({ period, onPeriodChange, query }) {
                         <div className="grid lg:grid-cols-[285px_minmax(0,1fr)]">
                             <div className="flex flex-col items-center justify-center border-b border-slate-100 px-5 py-5 lg:border-b-0 lg:border-r">
                                 <div className="w-full text-left">
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Итоговый балл</p>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{i18nT("pages.rating.rating.bb560ce")}</p>
                                 </div>
                                 <div className="relative mt-1 h-[190px] w-[230px] max-w-full">
                                     <Chart type="radialBar" height={190} width="100%" series={[boundedScore]} options={chartOptions} />
-                                    <span className="pointer-events-none absolute bottom-[27px] left-1/2 -translate-x-1/2 text-[11px] font-medium text-slate-400">из 100</span>
+                                    <span className="pointer-events-none absolute bottom-[27px] left-1/2 -translate-x-1/2 text-[11px] font-medium text-slate-400">{i18nT("pages.rating.rating.0791eff")}</span>
                                 </div>
                                 <div className="w-full border-t border-slate-100 pt-3">
                                     <p className="truncate text-sm font-semibold text-slate-900">{rating.fullName || "Ваш результат"}</p>
-                                    <p className="mt-0.5 text-xs text-slate-500">{rating.specialty || "Исполнитель"}</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">{rating.specialty || i18nT("ordersTable.assignee")}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-4">
@@ -1123,10 +1121,10 @@ function FormulaSection({
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                 <div>
                     <h2 className="text-[15px] font-semibold text-gray-900">
-                        Формула рейтинга
+                        {i18nT("pages.rating.rating.0e2f7ee")}
                     </h2>
                     <p className="mt-1 text-xs text-gray-500">
-                        Баллы рассчитаны backend
+                        {i18nT("pages.rating.rating.a7810e8")}
                     </p>
                 </div>
                 <RiShieldCheckLine
@@ -1136,37 +1134,37 @@ function FormulaSection({
             </div>
             <div className="grid grid-cols-2 gap-3 p-5 md:grid-cols-3">
                 <PointCard
-                    title="Качество"
+                    title={i18nT("pages.rating.rating.cfedc14")}
                     value={
                         rating.points?.quality
                     }
                 />
                 <PointCard
-                    title="Сроки"
+                    title={i18nT("pages.orders.orderdetails.orderdetails.8a44424")}
                     value={
                         rating.points?.onTime
                     }
                 />
                 <PointCard
-                    title="Без возвратов"
+                    title={i18nT("pages.rating.rating.a09c947")}
                     value={
                         rating.points?.noReturns
                     }
                 />
                 <PointCard
-                    title="Объём"
+                    title={i18nT("pages.rating.rating.678bc9b")}
                     value={
                         rating.points?.volume
                     }
                 />
                 <PointCard
-                    title="Сложность"
+                    title={i18nT("pages.rating.rating.8edf8fc")}
                     value={
                         rating.points?.complexity
                     }
                 />
                 <PointCard
-                    title="Отказы"
+                    title={i18nT("pages.rating.rating.71a5d51")}
                     value={
                         rating.points?.rejects
                     }
@@ -1174,7 +1172,7 @@ function FormulaSection({
             </div>
             {rating.complexityBonus != null && (
                 <div className="border-t border-gray-100 px-5 py-4 text-xs text-gray-500">
-                    Бонус за сложность:{" "}
+                    {i18nT("pages.rating.rating.89d7ccd")}{" "}
                     <span className="font-semibold text-gray-900">
                         {rating.complexityBonus}
                     </span>
@@ -1194,7 +1192,7 @@ function ExplanationSection({
             <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50/40 px-5 py-4">
                 <div>
                     <h2 className="text-[15px] font-semibold text-gray-900">
-                        Объяснение
+                        {i18nT("pages.rating.rating.7b5097b")}
                     </h2>
                     <p className="mt-1 text-xs text-gray-500">
                         {subtitle}
@@ -1209,7 +1207,7 @@ function ExplanationSection({
                 {!compactResult && (
                 <div className="rounded-xl border border-green-100 bg-green-50 p-4">
                     <p className="text-xs font-semibold uppercase text-green-600">
-                        Результат
+                        {i18nT("pages.rating.rating.0133281")}
                     </p>
                     <p className="mt-2 text-3xl font-bold text-gray-900">
                         {scoreValue(
@@ -1355,12 +1353,12 @@ function LeaderCard({
                         {employee.score}
                     </p>
                     <p className="text-[10px] text-gray-400">
-                        из 100
+                        {i18nT("pages.rating.rating.0791eff")}
                     </p>
                 </div>
                 <p className="text-xs font-semibold text-gray-500">
                     {employee.closed}{" "}
-                    закрыто
+                    {i18nT("pages.rating.rating.04aadcb")}
                 </p>
             </div>
         </button>
@@ -1414,7 +1412,7 @@ function PointCard({
                     "—"}
             </p>
             <p className="mt-1 text-[10px] text-gray-400">
-                баллов
+                {i18nT("pages.rating.rating.ce62b4a")}
             </p>
         </div>
     );

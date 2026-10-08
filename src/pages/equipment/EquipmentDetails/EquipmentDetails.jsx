@@ -31,6 +31,7 @@ import {
 import {
     useEquipmentHistory,
 } from "../../../hooks/useEquipment.js";
+import { t as i18nT } from "../../../i18n/index.js";
 
 
 // MARK: Config
@@ -381,8 +382,7 @@ export default function EquipmentDetails() {
         return (
             <div className="flex min-h-[500px] items-center justify-center">
                 <div className="text-sm text-gray-500">
-                    Загрузка
-                    оборудования...
+                    {i18nT("pages.equipment.equipment.equipment.f12ef70")}
                 </div>
             </div>
         );
@@ -397,9 +397,7 @@ export default function EquipmentDetails() {
                 />
 
                 <h1 className="mt-4 text-2xl font-bold text-gray-900">
-                    Не удалось
-                    загрузить
-                    оборудование
+                    {i18nT("pages.equipment.equipment.equipment.ed7658e")}
                 </h1>
 
                 <p className="mt-2 text-sm text-gray-500">
@@ -417,7 +415,7 @@ export default function EquipmentDetails() {
                 >
                     <RiRefreshLine />
 
-                    Повторить
+                    {i18nT("components.layout.appnavbar.b914bbb")}
                 </button>
             </div>
         );
@@ -427,8 +425,7 @@ export default function EquipmentDetails() {
         return (
             <div className="py-24 text-center">
                 <h1 className="text-2xl font-bold text-gray-900">
-                    Оборудование
-                    не найдено
+                    {i18nT("equipmentPage.empty")}
                 </h1>
 
                 <button
@@ -440,7 +437,7 @@ export default function EquipmentDetails() {
                     }
                     className="mt-5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
                 >
-                    Назад
+                    {i18nT("pages.equipment.equipmentdetails.equipmentdetails.2b0b022")}
                 </button>
             </div>
         );
@@ -456,7 +453,7 @@ export default function EquipmentDetails() {
                     size={18}
                 />
 
-                Всё оборудование
+                {i18nT("pages.equipment.equipmentdetails.equipmentdetails.6e8d469")}
             </Link>
 
             {qrError && (
@@ -520,7 +517,7 @@ export default function EquipmentDetails() {
                         />
 
                         {qrLoading
-                            ? "Загрузка..."
+                            ? i18nT("pages.employees.employeedetails.employeedetails.43e40d4")
                             : "Скачать QR"}
                     </button>
                 </div>
@@ -544,7 +541,7 @@ export default function EquipmentDetails() {
                 />
 
                 <Kpi
-                    label="Простой"
+                    label={i18nT("pages.equipment.equipmentdetails.equipmentdetails.8864ec8")}
                     value={formatMinutes(
                         downtimeMinutes,
                     )}
@@ -563,7 +560,7 @@ export default function EquipmentDetails() {
             <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="min-w-0 space-y-6">
                     <Section
-                        title="Активные наряды"
+                        title={i18nT("dashboard.activeOrders")}
                         description="Работы, которые ещё не закрыты"
                         icon={
                             RiFileList3Line
@@ -589,14 +586,13 @@ export default function EquipmentDetails() {
                             </div>
                         ) : (
                             <EmptyText>
-                                Активных
-                                нарядов нет
+                                {i18nT("pages.equipment.equipmentdetails.equipmentdetails.213e095")}
                             </EmptyText>
                         )}
                     </Section>
 
                     <Section
-                        title="История ремонтов"
+                        title={i18nT("pages.equipment.equipmentdetails.equipmentdetails.ced007e")}
                         description="Все зарегистрированные наряды по оборудованию"
                         icon={
                             RiHistoryLine
@@ -611,8 +607,7 @@ export default function EquipmentDetails() {
                             />
                         ) : (
                             <EmptyText>
-                                История
-                                отсутствует
+                                {i18nT("pages.equipment.equipmentdetails.equipmentdetails.32d2955")}
                             </EmptyText>
                         )}
                     </Section>
@@ -620,7 +615,7 @@ export default function EquipmentDetails() {
 
                 <aside className="space-y-5">
                     <Section
-                        title="Данные"
+                        title={i18nT("pages.equipment.equipmentdetails.equipmentdetails.145f378")}
                         icon={
                             RiInformationLine
                         }
@@ -640,14 +635,14 @@ export default function EquipmentDetails() {
                         />
 
                         <InfoRow
-                            label="Тип"
+                            label={i18nT("pages.admin.admin.admin.345805b")}
                             value={
                                 equipment.type
                             }
                         />
 
                         <InfoRow
-                            label="Критичность"
+                            label={i18nT("equipmentModal.criticality")}
                             value={`${equipment.criticality}/5 — ${getCriticalityLabel(
                                 equipment.criticality,
                             )}`}
@@ -663,7 +658,7 @@ export default function EquipmentDetails() {
                     </Section>
 
                     <Section
-                        title="Участок"
+                        title={i18nT("ordersTable.area")}
                         icon={
                             RiMapPinLine
                         }
@@ -680,19 +675,18 @@ export default function EquipmentDetails() {
                                     {equipment
                                         .area
                                         ?.name ||
-                                        "Не указан"}
+                                        i18nT("components.employees.createemployeemodal.cdded47")}
                                 </p>
 
                                 <p className="mt-1 text-xs text-gray-400">
-                                    Производственный
-                                    участок
+                                    {i18nT("pages.equipment.equipmentdetails.equipmentdetails.962a030")}
                                 </p>
                             </div>
                         </div>
                     </Section>
 
                     <Section
-                        title="AI и качество"
+                        title={i18nT("pages.equipment.equipmentdetails.equipmentdetails.8de4070")}
                         icon={
                             RiSparkling2Line
                         }
@@ -792,19 +786,19 @@ function HistoryTable({
                     <thead className="bg-gray-50">
                         <tr className="text-xs uppercase text-gray-400">
                             <th className="px-4 py-3">
-                                Наряд
+                                {i18nT("ordersTable.order")}
                             </th>
 
                             <th className="px-4 py-3">
-                                Шифр
+                                {i18nT("pages.admin.admin.admin.74308c4")}
                             </th>
 
                             <th className="px-4 py-3">
-                                Приоритет
+                                {i18nT("orderModal.priority")}
                             </th>
 
                             <th className="px-4 py-3">
-                                Статус
+                                {i18nT("employeeModal.status")}
                             </th>
 
                             <th className="px-4 py-3">
@@ -812,11 +806,11 @@ function HistoryTable({
                             </th>
 
                             <th className="px-4 py-3">
-                                Простой
+                                {i18nT("pages.equipment.equipmentdetails.equipmentdetails.8864ec8")}
                             </th>
 
                             <th className="px-4 py-3">
-                                Материалы
+                                {i18nT("pages.admin.admin.admin.79bfff8")}
                             </th>
                         </tr>
                     </thead>

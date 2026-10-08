@@ -52,6 +52,7 @@ import {
 import {
   useI18n,
 } from "../../i18n/index.js";
+import { t as i18nT } from "../../i18n/index.js";
 
 
 // MARK: Config
@@ -59,9 +60,9 @@ import {
 const REPORT_TYPES = [
   {
     id: "shift",
-    title: "Отчёт по смене",
+    title: i18nT("pages.reports.reports.f8c41b8"),
     description:
-      "Выданные, закрытые, просроченные наряды, загрузка исполнителей и простой.",
+      i18nT("pages.reports.reports.fbf250a"),
     icon: RiTimeLine,
     tone:
       "bg-blue-50 text-blue-600",
@@ -70,9 +71,9 @@ const REPORT_TYPES = [
 
   {
     id: "orders",
-    title: "Наряды",
+    title: i18nT("sidebar.orders"),
     description:
-      "Полный список нарядов за выбранный период с применением фильтров.",
+      i18nT("pages.reports.reports.d49dbb9"),
     icon: RiFileList3Line,
     tone:
       "bg-indigo-50 text-indigo-600",
@@ -81,9 +82,9 @@ const REPORT_TYPES = [
 
   {
     id: "ratings",
-    title: "Рейтинг исполнителей",
+    title: i18nT("pages.reports.reports.d161594"),
     description:
-      "Качество, сроки, возвраты, производительность и итоговый рейтинг.",
+      i18nT("pages.reports.reports.51ed60d"),
     icon: RiBarChartBoxLine,
     tone:
       "bg-violet-50 text-violet-600",
@@ -92,9 +93,9 @@ const REPORT_TYPES = [
 
   {
     id: "brigades",
-    title: "Рейтинг бригад",
+    title: i18nT("pages.reports.reports.1d0130f"),
     description:
-      "Сводная эффективность и качество работы производственных бригад.",
+      i18nT("pages.reports.reports.7131185"),
     icon: RiTeamLine,
     tone:
       "bg-cyan-50 text-cyan-600",
@@ -103,9 +104,9 @@ const REPORT_TYPES = [
 
   {
     id: "materials",
-    title: "Материалы",
+    title: i18nT("pages.admin.admin.admin.79bfff8"),
     description:
-      "Фактический расход, нормативы, отклонения и перерасход материалов.",
+      i18nT("pages.reports.reports.129957d"),
     icon: RiToolsLine,
     tone:
       "bg-green-50 text-green-600",
@@ -114,9 +115,9 @@ const REPORT_TYPES = [
 
   {
     id: "downtime",
-    title: "Простои",
+    title: i18nT("pages.reports.reports.a442cd9"),
     description:
-      "Плановый и аварийный простой оборудования с причинами.",
+      i18nT("pages.reports.reports.bf74d13"),
     icon: RiAlarmWarningLine,
     tone:
       "bg-orange-50 text-orange-600",
@@ -125,9 +126,9 @@ const REPORT_TYPES = [
 
   {
     id: "anomalies",
-    title: "Аномалии",
+    title: i18nT("pages.analytics.analytics.fb6342c"),
     description:
-      "Найденные системой производственные отклонения и AI-сигналы.",
+      i18nT("pages.reports.reports.c8f354a"),
     icon: RiSparkling2Line,
     tone:
       "bg-purple-50 text-purple-600",
@@ -138,38 +139,38 @@ const REPORT_TYPES = [
 const PERIODS = [
   {
     value: "shift",
-    label: "Смена",
+    label: i18nT("reportModal.shift"),
   },
   {
     value: "day",
-    label: "День",
+    label: i18nT("pages.analytics.analytics.81e7619"),
   },
   {
     value: "week",
-    label: "Неделя",
+    label: i18nT("analyticsPage.week"),
   },
   {
     value: "month",
-    label: "30 дней",
+    label: i18nT("reportModal.thirtyDays"),
   },
 ];
 
 const GROUP_BY_OPTIONS = [
   {
     value: "material",
-    label: "По материалам",
+    label: i18nT("pages.reports.reports.2bc8226"),
   },
   {
     value: "area",
-    label: "По участкам",
+    label: i18nT("pages.reports.reports.c281f4e"),
   },
   {
     value: "equipment",
-    label: "По оборудованию",
+    label: i18nT("pages.reports.reports.1cea1b8"),
   },
   {
     value: "executor",
-    label: "По исполнителям",
+    label: i18nT("pages.reports.reports.a3436b1"),
   },
 ];
 
@@ -562,7 +563,7 @@ export default function Reports() {
       return [
         {
           value: "",
-          label: "Выберите наряд",
+          label: i18nT("pages.reports.reports.18b12b9"),
         },
 
         ...source.map(
@@ -1138,14 +1139,11 @@ export default function Reports() {
       <div className="mb-6 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-            Отчёты
+            {i18nT("pages.reports.reports.2c687d6")}
           </h1>
 
           <p className="mt-1 text-sm text-gray-500">
-            Производственные
-            отчёты,
-            аналитические
-            выгрузки и PDF
+            {i18nT("pages.reports.reports.0c97cf6")}
           </p>
         </div>
 
@@ -1224,14 +1222,11 @@ export default function Reports() {
       <section className="mb-6">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-gray-900">
-            Тип отчёта
+            {i18nT("pages.reports.reports.31a2928")}
           </h2>
 
           <p className="mt-1 text-xs text-gray-500">
-            Выберите
-            данные для
-            просмотра и
-            выгрузки
+            {i18nT("pages.reports.reports.bd6b44b")}
           </p>
         </div>
 
@@ -1307,7 +1302,7 @@ export default function Reports() {
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <FilterField
-              label="С"
+              label={i18nT("reportModal.from")}
             >
               <input
                 type="datetime-local"
@@ -1329,7 +1324,7 @@ export default function Reports() {
             </FilterField>
 
             <FilterField
-              label="По"
+              label={i18nT("reportModal.to")}
             >
               <input
                 type="datetime-local"
@@ -1351,7 +1346,7 @@ export default function Reports() {
             </FilterField>
 
             <FilterField
-              label="Участок"
+              label={i18nT("ordersTable.area")}
             >
               <select
                 value={
@@ -1369,8 +1364,7 @@ export default function Reports() {
                 className="reports-input"
               >
                 <option value="">
-                  Все
-                  участки
+                  {i18nT("reportModal.allAreas")}
                 </option>
 
                 {areas.map(
@@ -1395,7 +1389,7 @@ export default function Reports() {
             </FilterField>
 
             <FilterField
-              label="Оборудование"
+              label={i18nT("sidebar.equipment")}
             >
               <select
                 value={
@@ -1414,8 +1408,7 @@ export default function Reports() {
                 className="reports-input"
               >
                 <option value="">
-                  Всё
-                  оборудование
+                  {i18nT("equipmentDetails.allEquipment")}
                 </option>
 
                 {equipment.map(
@@ -1440,7 +1433,7 @@ export default function Reports() {
             </FilterField>
 
             <FilterField
-              label="Исполнитель"
+              label={i18nT("ordersTable.assignee")}
             >
               <select
                 value={
@@ -1459,8 +1452,7 @@ export default function Reports() {
                 className="reports-input"
               >
                 <option value="">
-                  Все
-                  исполнители
+                  {i18nT("employeeDetails.allEmployees")}
                 </option>
 
                 {executors.map(
@@ -1485,7 +1477,7 @@ export default function Reports() {
             </FilterField>
 
             <FilterField
-              label="Бригада"
+              label={i18nT("employeeModal.team")}
             >
               <select
                 value={
@@ -1504,8 +1496,7 @@ export default function Reports() {
                 className="reports-input"
               >
                 <option value="">
-                  Все
-                  бригады
+                  {i18nT("pages.orders.orders.orders.b8b0a3b")}
                 </option>
 
                 {brigades.map(
@@ -1577,7 +1568,7 @@ export default function Reports() {
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <RiFilter3Line />
 
-              Фильтров:
+              {i18nT("pages.reports.reports.43a4bd2")}
 
               <span className="font-semibold text-gray-900">
                 {
@@ -1596,7 +1587,7 @@ export default function Reports() {
                   >
                     <RiCloseLine />
 
-                    Сбросить
+                    {i18nT("employeesPage.reset")}
                   </button>
                 )}
             </div>
@@ -1623,7 +1614,7 @@ export default function Reports() {
                         .value,
                     )
                   }
-                  placeholder="Поиск в отчёте..."
+                  placeholder={i18nT("pages.reports.reports.926c41b")}
                   className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-blue-500 focus:bg-white"
                 />
               </div>
@@ -1688,7 +1679,7 @@ export default function Reports() {
           >
             <RiRefreshLine />
 
-            Обновить
+            {i18nT("components.layout.appnavbar.dbe5444")}
           </button>
         </div>
 
@@ -1769,15 +1760,11 @@ export default function Reports() {
         <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-4">
           <div>
             <h2 className="text-[15px] font-semibold text-gray-900">
-              PDF конкретного
-              наряда
+              {i18nT("pages.reports.reports.3d67cbb")}
             </h2>
 
             <p className="mt-1 text-xs text-gray-500">
-              Найдите наряд
-              по номеру,
-              оборудованию
-              или описанию
+              {i18nT("pages.reports.reports.16ffacb")}
             </p>
           </div>
 
@@ -1826,7 +1813,7 @@ export default function Reports() {
                       .value,
                   )
                 }
-                placeholder="Номер, оборудование, описание..."
+                placeholder={i18nT("pages.reports.reports.74c0c32")}
                 className="reports-input !pl-10"
               />
             </div>
@@ -1853,7 +1840,7 @@ export default function Reports() {
                 placeholder={
                   workOrdersQuery.isLoading
                     ? "Загрузка нарядов..."
-                    : "Выберите наряд"
+                    : i18nT("pages.reports.reports.18b12b9")
                 }
                 className="glide-select--field"
                 menuWidth={
@@ -1880,16 +1867,14 @@ export default function Reports() {
                 <RiDownload2Line />
               )}
 
-              Скачать PDF
+              {i18nT("pages.reports.reports.e546f78")}
             </button>
           </div>
 
           {workOrdersQuery.isError && (
             <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2.5">
               <p className="text-xs text-red-700">
-                Не удалось
-                загрузить список
-                нарядов
+                {i18nT("pages.reports.reports.a3fe4d3")}
               </p>
 
               <button
@@ -1901,7 +1886,7 @@ export default function Reports() {
               >
                 <RiRefreshLine />
 
-                Повторить
+                {i18nT("components.layout.appnavbar.b914bbb")}
               </button>
             </div>
           )}
@@ -1910,8 +1895,7 @@ export default function Reports() {
             !workOrdersQuery.isError &&
             workOrders.length === 0 && (
             <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-500">
-              Наряды для выбора
-              не найдены.
+              {i18nT("pages.reports.reports.50ce7c4")}
             </div>
           )}
 
@@ -1988,7 +1972,7 @@ function SelectedOrderPdfPreview({
         <div className="grid shrink-0 grid-cols-1 gap-1 text-xs text-gray-500 md:min-w-[280px]">
           <p>
             <span className="text-gray-400">
-              Оборудование:
+              {i18nT("pages.reports.reports.060640c")}
             </span>{" "}
 
             <span className="font-medium text-gray-700">
@@ -2000,7 +1984,7 @@ function SelectedOrderPdfPreview({
 
           <p>
             <span className="text-gray-400">
-              Участок:
+              {i18nT("pages.reports.reports.d928b7d")}
             </span>{" "}
 
             <span className="font-medium text-gray-700">
@@ -2012,7 +1996,7 @@ function SelectedOrderPdfPreview({
 
           <p>
             <span className="text-gray-400">
-              Исполнитель:
+              {i18nT("pages.reports.reports.1bdb0ac")}
             </span>{" "}
 
             <span className="font-medium text-gray-700">
@@ -2089,7 +2073,7 @@ function ShiftReport({
             "fullName",
 
           header:
-            "Исполнитель",
+            i18nT("ordersTable.assignee"),
 
           minWidth:
             240,
@@ -2129,7 +2113,7 @@ function ShiftReport({
             "completed",
 
           header:
-            "Выполнено",
+            i18nT("ratingTable.completed"),
 
           minWidth:
             110,
@@ -2151,7 +2135,7 @@ function ShiftReport({
             "employeeStatus",
 
           header:
-            "Статус",
+            i18nT("employeeModal.status"),
 
           minWidth:
             130,
@@ -2173,7 +2157,7 @@ function ShiftReport({
             "isOnShift",
 
           header:
-            "На смене",
+            i18nT("pages.admin.admin.admin.958b816"),
 
           minWidth:
             110,
@@ -2194,7 +2178,7 @@ function ShiftReport({
     <>
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-6">
         <MiniKpi
-          label="Выдано"
+          label={i18nT("kanban.issued")}
           value={
             data.issued ??
             0
@@ -2202,7 +2186,7 @@ function ShiftReport({
         />
 
         <MiniKpi
-          label="Выполнено"
+          label={i18nT("ratingTable.completed")}
           value={
             data.completed ??
             0
@@ -2210,7 +2194,7 @@ function ShiftReport({
         />
 
         <MiniKpi
-          label="Закрыто"
+          label={i18nT("ratingPodium.closed")}
           value={
             data.closed ??
             0
@@ -2218,7 +2202,7 @@ function ShiftReport({
         />
 
         <MiniKpi
-          label="Просрочено"
+          label={i18nT("kanban.overdue")}
           value={
             data.overdue ??
             0
@@ -2227,7 +2211,7 @@ function ShiftReport({
         />
 
         <MiniKpi
-          label="В работе"
+          label={i18nT("status.inProgress")}
           value={
             data.inProgress ??
             0
@@ -2235,7 +2219,7 @@ function ShiftReport({
         />
 
         <MiniKpi
-          label="Простой"
+          label={i18nT("analytics.downtime.label")}
           value={formatMinutes(
             data.downtime
               ?.minutes,
@@ -2296,7 +2280,7 @@ function RatingsReport({
             "fullName",
 
           header:
-            "Исполнитель",
+            i18nT("ordersTable.assignee"),
 
           minWidth:
             240,
@@ -2325,7 +2309,7 @@ function RatingsReport({
             "score",
 
           header:
-            "Рейтинг",
+            i18nT("sidebar.rating"),
 
           minWidth:
             110,
@@ -2347,7 +2331,7 @@ function RatingsReport({
             "quality",
 
           header:
-            "Качество",
+            i18nT("analytics.area.quality"),
 
           minWidth:
             110,
@@ -2358,7 +2342,7 @@ function RatingsReport({
             "onTimeRate",
 
           header:
-            "В срок",
+            i18nT("analytics.area.onTime"),
 
           minWidth:
             110,
@@ -2377,7 +2361,7 @@ function RatingsReport({
             "reworkRate",
 
           header:
-            "Доработки",
+            i18nT("pages.rating.rating.399f7c5"),
 
           minWidth:
             120,
@@ -2415,7 +2399,7 @@ function RatingsReport({
             "productivity",
 
           header:
-            "Производительность",
+            i18nT("pages.rating.rating.a12969d"),
 
           minWidth:
             160,
@@ -2426,7 +2410,7 @@ function RatingsReport({
             "closed",
 
           header:
-            "Закрыто",
+            i18nT("ratingPodium.closed"),
 
           minWidth:
             100,
@@ -2519,7 +2503,7 @@ function BrigadesReport({
             "name",
 
           header:
-            "Бригада",
+            i18nT("employeeModal.team"),
 
           minWidth:
             230,
@@ -2536,7 +2520,7 @@ function BrigadesReport({
                 </p>
 
                 <p className="mt-1 text-xs text-gray-400">
-                  Участников:{" "}
+                  {i18nT("pages.rating.rating.6cef7a4")}{" "}
                   {Array.isArray(
                     item.members,
                   )
@@ -2555,7 +2539,7 @@ function BrigadesReport({
             "score",
 
           header:
-            "Рейтинг",
+            i18nT("sidebar.rating"),
 
           minWidth:
             110,
@@ -2577,7 +2561,7 @@ function BrigadesReport({
             "quality",
 
           header:
-            "Качество",
+            i18nT("analytics.area.quality"),
 
           minWidth:
             110,
@@ -2588,7 +2572,7 @@ function BrigadesReport({
             "onTimeRate",
 
           header:
-            "В срок",
+            i18nT("analytics.area.onTime"),
 
           minWidth:
             110,
@@ -2607,7 +2591,7 @@ function BrigadesReport({
             "repeatFailureRate",
 
           header:
-            "Повторные отказы",
+            i18nT("pages.rating.rating.0a7f61c"),
 
           minWidth:
             160,
@@ -2626,7 +2610,7 @@ function BrigadesReport({
             "closed",
 
           header:
-            "Закрыто",
+            i18nT("ratingPodium.closed"),
 
           minWidth:
             110,
@@ -2745,7 +2729,7 @@ function MaterialsReport({
                         "material",
 
                     header:
-                        "Материал",
+                        i18nT("orderDetails.material"),
 
                     minWidth:
                         220,
@@ -2817,7 +2801,7 @@ function MaterialsReport({
                         "normQuantity",
 
                     header:
-                        "Норматив",
+                        i18nT("pages.admin.admin.admin.63ed571"),
 
                     minWidth:
                         120,
@@ -3072,7 +3056,7 @@ function DowntimeReport({
             "number",
 
           header:
-            "Наряд",
+            i18nT("ordersTable.order"),
 
           minWidth:
             120,
@@ -3083,7 +3067,7 @@ function DowntimeReport({
             "equipment",
 
           header:
-            "Оборудование",
+            i18nT("sidebar.equipment"),
 
           minWidth:
             220,
@@ -3121,7 +3105,7 @@ function DowntimeReport({
             "fault",
 
           header:
-            "Шифр",
+            i18nT("pages.admin.admin.admin.74308c4"),
 
           minWidth:
             130,
@@ -3158,7 +3142,7 @@ function DowntimeReport({
             "minutes",
 
           header:
-            "Простой",
+            i18nT("analytics.downtime.label"),
 
           minWidth:
             120,
@@ -3177,7 +3161,7 @@ function DowntimeReport({
             "ongoing",
 
           header:
-            "Сейчас",
+            i18nT("pages.dashboard.dashboard.2c2777e"),
 
           minWidth:
             100,
@@ -3189,7 +3173,7 @@ function DowntimeReport({
               item.ongoing
                 ? (
                   <span className="rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
-                    Да
+                    {i18nT("pages.analytics.analytics.e04af96")}
                   </span>
                 )
                 : "Нет",
@@ -3202,7 +3186,7 @@ function DowntimeReport({
     <>
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MiniKpi
-          label="Всего"
+          label={i18nT("analytics.status.total")}
           value={formatMinutes(
             data.totals
               ?.minutes,
@@ -3210,7 +3194,7 @@ function DowntimeReport({
         />
 
         <MiniKpi
-          label="Плановый"
+          label={i18nT("priority.planned")}
           value={formatMinutes(
             data.totals
               ?.plannedMinutes,
@@ -3218,7 +3202,7 @@ function DowntimeReport({
         />
 
         <MiniKpi
-          label="Аварийный"
+          label={i18nT("priority.emergency")}
           value={formatMinutes(
             data.totals
               ?.unplannedMinutes,
@@ -3294,15 +3278,7 @@ function ExportOnly({
         </p>
 
         <p className="mt-2 text-xs text-gray-400">
-          Предпросмотр
-          этого отчёта
-          уже находится
-          в профильном
-          разделе.
-          Здесь доступна
-          выгрузка с
-          выбранными
-          фильтрами.
+          {i18nT("pages.reports.reports.7adab7b")}
         </p>
 
         <div className="mt-5 flex justify-center gap-2">
@@ -3433,28 +3409,28 @@ function EmployeeStatus({
   const config = {
     AVAILABLE: {
       title:
-        "Свободен",
+        i18nT("employeeModal.free"),
       style:
         "bg-green-50 text-green-700",
     },
 
     BUSY: {
       title:
-        "Занят",
+        i18nT("pages.reports.reports.9b8aa4f"),
       style:
         "bg-amber-50 text-amber-700",
     },
 
     QUEUED: {
       title:
-        "Очередь",
+        i18nT("pages.reports.reports.4c987aa"),
       style:
         "bg-blue-50 text-blue-700",
     },
 
     OFF_SHIFT: {
       title:
-        "Не на смене",
+        i18nT("employeeModal.offShift"),
       style:
         "bg-gray-100 text-gray-600",
     },
@@ -3505,9 +3481,7 @@ function ErrorState({
         />
 
         <p className="mt-3 text-sm font-semibold text-gray-800">
-          Не удалось
-          сформировать
-          отчёт
+          {i18nT("pages.reports.reports.fd40d9f")}
         </p>
 
         <p className="mt-2 text-xs leading-5 text-gray-500">

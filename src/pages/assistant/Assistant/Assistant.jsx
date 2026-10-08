@@ -32,48 +32,49 @@ import {
 } from "../../../hooks/useAssistant.js";
 
 import AssistantPromptInput from "../../../components/AssistantInput/AssistantPromptInput.jsx";
+import { t as i18nT } from "../../../i18n/index.js";
 
 // MARK: Suggestions
 
 const SUGGESTIONS = [
     {
         text:
-            "Кто свободен?",
+            i18nT("pages.assistant.assistant.assistant.dc77db9"),
         icon:
             RiTeamLine,
     },
 
     {
         text:
-            "Что просрочено?",
+            i18nT("pages.assistant.assistant.assistant.af97c79"),
         icon:
             RiAlarmWarningLine,
     },
 
     {
         text:
-            "Как прошла смена?",
+            i18nT("pages.assistant.assistant.assistant.48f4766"),
         icon:
             RiTimeLine,
     },
 
     {
         text:
-            "Покажи аномалии",
+            i18nT("pages.assistant.assistant.assistant.7474867"),
         icon:
             RiSparkling2Line,
     },
 
     {
         text:
-            "Прогноз отказов",
+            i18nT("pages.analytics.analytics.b89121c"),
         icon:
             RiFlashlightLine,
     },
 
     {
         text:
-            "Сформируй отчёт за неделю",
+            i18nT("pages.assistant.assistant.assistant.c64032e"),
         icon:
             RiBarChartBoxLine,
     },
@@ -475,15 +476,11 @@ export default function Assistant() {
 
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                                НарядAI
+                                {i18nT("pages.assistant.assistant.assistant.9d43787")}
                             </h1>
 
                             <p className="mt-1 text-sm text-gray-500">
-                                Помощник по
-                                нарядам,
-                                оборудованию,
-                                сотрудникам и
-                                аналитике
+                                {i18nT("pages.assistant.assistant.assistant.ab53863")}
                             </p>
                         </div>
                     </div>
@@ -608,7 +605,7 @@ export default function Assistant() {
                                     1000
                                 }
 
-                                placeholder="Спросите: кто свободен, что просрочено, как прошла смена..."
+                                placeholder={i18nT("pages.assistant.assistant.assistant.321804c")}
                             />
                         </div>
                     </div>
@@ -619,7 +616,7 @@ export default function Assistant() {
 
                 <aside className="hidden w-[310px] shrink-0 border-l border-gray-200 bg-gray-50/70 p-5 xl:block">
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
-                        Быстрые запросы
+                        {i18nT("pages.assistant.assistant.assistant.b30f591")}
                     </p>
 
                     <div className="mt-4 space-y-2">
@@ -666,20 +663,12 @@ export default function Assistant() {
                             <RiSparkling2Line />
 
                             <span className="text-xs font-bold">
-                                Можно
-                                спрашивать
-                                свободно
+                                {i18nT("pages.assistant.assistant.assistant.c791eed")}
                             </span>
                         </div>
 
                         <p className="mt-2 text-xs leading-5 text-violet-700/80">
-                            Помощник
-                            понимает период,
-                            участок,
-                            оборудование и
-                            может отвечать
-                            на русском или
-                            казахском.
+                            {i18nT("pages.assistant.assistant.assistant.2ce8bce")}
                         </p>
                     </div>
                 </aside>
@@ -704,22 +693,11 @@ function Welcome({
                 </div>
 
                 <h2 className="mt-5 text-xl font-bold text-gray-900">
-                    Чем помочь
-                    по производству?
+                    {i18nT("pages.assistant.assistant.assistant.c5415ff")}
                 </h2>
 
                 <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-gray-500">
-                    Я могу найти
-                    свободных
-                    исполнителей,
-                    просроченные
-                    наряды,
-                    историю
-                    оборудования,
-                    показать сводку
-                    смены,
-                    аномалии и
-                    прогноз отказов.
+                    {i18nT("pages.assistant.assistant.assistant.3941146")}
                 </p>
 
                 <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1054,7 +1032,7 @@ function OrdersResult({
 
                                 {order.isOverdue && (
                                     <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">
-                                        Просрочен
+                                        {i18nT("pages.assistant.assistant.assistant.0a04820")}
                                     </span>
                                 )}
                             </div>
@@ -1123,7 +1101,7 @@ function ShiftResult({
     const stats = [
         {
             label:
-                "Выдано",
+                i18nT("pages.assistant.assistant.assistant.df7362f"),
             value:
                 data.issued ??
                 0,
@@ -1131,7 +1109,7 @@ function ShiftResult({
 
         {
             label:
-                "Закрыто",
+                i18nT("pages.assistant.assistant.assistant.8280957"),
             value:
                 data.closed ??
                 0,
@@ -1139,7 +1117,7 @@ function ShiftResult({
 
         {
             label:
-                "Просрочено",
+                i18nT("pages.assistant.assistant.assistant.b6fa08e"),
             value:
                 data.overdue ??
                 0,
@@ -1147,7 +1125,7 @@ function ShiftResult({
 
         {
             label:
-                "В работе",
+                i18nT("pages.assistant.assistant.assistant.8c92e34"),
             value:
                 data.inProgress ??
                 0,
@@ -1185,7 +1163,7 @@ function ShiftResult({
 
             {data.downtime && (
                 <div className="mt-3 rounded-xl bg-orange-50 p-3 text-xs text-orange-700">
-                    Простой:{" "}
+                    {i18nT("pages.assistant.assistant.assistant.b90ada4")}{" "}
                     {formatMinutes(
                         data.downtime
                             ?.minutes,
@@ -1344,7 +1322,7 @@ function ForecastResult({
                                         </p>
 
                                         <p className="mt-1 text-xs text-gray-500">
-                                            Отказов:{" "}
+                                            {i18nT("pages.assistant.assistant.assistant.fec291d")}{" "}
                                             {
                                                 item.recentFailures
                                             }
@@ -1398,9 +1376,7 @@ function Typing() {
                     </div>
 
                     <p className="mt-2 text-xs text-gray-400">
-                        НарядAI
-                        анализирует
-                        данные...
+                        {i18nT("pages.assistant.assistant.assistant.40cbbfd")}
                     </p>
                 </div>
             </div>

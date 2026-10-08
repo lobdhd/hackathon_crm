@@ -46,6 +46,7 @@ import {
 } from "../../hooks/useRealtimeSync.js";
 
 import ScrollArea from "../ScrollArea/ScrollArea.jsx";
+import { t as i18nT } from "../../i18n/index.js";
 
 
 // MARK: Config
@@ -689,7 +690,7 @@ export default function AppNavbar({
                                 }
                             `}
                         >
-                            ҚАЗ
+                            {i18nT("components.layout.appnavbar.eac9126")}
                         </button>
                     </div>
 
@@ -728,7 +729,7 @@ export default function AppNavbar({
                                         : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                                 }
                             `}
-                            aria-label="Уведомления"
+                            aria-label={i18nT("components.layout.appnavbar.d2ed721")}
                             aria-expanded={
                                 notificationsOpen
                             }
@@ -757,7 +758,7 @@ export default function AppNavbar({
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <h3 className="text-sm font-bold text-gray-900">
-                                                Уведомления
+                                                {i18nT("components.layout.appnavbar.d2ed721")}
                                             </h3>
 
                                             {unreadCount >
@@ -766,13 +767,13 @@ export default function AppNavbar({
                                                     {
                                                         unreadCount
                                                     }{" "}
-                                                    новых
+                                                    {i18nT("components.layout.appnavbar.4733918")}
                                                 </span>
                                             )}
                                         </div>
 
                                         <p className="mt-1 text-[11px] text-gray-400">
-                                            Последние события системы
+                                            {i18nT("components.layout.appnavbar.ac09d97")}
                                         </p>
                                     </div>
 
@@ -786,7 +787,7 @@ export default function AppNavbar({
                                                 notificationsQuery.isFetching
                                             }
                                             className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40"
-                                            title="Обновить"
+                                            title={i18nT("components.layout.appnavbar.dbe5444")}
                                         >
                                             <RiRefreshLine
                                                 size={
@@ -812,7 +813,7 @@ export default function AppNavbar({
                                                 }
                                                 className="rounded-lg px-2.5 py-2 text-[11px] font-semibold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50"
                                             >
-                                                Прочитать все
+                                                {i18nT("components.layout.appnavbar.ed02489")}
                                             </button>
                                         )}
                                     </div>
@@ -838,7 +839,7 @@ export default function AppNavbar({
                                             />
 
                                             <p className="mt-3 text-sm font-semibold text-gray-800">
-                                                Не удалось загрузить уведомления
+                                                {i18nT("components.layout.appnavbar.6a0d764")}
                                             </p>
 
                                             <button
@@ -848,7 +849,7 @@ export default function AppNavbar({
                                                 }
                                                 className="mt-3 text-xs font-semibold text-blue-600"
                                             >
-                                                Повторить
+                                                {i18nT("components.layout.appnavbar.b914bbb")}
                                             </button>
                                         </div>
                                     </div>
@@ -865,11 +866,11 @@ export default function AppNavbar({
                                             </div>
 
                                             <p className="mt-3 text-sm font-semibold text-gray-800">
-                                                Уведомлений пока нет
+                                                {i18nT("components.layout.appnavbar.851e27b")}
                                             </p>
 
                                             <p className="mt-1 text-xs text-gray-400">
-                                                Новые события появятся здесь
+                                                {i18nT("components.layout.appnavbar.1a3499d")}
                                             </p>
                                         </div>
                                     </div>
@@ -906,11 +907,11 @@ export default function AppNavbar({
                                     0 && (
                                     <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 text-center">
                                         <span className="text-[10px] font-medium text-gray-400">
-                                            Показаны последние{" "}
+                                            {i18nT("components.layout.appnavbar.fa9ace8")}{" "}
                                             {
                                                 notifications.length
                                             }{" "}
-                                            уведомлений
+                                            {i18nT("components.layout.appnavbar.9fa7b2d")}
                                         </span>
                                     </div>
                                 )}
@@ -1023,7 +1024,7 @@ export default function AppNavbar({
                                         <div className="min-w-0">
                                             <p className="truncate text-sm font-bold text-gray-900">
                                                 {user?.fullName ||
-                                                    "Пользователь"}
+                                                    i18nT("pages.admin.admin.admin.f154d6c")}
                                             </p>
 
                                             <p className="mt-0.5 truncate text-xs text-gray-500">
@@ -1044,7 +1045,7 @@ export default function AppNavbar({
                                     <div className="mb-2 flex items-center gap-2 px-1 text-xs font-semibold text-gray-500">
                                         <RiGlobalLine />
 
-                                        Язык
+                                        {i18nT("components.employees.createemployeemodal.0577df9")}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
@@ -1071,7 +1072,7 @@ export default function AppNavbar({
                                                 }
                                             `}
                                         >
-                                            Русский
+                                            {i18nT("components.employees.createemployeemodal.a5c072f")}
                                         </button>
 
                                         <button
@@ -1097,7 +1098,7 @@ export default function AppNavbar({
                                                 }
                                             `}
                                         >
-                                            Қазақша
+                                            {i18nT("components.employees.createemployeemodal.8be1a8f")}
                                         </button>
                                     </div>
                                 </div>
@@ -1119,7 +1120,7 @@ export default function AppNavbar({
                                             }
                                         />
 
-                                        Настройки
+                                        {i18nT("components.layout.appnavbar.c919d65")}
                                     </button>
 
                                     <button
@@ -1147,7 +1148,7 @@ export default function AppNavbar({
                                             />
                                         )}
 
-                                        Выйти
+                                        {i18nT("components.layout.appnavbar.0f05cf8")}
                                     </button>
                                 </div>
                             </div>
@@ -1226,8 +1227,8 @@ function NotificationItem({
                         {isUnread && (
                             <span
                                 className="h-[7px] w-[7px] shrink-0 rounded-full bg-blue-600 ring-[3px] ring-blue-100"
-                                title="Не прочитано"
-                                aria-label="Не прочитано"
+                                title={i18nT("components.layout.appnavbar.0dde1ef")}
+                                aria-label={i18nT("components.layout.appnavbar.0dde1ef")}
                             />
                         )}
                     </div>
@@ -1245,7 +1246,7 @@ function NotificationItem({
                     <div className="mt-2.5 flex items-center">
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 transition-colors group-hover:text-blue-700">
                             <RiFileList3Line size={13} />
-                            Открыть наряд
+                            {i18nT("components.layout.appnavbar.73cd923")}
                             <span className="transition-transform duration-200 group-hover:translate-x-0.5">
                                 →
                             </span>

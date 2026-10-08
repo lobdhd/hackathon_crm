@@ -33,79 +33,80 @@ import {
 import {
     useI18n,
 } from "../../i18n/index.js";
+import { t as i18nT } from "../../i18n/index.js";
 // MARK: Config
 const PERIODS = [
     {
         value: "shift",
-        label: "Смена",
+        label: i18nT("reportModal.shift"),
         days: 1,
     },
     {
         value: "day",
-        label: "День",
+        label: i18nT("pages.analytics.analytics.81e7619"),
         days: 1,
     },
     {
         value: "week",
-        label: "Неделя",
+        label: i18nT("analyticsPage.week"),
         days: 7,
     },
     {
         value: "month",
-        label: "30 дней",
+        label: i18nT("reportModal.thirtyDays"),
         days: 30,
     },
 ];
 const ANOMALY_TYPES = [
     {
         value: "",
-        label: "Все аномалии",
+        label: i18nT("pages.analytics.analytics.32a2cfd"),
     },
     {
         value: "FREQUENT_FAILURES",
-        label: "Частые отказы",
+        label: i18nT("pages.analytics.analytics.91b6362"),
     },
     {
         value: "REPEATED_FAULT",
-        label: "Повторная неисправность",
+        label: i18nT("pages.analytics.analytics.a6d8e7b"),
     },
     {
         value:
             "FAILURE_AFTER_PLANNED_MAINTENANCE",
         label:
-            "Отказ после ППР",
+            i18nT("pages.analytics.analytics.ebc8df2"),
     },
     {
         value: "MATERIAL_ANOMALY",
         label:
-            "Расход материалов",
+            i18nT("pages.analytics.analytics.db68c6c"),
     },
     {
         value: "AREA_HOTSPOT",
         label:
-            "Проблемный участок",
+            i18nT("pages.analytics.analytics.a871901"),
     },
     {
         value: "SHIFT_PATTERN",
         label:
-            "Паттерн смены",
+            i18nT("pages.analytics.analytics.349d3d9"),
     },
     {
         value: "TIME_OF_DAY",
         label:
-            "Время суток",
+            i18nT("pages.analytics.analytics.e3d751f"),
     },
     {
         value:
             "EXECUTOR_REPEAT_FAILURES",
         label:
-            "Повтор после исполнителя",
+            i18nT("pages.analytics.analytics.1d44cc6"),
     },
     {
         value:
             "BRIGADE_REPEAT_FAILURES",
         label:
-            "Повтор после бригады",
+            i18nT("pages.analytics.analytics.15a05ac"),
     },
 ];
 // MARK: Helpers
@@ -364,7 +365,7 @@ export default function Analytics() {
                     key:
                         "equipment",
                     header:
-                        "Оборудование",
+                        i18nT("sidebar.equipment"),
                     minWidth:
                         220,
                     sortValue:
@@ -407,7 +408,7 @@ export default function Analytics() {
                     field:
                         "minutes",
                     header:
-                        "Простой",
+                        i18nT("analytics.downtime.label"),
                     minWidth:
                         130,
                     sortValue:
@@ -429,7 +430,7 @@ export default function Analytics() {
                     field:
                         "plannedMinutes",
                     header:
-                        "Плановый",
+                        i18nT("priority.planned"),
                     minWidth:
                         130,
                     render:
@@ -444,7 +445,7 @@ export default function Analytics() {
                     field:
                         "unplannedMinutes",
                     header:
-                        "Аварийный",
+                        i18nT("priority.emergency"),
                     minWidth:
                         130,
                     render:
@@ -462,7 +463,7 @@ export default function Analytics() {
                     field:
                         "ongoing",
                     header:
-                        "Сейчас",
+                        i18nT("pages.dashboard.dashboard.2c2777e"),
                     minWidth:
                         100,
                     render:
@@ -472,12 +473,12 @@ export default function Analytics() {
                             row.ongoing
                                 ? (
                                     <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
-                                        Да
+                                        {i18nT("pages.analytics.analytics.e04af96")}
                                     </span>
                                 )
                                 : (
                                     <span className="text-gray-400">
-                                        Нет
+                                        {i18nT("pages.analytics.analytics.d0cd224")}
                                     </span>
                                 ),
                 },
@@ -528,14 +529,10 @@ export default function Analytics() {
             <div className="mb-6 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                        Аналитика
+                        {i18nT("pages.analytics.analytics.4047521")}
                     </h1>
                     <p className="mt-1 text-sm text-gray-500">
-                        Производственные
-                        показатели,
-                        простои,
-                        прогноз отказов
-                        и аномалии
+                        {i18nT("pages.analytics.analytics.5520929")}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -547,7 +544,7 @@ export default function Analytics() {
                         className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                     >
                         <RiRefreshLine />
-                        Обновить
+                        {i18nT("components.layout.appnavbar.dbe5444")}
                     </button>
                     <button
                         type="button"
@@ -618,7 +615,7 @@ export default function Analytics() {
                             className="min-w-[220px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
                         >
                             <option value="">
-                                Все участки
+                                {i18nT("reportModal.allAreas")}
                             </option>
                             {areas.map(
                                 (
@@ -689,7 +686,7 @@ export default function Analytics() {
             {/* KPI */}
             <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-5">
                 <KpiCard
-                    label="Закрыто"
+                    label={i18nT("ratingPodium.closed")}
                     value={
                         shift.closed ??
                         0
@@ -701,7 +698,7 @@ export default function Analytics() {
                     tone="green"
                 />
                 <KpiCard
-                    label="В работе"
+                    label={i18nT("status.inProgress")}
                     value={
                         shift.inProgress ??
                         0
@@ -713,12 +710,12 @@ export default function Analytics() {
                     tone="blue"
                 />
                 <KpiCard
-                    label="Просрочено"
+                    label={i18nT("kanban.overdue")}
                     value={
                         shift.overdue ??
                         0
                     }
-                    helper="Требуют внимания"
+                    helper={i18nT("pages.dashboard.dashboard.06745d6")}
                     icon={
                         RiAlarmWarningLine
                     }
@@ -737,7 +734,7 @@ export default function Analytics() {
                     tone="orange"
                 />
                 <KpiCard
-                    label="Средняя реакция"
+                    label={i18nT("pages.dashboard.dashboard.849a585")}
                     value={formatMinutes(
                         dashboard.averageReactionMinutes,
                     )}
@@ -753,7 +750,7 @@ export default function Analytics() {
             {/* WORKLOAD */}
             <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <Section
-                    title="Загрузка смены"
+                    title={i18nT("pages.analytics.analytics.f9f5658")}
                     subtitle="Состояние исполнителей за выбранный период"
                     icon={
                         RiBarChartBoxLine
@@ -761,7 +758,7 @@ export default function Analytics() {
                 >
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         <MiniStat
-                            title="На смене"
+                            title={i18nT("pages.admin.admin.admin.958b816")}
                             value={
                                 shift.workload
                                     ?.executorsOnShift ??
@@ -769,7 +766,7 @@ export default function Analytics() {
                             }
                         />
                         <MiniStat
-                            title="Заняты"
+                            title={i18nT("pages.analytics.analytics.90fc82e")}
                             value={
                                 shift.workload
                                     ?.busy ??
@@ -777,7 +774,7 @@ export default function Analytics() {
                             }
                         />
                         <MiniStat
-                            title="Свободны"
+                            title={i18nT("pages.analytics.analytics.f3fd6df")}
                             value={
                                 shift.workload
                                     ?.free ??
@@ -785,7 +782,7 @@ export default function Analytics() {
                             }
                         />
                         <MiniStat
-                            title="Оборудование в простое"
+                            title={i18nT("pages.analytics.analytics.0f7ca97")}
                             value={
                                 shift.downtime
                                     ?.equipmentInDowntimeNow ??
@@ -834,7 +831,7 @@ export default function Analytics() {
                     </div>
                 </Section>
                 <Section
-                    title="AI-сводка"
+                    title={i18nT("pages.analytics.analytics.e3c205a")}
                     subtitle="Вывод сервера по периоду"
                     icon={
                         RiSparkling2Line
@@ -875,7 +872,7 @@ export default function Analytics() {
             <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                 <div className="min-w-0">
                 <Section
-                    title="Прогноз отказов"
+                    title={i18nT("pages.analytics.analytics.b89121c")}
                     subtitle={`Горизонт: ${currentPeriod.days} дн.`}
                     icon={
                         RiFlashlightLine
@@ -886,7 +883,7 @@ export default function Analytics() {
                     ) : sortedForecast.length >
                       0 ? (
                         <div className="space-y-3">
-<p className="text-[11px] text-gray-400">Профиль риска по оборудованию, от большего к меньшему</p>
+<p className="text-[11px] text-gray-400">{i18nT("pages.analytics.analytics.f8c7a7a")}</p>
                             <ForecastChart items={sortedForecast.slice(0, 8)} height={220} />
                             {sortedForecast
                                 .slice(
@@ -916,7 +913,7 @@ export default function Analytics() {
                 <div className="min-w-0 xl:relative xl:min-h-0">
                     <div className={sortedForecast.length && !forecastQuery.isLoading ? "xl:absolute xl:inset-0" : ""}>
                 <Section
-                    title="Аномалии"
+                    title={i18nT("pages.analytics.analytics.fb6342c")}
                     subtitle={`${sortedAnomalies.length} найдено`}
                     icon={RiSparkling2Line}
                     fillHeight
@@ -953,7 +950,7 @@ export default function Analytics() {
             </div>
             {/* DOWNTIME */}
             <Section
-                title="Простой оборудования"
+                title={i18nT("analytics.downtime.title")}
                 subtitle="Разбивка по оборудованию"
                 icon={
                     RiTimeLine
@@ -984,7 +981,7 @@ export default function Analytics() {
             {/* TOPS */}
             <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                 <Section
-                    title="Проблемное оборудование"
+                    title={i18nT("pages.analytics.analytics.101358d")}
                     subtitle="Аварийные наряды за 30 дней"
                     icon={
                         RiToolsLine
@@ -1000,7 +997,7 @@ export default function Analytics() {
                     />
                 </Section>
                 <Section
-                    title="Проблемные участки"
+                    title={i18nT("pages.analytics.analytics.e536c9b")}
                     subtitle="Аварийность на единицу оборудования"
                     icon={
                         RiMapPinLine
@@ -1172,12 +1169,12 @@ function ForecastItem({
                             `Оборудование #${item.equipmentId}`}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                        Сейчас:{" "}
+                        {i18nT("pages.analytics.analytics.d633feb")}{" "}
                         {
                             item.recentFailures
                         }
                         {" • "}
-                        Ранее:{" "}
+                        {i18nT("pages.analytics.analytics.caf02f6")}{" "}
                         {
                             item.previousFailures
                         }
@@ -1419,7 +1416,7 @@ function SeverityChart({ items }) {
         labels: ["1 · Низкая", "2 · Умеренная", "3 · Средняя", "4 · Высокая", "5 · Критическая"],
         colors: ["#bfdbfe", "#60a5fa", "#fbbf24", "#fb923c", "#ef4444"],
         stroke: { width: 3, colors: ["#fff"] },
-        plotOptions: { pie: { expandOnClick: false, donut: { size: "75%", labels: { show: true, name: { show: true, fontSize: "11px", color: "#94a3b8", offsetY: -7 }, value: { show: true, fontSize: "24px", fontWeight: 700, color: "#0f172a", offsetY: 5 }, total: { show: true, label: "Всего", formatter: () => String(items.length) } } } } },
+        plotOptions: { pie: { expandOnClick: false, donut: { size: "75%", labels: { show: true, name: { show: true, fontSize: "11px", color: "#94a3b8", offsetY: -7 }, value: { show: true, fontSize: "24px", fontWeight: 700, color: "#0f172a", offsetY: 5 }, total: { show: true, label: i18nT("analytics.status.total"), formatter: () => String(items.length) } } } } },
         dataLabels: { enabled: false },
         legend: { show: true, position: "right", fontSize: "11px", labels: { colors: "#64748b" }, markers: { size: 7 }, itemMargin: { vertical: 5 } },
         tooltip: { y: { formatter: (v) => `${v} событий` } },
