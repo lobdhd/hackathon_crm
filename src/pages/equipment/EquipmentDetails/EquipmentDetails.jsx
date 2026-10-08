@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 
 import {
+    RiAddLine,
     RiAlarmWarningLine,
     RiArrowLeftLine,
     RiDownload2Line,
@@ -31,6 +32,8 @@ import {
 import {
     useEquipmentHistory,
 } from "../../../hooks/useEquipment.js";
+import { useAuth } from "../../../auth/AuthProvider.jsx";
+import { isOrderStaff } from "../../../auth/roles.js";
 import { t as i18nT } from "../../../i18n/index.js";
 import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
@@ -221,6 +224,9 @@ export default function EquipmentDetails() {
 
     const navigate =
         useNavigate();
+
+    const { user } = useAuth();
+    const canCreateOrder = isOrderStaff(user?.role);
 
     const query =
         useEquipmentHistory(
@@ -505,6 +511,25 @@ export default function EquipmentDetails() {
                         </div>
                     </div>
 
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                    {canCreateOrder && (
+                        <button
+                            type="button"
+                            onClick={() =>
+                                navigate(
+                                    `/orders?create=1&equipmentId=${equipment.id}`,
+                                )
+                            }
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                        >
+                            <RiAddLine
+                                size={18}
+                            />
+
+                            {i18nT("quickOrder.create")}
+                        </button>
+                    )}
+
                     <button
                         type="button"
                         onClick={
@@ -523,6 +548,7 @@ export default function EquipmentDetails() {
                             ? i18nT("pages.employees.employeedetails.employeedetails.43e40d4")
                             : "Скачать QR"}
                     </button>
+                    </div>
                 </div>
             </div>
 

@@ -389,10 +389,12 @@ export function useReassignWorkOrder() {
         mutationFn: ({
             id,
             assigneeId,
+            comment,
         }) =>
             reassignWorkOrder(
                 id,
                 assigneeId,
+                comment,
             ),
 
         onSuccess: async (

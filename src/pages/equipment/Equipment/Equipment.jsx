@@ -13,6 +13,7 @@ import {
     RiLayoutGridLine,
     RiListCheck2,
     RiMapPinLine,
+    RiQrScan2Line,
     RiRefreshLine,  
     RiSearchLine,
     RiToolsLine,
@@ -31,6 +32,7 @@ import {
 } from "../../../hooks/useReferences.js";
 
 import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
+import QrScannerModal from "../../../components/equipment/QrScannerModal.jsx";
 import { t as i18nT } from "../../../i18n/index.js";
 import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
@@ -95,6 +97,7 @@ export default function Equipment() {
         user,
     } = useAuth();
     const [view, setView] = useState("cards");
+    const [scanOpen, setScanOpen] = useState(false);
     const [
         createOpen,
         setCreateOpen,
@@ -353,7 +356,15 @@ export default function Equipment() {
                             {i18nT("pages.equipment.equipment.equipment.0c76acb")}
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setScanOpen(true)}
+                            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:flex-none"
+                        >
+                            <RiQrScan2Line size={18} />
+                            {i18nT("qrScanner.scan")}
+                        </button>
                         <button
                             type="button"
                             onClick={() =>
@@ -679,6 +690,15 @@ export default function Equipment() {
                             false,
                         )
                     }
+                />
+            )}
+            {scanOpen && (
+                <QrScannerModal
+                    onClose={() => setScanOpen(false)}
+                    onDetected={(item) => {
+                        setScanOpen(false);
+                        navigate(`/equipment/${item.id}`);
+                    }}
                 />
             )}
         </>

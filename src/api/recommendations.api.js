@@ -39,6 +39,7 @@ export async function getWorkRecommendation(
         {
             description: payload.description,
             equipmentId: Number(payload.equipmentId),
+            fast: payload.fast || undefined,
         },
         {
             timeout: 30000,

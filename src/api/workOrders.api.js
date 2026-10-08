@@ -111,9 +111,10 @@ export async function updateWorkOrder(id, payload) {
 
 // MARK: Reassign
 
-export async function reassignWorkOrder(id, assigneeId) {
+export async function reassignWorkOrder(id, assigneeId, comment) {
     const response = await api.post(`/api/work-orders/${id}/reassign`, {
         assigneeId: Number(assigneeId),
+        comment: comment?.trim() || undefined,
     });
 
     return response.data;

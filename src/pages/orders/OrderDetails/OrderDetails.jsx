@@ -10,8 +10,19 @@ import {
 } from "react-router-dom";
 
 import {
+    RiAddCircleLine,
     RiAlarmWarningLine,
+    RiArrowGoBackLine,
     RiArrowLeftLine,
+    RiArrowRightLine,
+    RiChat3Line,
+    RiCheckboxCircleLine,
+    RiCheckDoubleLine,
+    RiCloseCircleLine,
+    RiEdit2Line,
+    RiPauseCircleLine,
+    RiPlayCircleLine,
+    RiUserSharedLine,
     RiCalendarLine,
     RiCameraLine,
     RiCheckLine,
@@ -29,7 +40,6 @@ import {
     RiTimeLine,
     RiToolsLine,
     RiUserLine,
-    RiUserStarLine,
 } from "react-icons/ri";
 
 import GlideSelect from "../../../react-components/GlideSelect/GlideSelect.jsx";
@@ -63,8 +73,10 @@ import {
 } from "../../../hooks/useWorkOrders.js";
 
 import {
-    useRecommendExecutors,
+    useExecutorSuggestions,
 } from "../../../hooks/useRecommendations.js";
+
+import { ExecutorOption, ShowAllButton } from "../../../components/orders/CreateOrderModal.jsx";
 
 import {
     useWorkOrderOfflineQueueStatus,
@@ -106,6 +118,49 @@ const ACTION_LABELS = {
     CLOSE: "Закрыть",
     CANCEL: "Отменить",
 };
+
+// Past tense for the history feed; CREATE/EDIT/REASSIGN/COMMENT come from history.* keys.
+const HISTORY_LABELS = {
+    ACCEPT: "Принят",
+    QUEUE: "Поставлен в очередь",
+    REJECT: "Отклонён",
+    START: "Работа начата",
+    PAUSE: "Приостановлен",
+    RESUME: "Работа продолжена",
+    COMPLETE: "Работа завершена",
+    AI_REVIEW: "Проверен ИИ",
+    SEND_TO_REWORK: "Возвращён на доработку",
+    CLOSE: "Закрыт",
+    CANCEL: "Отменён",
+};
+
+// [icon, tile classes] per history event.
+const HISTORY_STYLES = {
+    CREATE: [RiAddCircleLine, "bg-blue-600 text-white"],
+    EDIT: [RiEdit2Line, "bg-amber-100 text-amber-700"],
+    REASSIGN: [RiUserSharedLine, "bg-violet-100 text-violet-700"],
+    COMMENT: [RiChat3Line, "bg-slate-100 text-slate-600"],
+    ACCEPT: [RiCheckLine, "bg-indigo-100 text-indigo-700"],
+    QUEUE: [RiTimeLine, "bg-slate-100 text-slate-600"],
+    REJECT: [RiCloseCircleLine, "bg-red-100 text-red-700"],
+    START: [RiPlayCircleLine, "bg-emerald-100 text-emerald-700"],
+    PAUSE: [RiPauseCircleLine, "bg-amber-100 text-amber-700"],
+    RESUME: [RiPlayCircleLine, "bg-emerald-100 text-emerald-700"],
+    COMPLETE: [RiCheckDoubleLine, "bg-cyan-100 text-cyan-700"],
+    AI_REVIEW: [RiSparkling2Line, "bg-violet-600 text-white"],
+    SEND_TO_REWORK: [RiArrowGoBackLine, "bg-orange-100 text-orange-700"],
+    CLOSE: [RiCheckboxCircleLine, "bg-emerald-600 text-white"],
+    CANCEL: [RiCloseCircleLine, "bg-slate-600 text-white"],
+};
+
+function historyLabel(action) {
+    const key = `history.${action}`;
+    const translated = i18nT(key);
+
+    if (translated && translated !== key) return translated;
+
+    return HISTORY_LABELS[action] || action;
+}
 
 const ALLOWED_ACTIONS = {
     ACCEPT: [
@@ -2022,12 +2077,13 @@ function EditOrderModal({
                 payload: {
                     priority:
                         form.priority,
+                    // Empty field keeps the current deadline.
                     deadline:
                         form.deadline
                             ? new Date(
                                 form.deadline,
                             ).toISOString()
-                            : null,
+                            : undefined,
                     comment:
                         form.comment,
                 },
@@ -2149,59 +2205,73 @@ function ReassignModal({
     const executorsQuery =
         useExecutors();
 
-    const recommendation =
-        useRecommendExecutors();
+    // Recommendations load right away: the master sees statuses and the AI pick without an extra tap.
+    const suggestionsQuery =
+        useExecutorSuggestions({
+            equipmentId:
+                order.equipmentId,
+            description:
+                order.description,
+            faultCodeId:
+                order.faultCodeId ||
+                undefined,
+            brigadeId:
+                order.brigadeId ||
+                undefined,
+        });
 
     const [
         assigneeId,
         setAssigneeId,
-    ] = useState(
-        order.assigneeId
-            ? String(
-                order.assigneeId,
-            )
-            : "",
-    );
+    ] = useState("");
+
+    const [
+        comment,
+        setComment,
+    ] = useState("");
+
+    const [
+        showAll,
+        setShowAll,
+    ] = useState(false);
 
     const [
         error,
         setError,
     ] = useState("");
 
-    const executors =
-        asArray(
-            executorsQuery.data,
-        );
-
     const suggested =
         asArray(
-            recommendation.data,
+            suggestionsQuery.data,
+        ).filter(
+            (item) =>
+                item.id !==
+                order.assigneeId,
         );
 
-    async function loadRecommendations() {
-        setError("");
-
-        try {
-            await recommendation.mutateAsync({
-                equipmentId:
-                    order.equipmentId,
-                description:
-                    order.description,
-                brigadeId:
-                    order.brigadeId ||
-                    undefined,
-                faultCodeId:
-                    order.faultCodeId ||
-                    undefined,
-            });
-        } catch (requestError) {
-            setError(
-                extractError(
-                    requestError,
-                ),
+    const others =
+        asArray(
+            executorsQuery.data,
+        )
+            .filter(
+                (item) =>
+                    item.id !==
+                        order.assigneeId &&
+                    !suggested.some(
+                        (x) =>
+                            x.id ===
+                            item.id,
+                    ),
+            )
+            .sort(
+                (a, b) =>
+                    Number(b.isOnShift) -
+                        Number(a.isOnShift) ||
+                    a.fullName.localeCompare(
+                        b.fullName,
+                        "ru",
+                    ),
             );
-        }
-    }
 
     async function submit(
         event,
@@ -2210,7 +2280,7 @@ function ReassignModal({
 
         if (!assigneeId) {
             setError(
-                "Выберите исполнителя",
+                i18nT("quickOrder.missingExecutor"),
             );
             return;
         }
@@ -2222,6 +2292,7 @@ function ReassignModal({
                     Number(
                         assigneeId,
                     ),
+                comment,
             });
 
             onClose();
@@ -2250,100 +2321,93 @@ function ReassignModal({
                     />
                 )}
 
-                <Field label={i18nT("ordersTable.assignee")}>
-                    <FieldSelect
-                        value={
-                            assigneeId
-                        }
-                        onChange={
-                            setAssigneeId
-                        }
-                        options={[
-                            {
-                                value: "",
-                                label: i18nT("pages.orders.orderdetails.orderdetails.ed773b2"),
-                            },
-                            ...mapOptions(
-                                executors,
-                                (item) =>
-                                    item.fullName,
-                                (item) =>
-                                    item.statusText ||
-                                    item.specialty,
+                {order.assignee && (
+                    <p className="text-sm text-gray-500">
+                        {i18nT("reassign.current", {
+                            name: order.assignee.fullName,
+                        })}
+                    </p>
+                )}
+
+                <div className="space-y-2">
+                    {suggestionsQuery.isLoading && (
+                        <div className="flex justify-center p-4 text-blue-600">
+                            <RiLoader4Line className="animate-spin" size={20} />
+                        </div>
+                    )}
+
+                    {suggested
+                        .slice(
+                            0,
+                            showAll
+                                ? suggested.length
+                                : 3,
+                        )
+                        .map(
+                            (item, index) => (
+                                <ExecutorOption
+                                    key={item.id}
+                                    executor={item}
+                                    recommended={index === 0}
+                                    selected={
+                                        String(item.id) ===
+                                        assigneeId
+                                    }
+                                    onSelect={() =>
+                                        setAssigneeId(
+                                            String(item.id),
+                                        )
+                                    }
+                                />
                             ),
-                        ]}
-                        menuWidth={360}
-                        ariaLabel="Исполнитель"
+                        )}
+
+                    {showAll &&
+                        others.map(
+                            (item) => (
+                                <ExecutorOption
+                                    key={item.id}
+                                    executor={item}
+                                    selected={
+                                        String(item.id) ===
+                                        assigneeId
+                                    }
+                                    onSelect={() =>
+                                        setAssigneeId(
+                                            String(item.id),
+                                        )
+                                    }
+                                />
+                            ),
+                        )}
+
+                    <ShowAllButton
+                        open={showAll}
+                        count={
+                            suggested.length +
+                            others.length
+                        }
+                        onClick={() =>
+                            setShowAll(
+                                (value) => !value,
+                            )
+                        }
+                    />
+                </div>
+
+                <Field label={i18nT("reassign.reason")}>
+                    <textarea
+                        rows={2}
+                        value={comment}
+                        onChange={(event) =>
+                            setComment(
+                                event.target.value,
+                            )
+                        }
+                        placeholder={i18nT("reassign.reasonPlaceholder")}
+                        className="input min-h-[70px] resize-none py-3"
                     />
                 </Field>
-
-                <button
-                    type="button"
-                    onClick={
-                        loadRecommendations
-                    }
-                    disabled={
-                        recommendation.isPending
-                    }
-                    className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 disabled:opacity-50"
-                >
-                    {recommendation.isPending ? (
-                        <RiLoader4Line className="animate-spin" />
-                    ) : (
-                        <RiUserStarLine />
-                    )}
-                    {i18nT("pages.orders.orderdetails.orderdetails.cb68c9f")}
-                </button>
-
-                {suggested.length > 0 && (
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                        {suggested
-                            .slice(
-                                0,
-                                6,
-                            )
-                            .map(
-                                (item) => (
-                                    <button
-                                        key={
-                                            item.id
-                                        }
-                                        type="button"
-                                        onClick={() =>
-                                            setAssigneeId(
-                                                String(
-                                                    item.id,
-                                                ),
-                                            )
-                                        }
-                                        className={`rounded-xl border p-3 text-left ${
-                                            String(
-                                                item.id,
-                                            ) ===
-                                            String(
-                                                assigneeId,
-                                            )
-                                                ? "border-blue-400 bg-blue-50"
-                                                : "border-gray-200 bg-white"
-                                        }`}
-                                    >
-                                        <p className="text-sm font-semibold text-gray-900">
-                                            {item.fullName}
-                                        </p>
-                                        <p className="mt-1 text-xs text-gray-500">
-                                            {item.specialty ||
-                                                "—"} {i18nT("pages.orders.orderdetails.orderdetails.e1a0e0b")} {item.queue ?? 0} {i18nT("pages.orders.orderdetails.orderdetails.148c880")} {Number(
-                                                item.score ||
-                                                    0,
-                                            ).toFixed(
-                                                1,
-                                            )}
-                                        </p>
-                                    </button>
-                                ),
-                            )}
-                    </div>
-                )}
 
                 <ModalFooter
                     onClose={onClose}
@@ -3373,65 +3437,91 @@ function Timeline({
     }
 
     return (
-        <div className="space-y-4">
+        <ol className="relative space-y-3">
             {items.map(
-                (event, index) => (
-                    <div
-                        key={event.id}
-                        className="relative flex gap-4"
-                    >
-                        {index <
-                            items.length -
-                                1 && (
-                            <div className="absolute left-[17px] top-9 h-[calc(100%+8px)] w-px bg-gray-200" />
-                        )}
+                (event, index) => {
+                    const [
+                        Icon,
+                        tone,
+                    ] =
+                        HISTORY_STYLES[
+                            event.action
+                        ] || [
+                            RiHistoryLine,
+                            "bg-blue-50 text-blue-600",
+                        ];
 
-                        <div className="relative z-10 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
-                            <RiHistoryLine />
-                        </div>
+                    const statusChanged =
+                        event.fromStatus &&
+                        event.toStatus &&
+                        event.fromStatus !==
+                            event.toStatus;
 
-                        <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-                            <div className="flex flex-wrap items-start justify-between gap-2">
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-900">
-                                        {event.action}
+                    return (
+                        <li
+                            key={event.id}
+                            className="relative flex gap-3"
+                        >
+                            {index <
+                                items.length -
+                                    1 && (
+                                <span className="absolute left-[17px] top-10 h-[calc(100%-16px)] w-0.5 rounded bg-slate-200" />
+                            )}
+
+                            <span className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm ${tone}`}>
+                                <Icon size={17} />
+                            </span>
+
+                            <div className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                    <p className="text-sm font-bold text-slate-900">
+                                        {historyLabel(
+                                            event.action,
+                                        )}
                                     </p>
 
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        {event.actor
-                                            ?.fullName ||
-                                            "Система"}
-                                    </p>
+                                    <time className="text-[11px] font-medium text-slate-400">
+                                        {formatDate(
+                                            event.createdAt,
+                                        )}
+                                    </time>
                                 </div>
 
-                                <span className="text-xs text-gray-400">
-                                    {formatDate(
-                                        event.createdAt,
-                                    )}
-                                </span>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    {event.actor
+                                        ?.fullName ||
+                                        i18nT("history.system")}
+                                </p>
+
+                                {statusChanged && (
+                                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+                                        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-slate-600">
+                                            {STATUS_LABELS[
+                                                event.fromStatus
+                                            ] ||
+                                                event.fromStatus}
+                                        </span>
+                                        <RiArrowRightLine size={13} className="text-slate-400" />
+                                        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-blue-700">
+                                            {STATUS_LABELS[
+                                                event.toStatus
+                                            ] ||
+                                                event.toStatus}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {event.comment && (
+                                    <p className="mt-2.5 rounded-xl bg-slate-50 px-3 py-2 text-sm leading-5 text-slate-700">
+                                        {event.comment}
+                                    </p>
+                                )}
                             </div>
-
-                            {(event.fromStatus ||
-                                event.toStatus) && (
-                                <p className="mt-3 text-xs text-gray-600">
-                                    {event.fromStatus ||
-                                        "—"}{" "}
-                                    →{" "}
-                                    {event.toStatus ||
-                                        "—"}
-                                </p>
-                            )}
-
-                            {event.comment && (
-                                <p className="mt-3 text-sm text-gray-700">
-                                    {event.comment}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                ),
+                        </li>
+                    );
+                },
             )}
-        </div>
+        </ol>
     );
 }
 
