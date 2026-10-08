@@ -19,24 +19,25 @@ import {
     RiSparkling2Line,
     RiStarFill,
     RiTeamLine,
-    RiTimeLine,
     RiTrophyLine,
 } from "react-icons/ri";
 
 import SmartTable from "../../react-components/SmartTable/SmartTable.jsx";
+import GlideSelect from "../../react-components/GlideSelect/GlideSelect.jsx";
+
+import {
+    useAuth,
+} from "../../auth/AuthProvider.jsx";
 
 import {
     useBrigadeRatings,
+    useMyRating,
     useRatings,
 } from "../../hooks/useReports.js";
 
 import {
     useAreas,
 } from "../../hooks/useReferences.js";
-
-import {
-    useI18n,
-} from "../../i18n/index.js";
 
 
 // MARK: Config
@@ -60,38 +61,46 @@ const PERIODS = [
 // MARK: Helpers
 
 function asArray(value) {
-    return Array.isArray(
-        value,
-    )
+    return Array.isArray(value)
         ? value
         : [];
 }
 
-function percent(
-    value,
-) {
+function asObject(value) {
+    if (
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+    ) {
+        return value;
+    }
+
+    if (
+        Array.isArray(value) &&
+        value.length > 0
+    ) {
+        return value[0];
+    }
+
+    return null;
+}
+
+function percent(value) {
     const number =
         Number(value);
 
     if (
-        !Number.isFinite(
-            number,
-        )
+        !Number.isFinite(number)
     ) {
         return "—";
     }
 
-    /*
-     * Backend может отдавать долю либо уже процент.
-     */
     const normalized =
         number <= 1
             ? number * 100
             : number;
 
-    return `${Math.round(
-        normalized,
-    )}%`;
+    return `${Math.round(normalized)}%`;
 }
 
 function numberValue(
@@ -102,15 +111,32 @@ function numberValue(
         Number(value);
 
     if (
-        !Number.isFinite(
-            number,
-        )
+        !Number.isFinite(number)
     ) {
         return "—";
     }
 
-    return number.toFixed(
-        digits,
+    return number.toFixed(digits);
+}
+
+function scoreValue(value) {
+    const number =
+        Number(value);
+
+    if (
+        !Number.isFinite(number)
+    ) {
+        return "—";
+    }
+
+    return Math.round(number * 10) / 10;
+}
+
+function getErrorMessage(error) {
+    return (
+        error?.response?.data?.error ||
+        error?.message ||
+        "Не удалось загрузить рейтинг"
     );
 }
 
@@ -118,10 +144,18 @@ function numberValue(
 // MARK: Page
 
 export default function Rating() {
-    useI18n();
-
     const navigate =
         useNavigate();
+
+    const auth =
+        useAuth();
+
+    const role =
+        auth?.role ??
+        auth?.user?.role;
+
+    const isExecutor =
+        role === "EXECUTOR";
 
     const [
         mode,
@@ -139,6 +173,18 @@ export default function Rating() {
         specialty: "",
         period: "month",
     });
+
+    function updateFilter(
+        field,
+        value,
+    ) {
+        setFilters(
+            (previous) => ({
+                ...previous,
+                [field]: value,
+            }),
+        );
+    }
 
     const reportParams =
         useMemo(
@@ -164,15 +210,56 @@ export default function Rating() {
     const ratingsQuery =
         useRatings(
             reportParams,
+            {
+                enabled:
+                    !isExecutor,
+            },
         );
 
     const brigadesQuery =
         useBrigadeRatings(
             reportParams,
+            {
+                enabled:
+                    !isExecutor,
+            },
+        );
+
+    const myRatingQuery =
+        useMyRating(
+            {
+                period:
+                    filters.period,
+            },
+            {
+                enabled:
+                    isExecutor,
+            },
         );
 
     const areasQuery =
         useAreas();
+
+    if (isExecutor) {
+        return (
+            <MyRatingView
+                period={
+                    filters.period
+                }
+                onPeriodChange={(
+                    value,
+                ) =>
+                    updateFilter(
+                        "period",
+                        value,
+                    )
+                }
+                query={
+                    myRatingQuery
+                }
+            />
+        );
+    }
 
     const employees =
         asArray(
@@ -189,25 +276,9 @@ export default function Rating() {
             areasQuery.data,
         );
 
-    function updateFilter(
-        field,
-        value,
-    ) {
-        setFilters(
-            (
-                previous,
-            ) => ({
-                ...previous,
-                [field]: value,
-            }),
-        );
-    }
-
     function resetFilters() {
         setFilters(
-            (
-                previous,
-            ) => ({
+            (previous) => ({
                 ...previous,
                 search: "",
                 areaId: "",
@@ -222,19 +293,54 @@ export default function Rating() {
                 ...new Set(
                     employees
                         .map(
-                            (
-                                item,
-                            ) =>
+                            (item) =>
                                 item.specialty,
                         )
-                        .filter(
-                            Boolean,
-                        ),
+                        .filter(Boolean),
                 ),
             ].sort(),
-            [
-                employees,
+            [employees],
+        );
+
+    const areaOptions =
+        useMemo(
+            () => [
+                {
+                    value: "",
+                    label: "Все участки",
+                },
+                ...areas.map(
+                    (area) => ({
+                        value:
+                            String(
+                                area.id,
+                            ),
+                        label:
+                            area.name,
+                    }),
+                ),
             ],
+            [areas],
+        );
+
+    const specialtyOptions =
+        useMemo(
+            () => [
+                {
+                    value: "",
+                    label:
+                        "Все специальности",
+                },
+                ...specialties.map(
+                    (specialty) => ({
+                        value:
+                            specialty,
+                        label:
+                            specialty,
+                    }),
+                ),
+            ],
+            [specialties],
         );
 
     const filteredEmployees =
@@ -246,9 +352,7 @@ export default function Rating() {
 
             return employees
                 .filter(
-                    (
-                        employee,
-                    ) => {
+                    (employee) => {
                         const matchSearch =
                             !search ||
                             String(
@@ -280,10 +384,7 @@ export default function Rating() {
                     },
                 )
                 .sort(
-                    (
-                        a,
-                        b,
-                    ) =>
+                    (a, b) =>
                         Number(
                             b.score,
                         ) -
@@ -306,9 +407,7 @@ export default function Rating() {
 
             return brigades
                 .filter(
-                    (
-                        brigade,
-                    ) =>
+                    (brigade) =>
                         !search ||
                         String(
                             brigade.name ||
@@ -320,10 +419,7 @@ export default function Rating() {
                             ),
                 )
                 .sort(
-                    (
-                        a,
-                        b,
-                    ) =>
+                    (a, b) =>
                         Number(
                             b.score,
                         ) -
@@ -338,9 +434,7 @@ export default function Rating() {
 
     const scoredEmployees =
         filteredEmployees.filter(
-            (
-                employee,
-            ) =>
+            (employee) =>
                 Number.isFinite(
                     Number(
                         employee.score,
@@ -361,10 +455,7 @@ export default function Rating() {
     const averageRating =
         scoredEmployees.length
             ? scoredEmployees.reduce(
-                (
-                    total,
-                    employee,
-                ) =>
+                (total, employee) =>
                     total +
                     Number(
                         employee.score,
@@ -377,10 +468,7 @@ export default function Rating() {
     const averageOnTime =
         scoredEmployees.length
             ? scoredEmployees.reduce(
-                (
-                    total,
-                    employee,
-                ) => {
+                (total, employee) => {
                     const value =
                         Number(
                             employee.onTimeRate,
@@ -388,10 +476,8 @@ export default function Rating() {
 
                     return (
                         total +
-                        (value <=
-                        1
-                            ? value *
-                              100
+                        (value <= 1
+                            ? value * 100
                             : value)
                     );
                 },
@@ -402,10 +488,7 @@ export default function Rating() {
 
     const totalClosed =
         employees.reduce(
-            (
-                total,
-                employee,
-            ) =>
+            (total, employee) =>
                 total +
                 Number(
                     employee.closed ??
@@ -418,362 +501,220 @@ export default function Rating() {
         [
             filters.areaId,
             filters.specialty,
-        ].filter(
-            Boolean,
-        ).length;
+        ].filter(Boolean).length;
 
-    const employeeColumns =
-        useMemo(
-            () => [
-                {
-                    key:
-                        "place",
+    const employeeColumns = [
+        {
+            key: "place",
+            header: "#",
+            minWidth: 60,
+            sortable: false,
+            render: (
+                _,
+                index,
+            ) => (
+                <span className="font-bold text-gray-400">
+                    {index + 1}
+                </span>
+            ),
+        },
+        {
+            field: "fullName",
+            header: "Исполнитель",
+            minWidth: 250,
+            render: (
+                employee,
+            ) => (
+                <div>
+                    <p className="font-semibold text-gray-900">
+                        {employee.fullName}
+                    </p>
 
-                    header:
-                        "#",
+                    <p className="mt-1 text-xs text-gray-400">
+                        {employee.specialty ||
+                            "Специальность не указана"}
+                    </p>
+                </div>
+            ),
+        },
+        {
+            field: "score",
+            header: "Рейтинг",
+            minWidth: 120,
+            sortValue: (
+                row,
+            ) =>
+                Number(
+                    row.score,
+                ),
+            render: (
+                row,
+            ) => (
+                <ScoreBadge
+                    score={
+                        row.score
+                    }
+                />
+            ),
+        },
+        {
+            field: "quality",
+            header: "Качество",
+            minWidth: 110,
+            render: (
+                row,
+            ) =>
+                numberValue(
+                    row.quality,
+                ),
+        },
+        {
+            field: "onTimeRate",
+            header: "В срок",
+            minWidth: 110,
+            render: (
+                row,
+            ) =>
+                percent(
+                    row.onTimeRate,
+                ),
+        },
+        {
+            field: "reworkRate",
+            header: "Доработки",
+            minWidth: 120,
+            render: (
+                row,
+            ) =>
+                percent(
+                    row.reworkRate,
+                ),
+        },
+        {
+            field: "repeatFailureRate",
+            header: "Повторные отказы",
+            minWidth: 150,
+            render: (
+                row,
+            ) =>
+                percent(
+                    row.repeatFailureRate,
+                ),
+        },
+        {
+            field: "productivity",
+            header: "Производительность",
+            minWidth: 160,
+            render: (
+                row,
+            ) =>
+                numberValue(
+                    row.productivity,
+                ),
+        },
+        {
+            field: "closed",
+            header: "Закрыто",
+            minWidth: 100,
+        },
+    ];
 
-                    minWidth:
-                        60,
+    const brigadeColumns = [
+        {
+            field: "name",
+            header: "Бригада",
+            minWidth: 230,
+            render: (
+                brigade,
+            ) => (
+                <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                        <RiTeamLine />
+                    </div>
 
-                    sortable:
-                        false,
+                    <div>
+                        <p className="font-semibold text-gray-900">
+                            {brigade.name}
+                        </p>
 
-                    render: (
-                        _,
-                        index,
-                    ) => (
-                        <span className="font-bold text-gray-400">
-                            {index +
-                                1}
-                        </span>
-                    ),
-                },
-
-                {
-                    field:
-                        "fullName",
-
-                    header:
-                        "Исполнитель",
-
-                    minWidth:
-                        250,
-
-                    render:
-                        (
-                            employee,
-                        ) => (
-                            <div>
-                                <p className="font-semibold text-gray-900">
-                                    {
-                                        employee.fullName
-                                    }
-                                </p>
-
-                                <p className="mt-1 text-xs text-gray-400">
-                                    {employee.specialty ||
-                                        "Специальность не указана"}
-                                </p>
-                            </div>
-                        ),
-                },
-
-                {
-                    field:
-                        "score",
-
-                    header:
-                        "Рейтинг",
-
-                    minWidth:
-                        120,
-
-                    sortValue:
-                        (
-                            row,
-                        ) =>
-                            Number(
-                                row.score,
-                            ),
-
-                    render:
-                        (
-                            row,
-                        ) => (
-                            <ScoreBadge
-                                score={
-                                    row.score
-                                }
-                            />
-                        ),
-                },
-
-                {
-                    field:
-                        "quality",
-
-                    header:
-                        "Качество",
-
-                    minWidth:
-                        110,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            numberValue(
-                                row.quality,
-                            ),
-                },
-
-                {
-                    field:
-                        "onTimeRate",
-
-                    header:
-                        "В срок",
-
-                    minWidth:
-                        110,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            percent(
-                                row.onTimeRate,
-                            ),
-                },
-
-                {
-                    field:
-                        "reworkRate",
-
-                    header:
-                        "Доработки",
-
-                    minWidth:
-                        120,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            percent(
-                                row.reworkRate,
-                            ),
-                },
-
-                {
-                    field:
-                        "repeatFailureRate",
-
-                    header:
-                        "Повторные отказы",
-
-                    minWidth:
-                        150,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            percent(
-                                row.repeatFailureRate,
-                            ),
-                },
-
-                {
-                    field:
-                        "productivity",
-
-                    header:
-                        "Производительность",
-
-                    minWidth:
-                        160,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            numberValue(
-                                row.productivity,
-                            ),
-                },
-
-                {
-                    field:
-                        "closed",
-
-                    header:
-                        "Закрыто",
-
-                    minWidth:
-                        100,
-                },
-            ],
-        [],
-    );
-
-    const brigadeColumns =
-        useMemo(
-            () => [
-                {
-                    field:
-                        "name",
-
-                    header:
-                        "Бригада",
-
-                    minWidth:
-                        230,
-
-                    render:
-                        (
-                            brigade,
-                        ) => (
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                    <RiTeamLine />
-                                </div>
-
-                                <div>
-                                    <p className="font-semibold text-gray-900">
-                                        {
-                                            brigade.name
-                                        }
-                                    </p>
-
-                                    <p className="mt-1 text-xs text-gray-400">
-                                        Участников:{" "}
-                                        {Array.isArray(
-                                            brigade.members,
-                                        )
-                                            ? brigade
-                                                .members
-                                                .length
-                                            : brigade.members ??
-                                              "—"}
-                                    </p>
-                                </div>
-                            </div>
-                        ),
-                },
-
-                {
-                    field:
-                        "score",
-
-                    header:
-                        "Рейтинг",
-
-                    minWidth:
-                        120,
-
-                    render:
-                        (
-                            row,
-                        ) => (
-                            <ScoreBadge
-                                score={
-                                    row.score
-                                }
-                            />
-                        ),
-                },
-
-                {
-                    field:
-                        "quality",
-
-                    header:
-                        "Качество",
-
-                    minWidth:
-                        120,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            numberValue(
-                                row.quality,
-                            ),
-                },
-
-                {
-                    field:
-                        "onTimeRate",
-
-                    header:
-                        "В срок",
-
-                    minWidth:
-                        120,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            percent(
-                                row.onTimeRate,
-                            ),
-                },
-
-                {
-                    field:
-                        "repeatFailureRate",
-
-                    header:
-                        "Повторные отказы",
-
-                    minWidth:
-                        150,
-
-                    render:
-                        (
-                            row,
-                        ) =>
-                            percent(
-                                row.repeatFailureRate,
-                            ),
-                },
-
-                {
-                    field:
-                        "closed",
-
-                    header:
-                        "Закрыто",
-
-                    minWidth:
-                        110,
-                },
-            ],
-        [],
-    );
+                        <p className="mt-1 text-xs text-gray-400">
+                            Участников:{" "}
+                            {Array.isArray(
+                                brigade.members,
+                            )
+                                ? brigade.members.length
+                                : brigade.members ??
+                                  "—"}
+                        </p>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            field: "score",
+            header: "Рейтинг",
+            minWidth: 120,
+            render: (
+                row,
+            ) => (
+                <ScoreBadge
+                    score={
+                        row.score
+                    }
+                />
+            ),
+        },
+        {
+            field: "quality",
+            header: "Качество",
+            minWidth: 120,
+            render: (
+                row,
+            ) =>
+                numberValue(
+                    row.quality,
+                ),
+        },
+        {
+            field: "onTimeRate",
+            header: "В срок",
+            minWidth: 120,
+            render: (
+                row,
+            ) =>
+                percent(
+                    row.onTimeRate,
+                ),
+        },
+        {
+            field: "repeatFailureRate",
+            header: "Повторные отказы",
+            minWidth: 150,
+            render: (
+                row,
+            ) =>
+                percent(
+                    row.repeatFailureRate,
+                ),
+        },
+        {
+            field: "closed",
+            header: "Закрыто",
+            minWidth: 110,
+        },
+    ];
 
     if (
         ratingsQuery.isLoading &&
         !ratingsQuery.data
     ) {
         return (
-            <div className="flex min-h-[500px] items-center justify-center">
-                <RiLoader4Line
-                    size={32}
-                    className="animate-spin text-blue-600"
-                />
-            </div>
+            <LoadingPage />
         );
     }
 
     return (
         <div className="mx-auto max-w-[1800px]">
-
-            {/* HEADER */}
-
             <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -782,55 +723,45 @@ export default function Rating() {
 
                     <p className="mt-1 text-sm text-gray-500">
                         Оценка качества,
-                        сроков и
-                        эффективности
+                        сроков и эффективности
                         исполнителей
                     </p>
                 </div>
 
-                <div className="inline-flex self-start rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
-                    {PERIODS.map(
-                        (
-                            item,
-                        ) => (
-                            <PeriodButton
-                                key={
-                                    item.value
-                                }
-                                active={
-                                    filters.period ===
-                                    item.value
-                                }
-                                onClick={() =>
-                                    updateFilter(
-                                        "period",
-                                        item.value,
-                                    )
-                                }
-                            >
-                                {
-                                    item.label
-                                }
-                            </PeriodButton>
-                        ),
-                    )}
-                </div>
+                <PeriodSwitch
+                    value={
+                        filters.period
+                    }
+                    onChange={(
+                        value,
+                    ) =>
+                        updateFilter(
+                            "period",
+                            value,
+                        )
+                    }
+                />
             </div>
 
-
-            {/* KPI */}
+            {ratingsQuery.isError && (
+                <ErrorBox
+                    text={
+                        getErrorMessage(
+                            ratingsQuery.error,
+                        )
+                    }
+                />
+            )}
 
             <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <StatCard
                     label="Лучший рейтинг"
                     value={
-                        bestEmployee
-                            ?.score ??
+                        bestEmployee?.score ??
                         "—"
                     }
                     helper={
-                        bestEmployee
-                            ?.fullName ??
+                        bestEmployee?.fullName ??
                         "Нет данных"
                     }
                     icon={
@@ -880,9 +811,6 @@ export default function Rating() {
                 />
             </div>
 
-
-            {/* PODIUM */}
-
             {topEmployees.length >
                 0 && (
                 <section className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -893,16 +821,13 @@ export default function Rating() {
                             </h2>
 
                             <p className="mt-1 text-xs text-gray-500">
-                                Лучшие
-                                исполнители
-                                за выбранный
-                                период
+                                Лучшие исполнители
+                                за выбранный период
                             </p>
                         </div>
 
                         <div className="hidden items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 sm:flex">
                             <RiMedalLine />
-
                             TOP 3
                         </div>
                     </div>
@@ -918,8 +843,7 @@ export default function Rating() {
                                         employee.id
                                     }
                                     place={
-                                        index +
-                                        1
+                                        index + 1
                                     }
                                     employee={
                                         employee
@@ -935,9 +859,6 @@ export default function Rating() {
                     </div>
                 </section>
             )}
-
-
-            {/* FILTERS */}
 
             <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
@@ -956,9 +877,7 @@ export default function Rating() {
                             ) =>
                                 updateFilter(
                                     "search",
-                                    event
-                                        .target
-                                        .value,
+                                    event.target.value,
                                 )
                             }
                             placeholder={
@@ -971,95 +890,51 @@ export default function Rating() {
                         />
                     </div>
 
-                    <select
+                    <GlideSelect
+                        options={
+                            areaOptions
+                        }
                         value={
                             filters.areaId
                         }
                         onChange={(
-                            event,
+                            value,
                         ) =>
                             updateFilter(
                                 "areaId",
-                                event
-                                    .target
-                                    .value,
+                                value,
                             )
                         }
-                        className="min-w-[210px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-                    >
-                        <option value="">
-                            Все участки
-                        </option>
-
-                        {areas.map(
-                            (
-                                area,
-                            ) => (
-                                <option
-                                    key={
-                                        area.id
-                                    }
-                                    value={
-                                        area.id
-                                    }
-                                >
-                                    {
-                                        area.name
-                                    }
-                                </option>
-                            ),
-                        )}
-                    </select>
+                        className="glide-select--filter"
+                        menuWidth={240}
+                    />
 
                     {mode ===
                         "executors" && (
-                        <select
+                        <GlideSelect
+                            options={
+                                specialtyOptions
+                            }
                             value={
                                 filters.specialty
                             }
                             onChange={(
-                                event,
+                                value,
                             ) =>
                                 updateFilter(
                                     "specialty",
-                                    event
-                                        .target
-                                        .value,
+                                    value,
                                 )
                             }
-                            className="min-w-[190px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-                        >
-                            <option value="">
-                                Все
-                                специальности
-                            </option>
-
-                            {specialties.map(
-                                (
-                                    specialty,
-                                ) => (
-                                    <option
-                                        key={
-                                            specialty
-                                        }
-                                        value={
-                                            specialty
-                                        }
-                                    >
-                                        {
-                                            specialty
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
+                            className="glide-select--filter"
+                            menuWidth={240}
+                        />
                     )}
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                         <RiFilter3Line />
-
                         В рейтинге
 
                         <span className="font-semibold text-gray-900">
@@ -1079,7 +954,6 @@ export default function Rating() {
                                 className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-600"
                             >
                                 <RiCloseLine />
-
                                 Сбросить
                             </button>
                         )}
@@ -1123,9 +997,6 @@ export default function Rating() {
                 </div>
             </div>
 
-
-            {/* TABLE */}
-
             {mode ===
             "executors" ? (
                 <SmartTable
@@ -1140,9 +1011,7 @@ export default function Rating() {
                     compact
                     striped
                     stickyHeader
-                    minWidth={
-                        1250
-                    }
+                    minWidth={1250}
                     scrollHeight="clamp(360px, calc(100dvh - 620px), 560px)"
                     rowClassName={() =>
                         "cursor-pointer"
@@ -1170,147 +1039,29 @@ export default function Rating() {
                     compact
                     striped
                     stickyHeader
-                    minWidth={
-                        900
-                    }
+                    minWidth={900}
                     scrollHeight="clamp(360px, calc(100dvh - 620px), 560px)"
                     emptyText="Рейтинг бригад пуст"
                     emptyDescription="За выбранный период нет данных"
                 />
             )}
 
-
-            {/* EXPLANATION */}
-
             {bestEmployee && (
                 <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+                    <FormulaSection
+                        rating={
+                            bestEmployee
+                        }
+                    />
 
-                    <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-                            <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900">
-                                    Формула
-                                    рейтинга
-                                </h2>
-
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Баллы
-                                    рассчитаны
-                                    backend
-                                </p>
-                            </div>
-
-                            <RiShieldCheckLine
-                                size={19}
-                                className="text-blue-600"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 p-5 md:grid-cols-3">
-                            <PointCard
-                                title="Качество"
-                                value={
-                                    bestEmployee
-                                        .points
-                                        ?.quality
-                                }
-                            />
-
-                            <PointCard
-                                title="Сроки"
-                                value={
-                                    bestEmployee
-                                        .points
-                                        ?.onTime
-                                }
-                            />
-
-                            <PointCard
-                                title="Без возвратов"
-                                value={
-                                    bestEmployee
-                                        .points
-                                        ?.noReturns
-                                }
-                            />
-
-                            <PointCard
-                                title="Объём"
-                                value={
-                                    bestEmployee
-                                        .points
-                                        ?.volume
-                                }
-                            />
-
-                            <PointCard
-                                title="Сложность"
-                                value={
-                                    bestEmployee
-                                        .points
-                                        ?.complexity
-                                }
-                            />
-
-                            <PointCard
-                                title="Отказы"
-                                value={
-                                    bestEmployee
-                                        .points
-                                        ?.rejects
-                                }
-                            />
-                        </div>
-                    </section>
-
-                    <section className="overflow-hidden rounded-xl border border-violet-200 bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50/40 px-5 py-4">
-                            <div>
-                                <h2 className="text-[15px] font-semibold text-gray-900">
-                                    Объяснение
-                                </h2>
-
-                                <p className="mt-1 text-xs text-gray-500">
-                                    {
-                                        bestEmployee.fullName
-                                    }
-                                </p>
-                            </div>
-
-                            <RiSparkling2Line
-                                size={19}
-                                className="text-violet-600"
-                            />
-                        </div>
-
-                        <div className="p-5">
-                            <div className="rounded-xl border border-green-100 bg-green-50 p-4">
-                                <p className="text-xs font-semibold uppercase text-green-600">
-                                    Результат
-                                </p>
-
-                                <p className="mt-2 text-3xl font-bold text-gray-900">
-                                    {
-                                        bestEmployee.score
-                                    }
-                                    /100
-                                </p>
-                            </div>
-
-                            <p className="mt-4 text-sm leading-6 text-gray-600">
-                                {bestEmployee.explanation ||
-                                    "Пояснение отсутствует"}
-                            </p>
-
-                            {bestEmployee.formula && (
-                                <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs leading-5 text-gray-500">
-                                    {
-                                        bestEmployee.formula
-                                    }
-                                </div>
-                            )}
-                        </div>
-                    </section>
+                    <ExplanationSection
+                        rating={
+                            bestEmployee
+                        }
+                        subtitle={
+                            bestEmployee.fullName
+                        }
+                    />
                 </div>
             )}
         </div>
@@ -1318,30 +1069,400 @@ export default function Rating() {
 }
 
 
-// MARK: Period
+// MARK: My rating
 
-function PeriodButton({
-    active,
-    onClick,
-    children,
+function MyRatingView({
+    period,
+    onPeriodChange,
+    query,
+}) {
+    const rating =
+        asObject(
+            query.data,
+        );
+
+    if (
+        query.isLoading &&
+        !query.data
+    ) {
+        return (
+            <LoadingPage />
+        );
+    }
+
+    return (
+        <div className="mx-auto max-w-[1500px]">
+            <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+                <div>
+                    <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        <RiTrophyLine />
+                        Мой рейтинг
+                    </div>
+
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                        Мои результаты
+                    </h1>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Персональная оценка качества,
+                        сроков и эффективности
+                    </p>
+                </div>
+
+                <PeriodSwitch
+                    value={
+                        period
+                    }
+                    onChange={
+                        onPeriodChange
+                    }
+                />
+            </div>
+
+            {query.isError && (
+                <ErrorBox
+                    text={
+                        getErrorMessage(
+                            query.error,
+                        )
+                    }
+                />
+            )}
+
+            {!query.isError &&
+            !rating ? (
+                <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+                    <RiTrophyLine
+                        size={36}
+                        className="mx-auto text-gray-300"
+                    />
+
+                    <h2 className="mt-4 text-base font-semibold text-gray-900">
+                        Пока нет данных
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        За выбранный период рейтинг
+                        ещё не рассчитан.
+                    </p>
+                </div>
+            ) : null}
+
+            {rating && (
+                <>
+                    <section className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                        <div className="grid gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
+                            <div className="flex flex-col justify-between bg-gray-950 p-6 text-white">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
+                                        Итоговый балл
+                                    </p>
+
+                                    <div className="mt-4 flex items-end gap-2">
+                                        <span className="text-6xl font-bold tracking-tight">
+                                            {scoreValue(
+                                                rating.score,
+                                            )}
+                                        </span>
+
+                                        <span className="pb-2 text-sm text-gray-400">
+                                            /100
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8">
+                                    <p className="text-sm font-semibold text-white">
+                                        {rating.fullName ||
+                                            "Ваш результат"}
+                                    </p>
+
+                                    <p className="mt-1 text-xs text-gray-400">
+                                        {rating.specialty ||
+                                            "Исполнитель"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-px bg-gray-100 md:grid-cols-4">
+                                <MyMetric
+                                    label="Качество"
+                                    value={
+                                        numberValue(
+                                            rating.quality,
+                                        )
+                                    }
+                                />
+
+                                <MyMetric
+                                    label="В срок"
+                                    value={
+                                        percent(
+                                            rating.onTimeRate,
+                                        )
+                                    }
+                                />
+
+                                <MyMetric
+                                    label="Доработки"
+                                    value={
+                                        percent(
+                                            rating.reworkRate,
+                                        )
+                                    }
+                                />
+
+                                <MyMetric
+                                    label="Повторные отказы"
+                                    value={
+                                        percent(
+                                            rating.repeatFailureRate,
+                                        )
+                                    }
+                                />
+
+                                <MyMetric
+                                    label="Возвраты"
+                                    value={
+                                        percent(
+                                            rating.returnRate,
+                                        )
+                                    }
+                                />
+
+                                <MyMetric
+                                    label="Производительность"
+                                    value={
+                                        numberValue(
+                                            rating.productivity,
+                                        )
+                                    }
+                                />
+
+                                <MyMetric
+                                    label="Необосн. отказы"
+                                    value={
+                                        rating.unjustifiedRejects ??
+                                        "—"
+                                    }
+                                />
+
+                                <MyMetric
+                                    label="Закрыто нарядов"
+                                    value={
+                                        rating.closed ??
+                                        0
+                                    }
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+                        <FormulaSection
+                            rating={
+                                rating
+                            }
+                        />
+
+                        <ExplanationSection
+                            rating={
+                                rating
+                            }
+                            subtitle="Что влияет на ваш результат"
+                        />
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+function MyMetric({
+    label,
+    value,
 }) {
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                active
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-            }`}
-        >
-            {children}
-        </button>
+        <div className="bg-white p-5">
+            <p className="text-xs font-medium text-gray-500">
+                {label}
+            </p>
+
+            <p className="mt-2 text-2xl font-bold text-gray-900">
+                {value}
+            </p>
+        </div>
     );
 }
 
 
-// MARK: Stat
+// MARK: Shared rating sections
+
+function FormulaSection({
+    rating,
+}) {
+    return (
+        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                <div>
+                    <h2 className="text-[15px] font-semibold text-gray-900">
+                        Формула рейтинга
+                    </h2>
+
+                    <p className="mt-1 text-xs text-gray-500">
+                        Баллы рассчитаны backend
+                    </p>
+                </div>
+
+                <RiShieldCheckLine
+                    size={19}
+                    className="text-blue-600"
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 p-5 md:grid-cols-3">
+                <PointCard
+                    title="Качество"
+                    value={
+                        rating.points?.quality
+                    }
+                />
+
+                <PointCard
+                    title="Сроки"
+                    value={
+                        rating.points?.onTime
+                    }
+                />
+
+                <PointCard
+                    title="Без возвратов"
+                    value={
+                        rating.points?.noReturns
+                    }
+                />
+
+                <PointCard
+                    title="Объём"
+                    value={
+                        rating.points?.volume
+                    }
+                />
+
+                <PointCard
+                    title="Сложность"
+                    value={
+                        rating.points?.complexity
+                    }
+                />
+
+                <PointCard
+                    title="Отказы"
+                    value={
+                        rating.points?.rejects
+                    }
+                />
+            </div>
+
+            {rating.complexityBonus != null && (
+                <div className="border-t border-gray-100 px-5 py-4 text-xs text-gray-500">
+                    Бонус за сложность:{" "}
+                    <span className="font-semibold text-gray-900">
+                        {rating.complexityBonus}
+                    </span>
+                </div>
+            )}
+        </section>
+    );
+}
+
+function ExplanationSection({
+    rating,
+    subtitle,
+}) {
+    return (
+        <section className="overflow-hidden rounded-xl border border-violet-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-violet-100 bg-violet-50/40 px-5 py-4">
+                <div>
+                    <h2 className="text-[15px] font-semibold text-gray-900">
+                        Объяснение
+                    </h2>
+
+                    <p className="mt-1 text-xs text-gray-500">
+                        {subtitle}
+                    </p>
+                </div>
+
+                <RiSparkling2Line
+                    size={19}
+                    className="text-violet-600"
+                />
+            </div>
+
+            <div className="p-5">
+                <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+                    <p className="text-xs font-semibold uppercase text-green-600">
+                        Результат
+                    </p>
+
+                    <p className="mt-2 text-3xl font-bold text-gray-900">
+                        {scoreValue(
+                            rating.score,
+                        )}
+                        /100
+                    </p>
+                </div>
+
+                <p className="mt-4 text-sm leading-6 text-gray-600">
+                    {rating.explanation ||
+                        "Пояснение отсутствует"}
+                </p>
+
+                {rating.formula && (
+                    <div className="mt-4 rounded-lg bg-gray-50 p-3 text-xs leading-5 text-gray-500">
+                        {rating.formula}
+                    </div>
+                )}
+            </div>
+        </section>
+    );
+}
+
+
+// MARK: UI helpers
+
+function PeriodSwitch({
+    value,
+    onChange,
+}) {
+    return (
+        <div className="inline-flex self-start rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+            {PERIODS.map(
+                (item) => (
+                    <button
+                        key={
+                            item.value
+                        }
+                        type="button"
+                        onClick={() =>
+                            onChange(
+                                item.value,
+                            )
+                        }
+                        className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                            value ===
+                            item.value
+                                ? "bg-blue-600 text-white shadow-sm"
+                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                        }`}
+                    >
+                        {item.label}
+                    </button>
+                ),
+            )}
+        </div>
+    );
+}
 
 function StatCard({
     label,
@@ -1353,13 +1474,10 @@ function StatCard({
     const tones = {
         gold:
             "bg-amber-50 text-amber-600",
-
         blue:
             "bg-blue-50 text-blue-600",
-
         green:
             "bg-green-50 text-green-600",
-
         violet:
             "bg-violet-50 text-violet-600",
     };
@@ -1385,17 +1503,12 @@ function StatCard({
                 tones.blue
             }`}>
                 <Icon
-                    size={
-                        20
-                    }
+                    size={20}
                 />
             </div>
         </div>
     );
 }
-
-
-// MARK: Leader
 
 function LeaderCard({
     place,
@@ -1411,7 +1524,9 @@ function LeaderCard({
     return (
         <button
             type="button"
-            onClick={onClick}
+            onClick={
+                onClick
+            }
             className={`w-full rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${
                 styles[place]
             }`}
@@ -1423,9 +1538,7 @@ function LeaderCard({
                     </p>
 
                     <p className="mt-2 text-sm font-bold text-gray-900">
-                        {
-                            employee.fullName
-                        }
+                        {employee.fullName}
                     </p>
 
                     <p className="mt-1 text-xs text-gray-500">
@@ -1436,9 +1549,7 @@ function LeaderCard({
 
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
                     <RiTrophyLine
-                        size={
-                            19
-                        }
+                        size={19}
                     />
                 </div>
             </div>
@@ -1446,9 +1557,7 @@ function LeaderCard({
             <div className="mt-4 flex items-end justify-between">
                 <div>
                     <p className="text-3xl font-bold text-gray-900">
-                        {
-                            employee.score
-                        }
+                        {employee.score}
                     </p>
 
                     <p className="text-[10px] text-gray-400">
@@ -1457,18 +1566,13 @@ function LeaderCard({
                 </div>
 
                 <p className="text-xs font-semibold text-gray-500">
-                    {
-                        employee.closed
-                    }{" "}
+                    {employee.closed}{" "}
                     закрыто
                 </p>
             </div>
         </button>
     );
 }
-
-
-// MARK: Score
 
 function ScoreBadge({
     score,
@@ -1499,17 +1603,12 @@ function ScoreBadge({
 
     return (
         <span className={`inline-flex min-w-[62px] justify-center rounded-full px-2.5 py-1 text-xs font-bold ${className}`}>
-            {Number.isFinite(
-                value,
-            )
+            {Number.isFinite(value)
                 ? value
                 : "—"}
         </span>
     );
 }
-
-
-// MARK: Points
 
 function PointCard({
     title,
@@ -1529,6 +1628,27 @@ function PointCard({
             <p className="mt-1 text-[10px] text-gray-400">
                 баллов
             </p>
+        </div>
+    );
+}
+
+function ErrorBox({
+    text,
+}) {
+    return (
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {text}
+        </div>
+    );
+}
+
+function LoadingPage() {
+    return (
+        <div className="flex min-h-[500px] items-center justify-center">
+            <RiLoader4Line
+                size={32}
+                className="animate-spin text-blue-600"
+            />
         </div>
     );
 }

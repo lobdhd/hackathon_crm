@@ -7,6 +7,7 @@ import {
     RiBarChartBoxLine,
     RiCloseLine,
     RiDashboardLine,
+    RiDatabase2Line,
     RiFileChartLine,
     RiFileList3Line,
     RiSettings3Line,
@@ -33,6 +34,11 @@ const ANALYTICS_ROLES = [
     "ADMIN",
 ];
 
+const INTEGRATION_ROLES = [
+    "MANAGER",
+    "ADMIN",
+];
+
 const ADMIN_ROLES = [
     "ADMIN",
 ];
@@ -50,6 +56,9 @@ const menu = [
 
         icon:
             RiDashboardLine,
+
+        roles:
+            ANALYTICS_ROLES,
     },
 
     {
@@ -108,9 +117,6 @@ const menu = [
 
         icon:
             RiTrophyLine,
-
-        roles:
-            ANALYTICS_ROLES,
     },
 
     {
@@ -139,6 +145,23 @@ const menu = [
 
         roles:
             ANALYTICS_ROLES,
+    },
+
+    {
+        titleKey:
+            "sidebar.oneC",
+
+        fallbackTitle:
+            "Интеграция 1С",
+
+        path:
+            "/integrations/1c",
+
+        icon:
+            RiDatabase2Line,
+
+        roles:
+            INTEGRATION_ROLES,
     },
 
     {
@@ -177,17 +200,12 @@ export default function AppSidebar({
     const role =
         user?.role ?? null;
 
-
-    // MARK: Visible menu
-
     const visibleMenu =
         menu.filter(
             (
                 item,
             ) => {
-                if (
-                    !item.roles
-                ) {
+                if (!item.roles) {
                     return true;
                 }
 
@@ -196,9 +214,6 @@ export default function AppSidebar({
                 );
             },
         );
-
-
-    // MARK: Translation
 
     function getTitle(
         item,
@@ -213,7 +228,7 @@ export default function AppSidebar({
             (
                 !translated ||
                 translated ===
-                item.titleKey
+                    item.titleKey
             )
         ) {
             return item.fallbackTitle;
@@ -221,9 +236,6 @@ export default function AppSidebar({
 
         return translated;
     }
-
-
-    // MARK: Render
 
     return (
         <>
@@ -242,23 +254,18 @@ export default function AppSidebar({
                     border-r border-gray-200 bg-white
                     transition-transform duration-200
                     lg:translate-x-0
-
-                    ${open
-                        ? "translate-x-0"
-                        : "-translate-x-full"
+                    ${
+                        open
+                            ? "translate-x-0"
+                            : "-translate-x-full"
                     }
                 `}
             >
-
-                {/* MARK: Brand */}
-
                 <div className="flex h-16 items-center justify-between border-b border-gray-200 px-5">
                     <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
                             <RiSparkling2Line
-                                size={
-                                    20
-                                }
+                                size={20}
                             />
                         </div>
 
@@ -285,15 +292,10 @@ export default function AppSidebar({
                         className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
                     >
                         <RiCloseLine
-                            size={
-                                22
-                            }
+                            size={22}
                         />
                     </button>
                 </div>
-
-
-                {/* MARK: Navigation */}
 
                 <div className="flex h-[calc(100vh-64px)] flex-col">
                     <nav className="flex-1 overflow-y-auto px-3 py-5">
@@ -325,22 +327,17 @@ export default function AppSidebar({
                                             className={({
                                                 isActive,
                                             }) => `
-                                                flex items-center gap-3
-                                                rounded-lg
-                                                px-3 py-2.5
-                                                text-sm font-medium
-                                                transition-colors
-
-                                                ${isActive
-                                                    ? "bg-blue-50 text-blue-700"
-                                                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                                flex items-center gap-3 rounded-lg px-3 py-2.5
+                                                text-sm font-medium transition-colors
+                                                ${
+                                                    isActive
+                                                        ? "bg-blue-50 text-blue-700"
+                                                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                                                 }
                                             `}
                                         >
                                             <Icon
-                                                size={
-                                                    20
-                                                }
+                                                size={20}
                                             />
 
                                             <span>
@@ -354,7 +351,34 @@ export default function AppSidebar({
                             )}
                         </div>
                     </nav>
-                   
+
+                    <div className="border-t border-gray-200 p-3">
+                        <NavLink
+                            to="/settings"
+                            onClick={
+                                onClose
+                            }
+                            className={({
+                                isActive,
+                            }) => `
+                                flex items-center gap-3 rounded-lg px-3 py-2.5
+                                text-sm font-medium transition-colors
+                                ${
+                                    isActive
+                                        ? "bg-blue-50 text-blue-700"
+                                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                }
+                            `}
+                        >
+                            <RiSettings3Line
+                                size={20}
+                            />
+
+                            {t(
+                                "sidebar.settings",
+                            )}
+                        </NavLink>
+                    </div>
                 </div>
             </aside>
         </>

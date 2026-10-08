@@ -3,6 +3,7 @@ import {
 } from "@tanstack/react-query";
 
 import {
+    extractEquipmentQrToken,
     getEquipmentByQr,
     getEquipmentHistory,
 } from "../api/equipment.api.js";
@@ -63,9 +64,14 @@ export function useEquipmentHistory(
 // MARK: QR
 
 export function useEquipmentByQr(
-    token,
+    rawToken,
     options = {},
 ) {
+    const token =
+        extractEquipmentQrToken(
+            rawToken,
+        );
+
     return useQuery({
         queryKey:
             equipmentKeys.qr(
@@ -78,7 +84,29 @@ export function useEquipmentByQr(
             ),
 
         enabled:
-            Boolean(token),
+            Boolean(
+                token,
+            ),
+
+        retry: (
+            failureCount,
+            error,
+        ) => {
+            const status =
+                error?.response
+                    ?.status;
+
+            if (
+                status === 400 ||
+                status === 404
+            ) {
+                return false;
+            }
+
+            return (
+                failureCount < 2
+            );
+        },
 
         ...options,
     });

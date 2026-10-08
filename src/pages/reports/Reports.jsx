@@ -23,6 +23,7 @@ import {
 } from "react-icons/ri";
 
 import SmartTable from "../../react-components/SmartTable/SmartTable.jsx";
+import GlideSelect from "../../react-components/GlideSelect/GlideSelect.jsx";
 
 import {
   downloadWorkOrderReportPdf,
@@ -36,6 +37,10 @@ import {
   useRatings,
   useShiftReport,
 } from "../../hooks/useReports.js";
+
+import {
+  useWorkOrders,
+} from "../../hooks/useWorkOrders.js";
 
 import {
   useAreas,
@@ -402,6 +407,11 @@ export default function Reports() {
   ] = useState("");
 
   const [
+    orderPdfSearch,
+    setOrderPdfSearch,
+  ] = useState("");
+
+  const [
     orderPdfLoading,
     setOrderPdfLoading,
   ] = useState(false);
@@ -432,6 +442,13 @@ export default function Reports() {
   const brigadesQuery =
     useBrigades();
 
+  const workOrdersQuery =
+    useWorkOrders({
+      compact: true,
+      limit: 500,
+      offset: 0,
+    });
+
   const areas =
     asArray(
       areasQuery.data,
@@ -451,6 +468,134 @@ export default function Reports() {
     asArray(
       brigadesQuery.data,
     );
+
+  const workOrders =
+    asArray(
+      workOrdersQuery.data?.items,
+    );
+
+  const selectedOrderReport =
+    useMemo(
+      () =>
+        workOrders.find(
+          (order) =>
+            Number(
+              order.id,
+            ) ===
+            Number(
+              orderReportId,
+            ),
+        ) ?? null,
+      [
+        workOrders,
+        orderReportId,
+      ],
+    );
+
+  const orderReportOptions =
+    useMemo(() => {
+      const searchValue =
+        orderPdfSearch
+          .trim()
+          .toLowerCase();
+
+      const filtered =
+        workOrders.filter(
+          (order) => {
+            if (
+              !searchValue
+            ) {
+              return true;
+            }
+
+            return [
+              order.number,
+              order.description,
+              order.equipment?.name,
+              order.equipment?.inventoryNumber,
+              order.area?.name,
+              order.assignee?.fullName,
+              order.status,
+            ]
+              .filter(Boolean)
+              .some(
+                (value) =>
+                  String(
+                    value,
+                  )
+                    .toLowerCase()
+                    .includes(
+                      searchValue,
+                    ),
+              );
+          },
+        );
+
+      const selected =
+        workOrders.find(
+          (order) =>
+            Number(
+              order.id,
+            ) ===
+            Number(
+              orderReportId,
+            ),
+        );
+
+      const source =
+        selected &&
+        !filtered.some(
+          (order) =>
+            Number(
+              order.id,
+            ) ===
+            Number(
+              selected.id,
+            ),
+        )
+          ? [
+            selected,
+            ...filtered,
+          ]
+          : filtered;
+
+      return [
+        {
+          value: "",
+          label: "Выберите наряд",
+        },
+
+        ...source.map(
+          (order) => ({
+            value:
+              String(
+                order.id,
+              ),
+
+            label:
+              [
+                order.number ||
+                  `#${order.id}`,
+                order.equipment
+                  ?.name,
+                order.description,
+              ]
+                .filter(Boolean)
+                .join(
+                  " — ",
+                ),
+
+            tag:
+              order.status ||
+              undefined,
+          }),
+        ),
+      ];
+    }, [
+      workOrders,
+      orderPdfSearch,
+      orderReportId,
+    ]);
 
 
   // MARK: Params
@@ -887,7 +1032,7 @@ export default function Reports() {
       id <= 0
     ) {
       setOrderPdfError(
-        "Укажите корректный ID наряда",
+        "Выберите наряд",
       );
 
       return;
@@ -907,9 +1052,18 @@ export default function Reports() {
           id,
         );
 
+      const filePart =
+        String(
+          selectedOrderReport?.number ||
+          `naryad-${id}`,
+        ).replace(
+          /[\\/:*?"<>|]+/g,
+          "-",
+        );
+
       downloadBlob(
         blob,
-        `naryad-${id}.pdf`,
+        `${filePart}.pdf`,
       );
     } catch (
     error
@@ -1611,7 +1765,7 @@ export default function Reports() {
 
       {/* ORDER PDF */}
 
-      <section className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <section className="mt-6 overflow-visible rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-4">
           <div>
             <h2 className="text-[15px] font-semibold text-gray-900">
@@ -1620,10 +1774,10 @@ export default function Reports() {
             </h2>
 
             <p className="mt-1 text-xs text-gray-500">
-              Итоговый
-              отчёт мастера
-              по одному
-              наряду
+              Найдите наряд
+              по номеру,
+              оборудованию
+              или описанию
             </p>
           </div>
 
@@ -1649,32 +1803,76 @@ export default function Reports() {
             </div>
           )}
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              type="number"
-              min="1"
-              value={
-                orderReportId
-              }
-              onChange={(
-                event,
-              ) =>
-                setOrderReportId(
-                  event
-                    .target
-                    .value,
-                )
-              }
-              placeholder="ID наряда"
-              className="reports-input flex-1"
-            />
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.7fr)_auto]">
+            <div className="relative">
+              <RiSearchLine
+                size={
+                  17
+                }
+                className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
+              />
+
+              <input
+                type="text"
+                value={
+                  orderPdfSearch
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setOrderPdfSearch(
+                    event
+                      .target
+                      .value,
+                  )
+                }
+                placeholder="Номер, оборудование, описание..."
+                className="reports-input !pl-10"
+              />
+            </div>
+
+            <div className="min-w-0">
+              <GlideSelect
+                options={
+                  orderReportOptions
+                }
+                value={
+                  orderReportId
+                }
+                onChange={(
+                  value,
+                ) => {
+                  setOrderReportId(
+                    value,
+                  );
+
+                  setOrderPdfError(
+                    "",
+                  );
+                }}
+                placeholder={
+                  workOrdersQuery.isLoading
+                    ? "Загрузка нарядов..."
+                    : "Выберите наряд"
+                }
+                className="glide-select--field"
+                menuWidth={
+                  560
+                }
+                disabled={
+                  workOrdersQuery.isLoading
+                }
+              />
+            </div>
 
             <button
               type="submit"
               disabled={
-                orderPdfLoading
+                orderPdfLoading ||
+                workOrdersQuery.isLoading ||
+                !orderReportId
               }
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {orderPdfLoading ? (
                 <RiLoader4Line className="animate-spin" />
@@ -1685,6 +1883,45 @@ export default function Reports() {
               Скачать PDF
             </button>
           </div>
+
+          {workOrdersQuery.isError && (
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2.5">
+              <p className="text-xs text-red-700">
+                Не удалось
+                загрузить список
+                нарядов
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  workOrdersQuery.refetch()
+                }
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700"
+              >
+                <RiRefreshLine />
+
+                Повторить
+              </button>
+            </div>
+          )}
+
+          {!workOrdersQuery.isLoading &&
+            !workOrdersQuery.isError &&
+            workOrders.length === 0 && (
+            <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-500">
+              Наряды для выбора
+              не найдены.
+            </div>
+          )}
+
+          {selectedOrderReport && (
+            <SelectedOrderPdfPreview
+              order={
+                selectedOrderReport
+              }
+            />
+          )}
         </form>
       </section>
 
@@ -1713,6 +1950,79 @@ export default function Reports() {
                     }
                 `}
       </style>
+    </div>
+  );
+}
+
+
+// MARK: Selected order PDF
+
+function SelectedOrderPdfPreview({
+  order,
+}) {
+  return (
+    <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-bold text-blue-600">
+              {order.number ||
+                `#${order.id}`}
+            </span>
+
+            {order.status && (
+              <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold text-gray-500 shadow-sm">
+                {
+                  order.status
+                }
+              </span>
+            )}
+          </div>
+
+          <p className="mt-2 line-clamp-2 text-sm font-semibold text-gray-900">
+            {order.description ||
+              "Описание не указано"}
+          </p>
+        </div>
+
+        <div className="grid shrink-0 grid-cols-1 gap-1 text-xs text-gray-500 md:min-w-[280px]">
+          <p>
+            <span className="text-gray-400">
+              Оборудование:
+            </span>{" "}
+
+            <span className="font-medium text-gray-700">
+              {order.equipment
+                ?.name ||
+                "—"}
+            </span>
+          </p>
+
+          <p>
+            <span className="text-gray-400">
+              Участок:
+            </span>{" "}
+
+            <span className="font-medium text-gray-700">
+              {order.area
+                ?.name ||
+                "—"}
+            </span>
+          </p>
+
+          <p>
+            <span className="text-gray-400">
+              Исполнитель:
+            </span>{" "}
+
+            <span className="font-medium text-gray-700">
+              {order.assignee
+                ?.fullName ||
+                "Не назначен"}
+            </span>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

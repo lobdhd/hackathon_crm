@@ -12,14 +12,15 @@ import {
 import {
     RiAlarmWarningLine,
     RiArrowDownSLine,
-    RiCheckboxCircleLine,
     RiFileList3Line,
     RiGlobalLine,
     RiLoader4Line,
+    RiLogoutBoxRLine,
     RiMenuLine,
     RiNotification3Line,
     RiRefreshLine,
     RiSearchLine,
+    RiSettings3Line,
     RiSparkling2Line,
     RiTeamLine,
     RiTimeLine,
@@ -288,6 +289,7 @@ export default function AppNavbar({
 
     const {
         user,
+        logout,
     } = useAuth();
 
 
@@ -332,18 +334,31 @@ export default function AppNavbar({
         unread.length;
 
 
-    // MARK: Dropdown
+    // MARK: Dropdown state
 
     const [
         notificationsOpen,
         setNotificationsOpen,
     ] = useState(false);
 
+    const [
+        userMenuOpen,
+        setUserMenuOpen,
+    ] = useState(false);
+
+    const [
+        logoutLoading,
+        setLogoutLoading,
+    ] = useState(false);
+
     const notificationsRef =
         useRef(null);
 
+    const userMenuRef =
+        useRef(null);
 
-    // MARK: Refresh on open
+
+    // MARK: Refresh notifications
 
     useEffect(() => {
         if (
@@ -351,7 +366,7 @@ export default function AppNavbar({
         ) {
             notificationsQuery.refetch();
         }
-        // refetch function is stable enough
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         notificationsOpen,
@@ -362,7 +377,8 @@ export default function AppNavbar({
 
     useEffect(() => {
         if (
-            !notificationsOpen
+            !notificationsOpen &&
+            !userMenuOpen
         ) {
             return undefined;
         }
@@ -371,12 +387,25 @@ export default function AppNavbar({
             event,
         ) {
             if (
+                notificationsOpen &&
                 notificationsRef.current &&
                 !notificationsRef.current.contains(
                     event.target,
                 )
             ) {
                 setNotificationsOpen(
+                    false,
+                );
+            }
+
+            if (
+                userMenuOpen &&
+                userMenuRef.current &&
+                !userMenuRef.current.contains(
+                    event.target,
+                )
+            ) {
+                setUserMenuOpen(
                     false,
                 );
             }
@@ -390,6 +419,10 @@ export default function AppNavbar({
                 "Escape"
             ) {
                 setNotificationsOpen(
+                    false,
+                );
+
+                setUserMenuOpen(
                     false,
                 );
             }
@@ -418,12 +451,13 @@ export default function AppNavbar({
         };
     }, [
         notificationsOpen,
+        userMenuOpen,
     ]);
 
 
-    // MARK: Notification click
+    // MARK: Notification actions
 
-    async function handleNotificationClick(
+    function handleNotificationClick(
         notification,
     ) {
         if (
@@ -447,13 +481,12 @@ export default function AppNavbar({
         }
     }
 
-
-    // MARK: Read all
-
     function handleReadAll() {
         const ids =
             unread.map(
-                (item) =>
+                (
+                    item,
+                ) =>
                     item.id,
             );
 
@@ -469,6 +502,61 @@ export default function AppNavbar({
         );
     }
 
+
+    // MARK: User actions
+
+    function openSettings() {
+        setUserMenuOpen(
+            false,
+        );
+
+        navigate(
+            "/settings",
+        );
+    }
+
+    function changeLanguage(
+        nextLanguage,
+    ) {
+        setLanguage(
+            nextLanguage,
+        );
+    }
+
+    async function handleLogout() {
+        if (
+            logoutLoading
+        ) {
+            return;
+        }
+
+        setLogoutLoading(
+            true,
+        );
+
+        try {
+            await logout?.();
+        } finally {
+            setUserMenuOpen(
+                false,
+            );
+
+            setLogoutLoading(
+                false,
+            );
+
+            navigate(
+                "/login",
+                {
+                    replace:
+                        true,
+                },
+            );
+        }
+    }
+
+
+    // MARK: Render
 
     return (
         <header className="fixed left-0 right-0 top-0 z-30 h-16 border-b border-gray-200 bg-white lg:left-64">
@@ -541,7 +629,7 @@ export default function AppNavbar({
                     </div>
 
 
-                    {/* Language */}
+                    {/* Language quick switch */}
 
                     <div className="hidden items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 sm:flex">
                         <div className="flex h-7 w-7 items-center justify-center text-gray-400">
@@ -555,7 +643,7 @@ export default function AppNavbar({
                         <button
                             type="button"
                             onClick={() =>
-                                setLanguage(
+                                changeLanguage(
                                     "ru",
                                 )
                             }
@@ -581,7 +669,7 @@ export default function AppNavbar({
                         <button
                             type="button"
                             onClick={() =>
-                                setLanguage(
+                                changeLanguage(
                                     "kk",
                                 )
                             }
@@ -616,14 +704,18 @@ export default function AppNavbar({
                     >
                         <button
                             type="button"
-                            onClick={() =>
+                            onClick={() => {
                                 setNotificationsOpen(
                                     (
                                         previous,
                                     ) =>
                                         !previous,
-                                )
-                            }
+                                );
+
+                                setUserMenuOpen(
+                                    false,
+                                );
+                            }}
                             className={`
                                 relative
                                 rounded-lg
@@ -649,26 +741,17 @@ export default function AppNavbar({
 
                             {unreadCount >
                                 0 && (
-                                <>
-                                    <span className="absolute right-[7px] top-[7px] h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
-
-                                    <span className="absolute -right-1.5 -top-1.5 flex min-w-[19px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-[19px] text-white shadow-sm">
-                                        {unreadCount >
-                                        99
-                                            ? "99+"
-                                            : unreadCount}
-                                    </span>
-                                </>
+                                <span className="absolute -right-1.5 -top-1.5 flex min-w-[19px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-[19px] text-white shadow-sm">
+                                    {unreadCount >
+                                    99
+                                        ? "99+"
+                                        : unreadCount}
+                                </span>
                             )}
                         </button>
 
-
-                        {/* Dropdown */}
-
                         {notificationsOpen && (
                             <div className="absolute right-0 top-[calc(100%+10px)] w-[390px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-
-                                {/* Header */}
 
                                 <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-4">
                                     <div>
@@ -689,9 +772,7 @@ export default function AppNavbar({
                                         </div>
 
                                         <p className="mt-1 text-[11px] text-gray-400">
-                                            Последние
-                                            события
-                                            системы
+                                            Последние события системы
                                         </p>
                                     </div>
 
@@ -731,15 +812,11 @@ export default function AppNavbar({
                                                 }
                                                 className="rounded-lg px-2.5 py-2 text-[11px] font-semibold text-blue-600 transition hover:bg-blue-50 disabled:opacity-50"
                                             >
-                                                Прочитать
-                                                все
+                                                Прочитать все
                                             </button>
                                         )}
                                     </div>
                                 </div>
-
-
-                                {/* Body */}
 
                                 {notificationsQuery.isLoading ? (
                                     <div className="flex h-[300px] items-center justify-center">
@@ -761,9 +838,7 @@ export default function AppNavbar({
                                             />
 
                                             <p className="mt-3 text-sm font-semibold text-gray-800">
-                                                Не удалось
-                                                загрузить
-                                                уведомления
+                                                Не удалось загрузить уведомления
                                             </p>
 
                                             <button
@@ -790,15 +865,11 @@ export default function AppNavbar({
                                             </div>
 
                                             <p className="mt-3 text-sm font-semibold text-gray-800">
-                                                Уведомлений
-                                                пока нет
+                                                Уведомлений пока нет
                                             </p>
 
                                             <p className="mt-1 text-xs text-gray-400">
-                                                Новые
-                                                события
-                                                появятся
-                                                здесь
+                                                Новые события появятся здесь
                                             </p>
                                         </div>
                                     </div>
@@ -831,15 +902,11 @@ export default function AppNavbar({
                                     </ScrollArea>
                                 )}
 
-
-                                {/* Footer */}
-
                                 {notifications.length >
                                     0 && (
                                     <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 text-center">
                                         <span className="text-[10px] font-medium text-gray-400">
-                                            Показаны
-                                            последние{" "}
+                                            Показаны последние{" "}
                                             {
                                                 notifications.length
                                             }{" "}
@@ -852,40 +919,239 @@ export default function AppNavbar({
                     </div>
 
 
-                    {/* MARK: User */}
+                    {/* MARK: User menu */}
 
-                    <div className="ml-1 flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-gray-100">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-                            {getInitials(
-                                user?.fullName,
-                            )}
-                        </div>
+                    <div
+                        ref={
+                            userMenuRef
+                        }
+                        className="relative"
+                    >
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setUserMenuOpen(
+                                    (
+                                        previous,
+                                    ) =>
+                                        !previous,
+                                );
 
-                        <div className="hidden text-left md:block">
-                            <div className="max-w-[180px] truncate text-sm font-semibold text-gray-900">
-                                {user?.fullName ||
-                                    t(
-                                        "navbar.userName",
-                                    )}
-                            </div>
+                                setNotificationsOpen(
+                                    false,
+                                );
+                            }}
+                            className={`
+                                ml-1
+                                flex
+                                items-center
+                                gap-3
+                                rounded-lg
+                                px-2
+                                py-1.5
+                                text-left
+                                transition
 
-                            <div className="text-xs text-gray-500">
-                                {ROLE_LABELS[
-                                    user?.role
-                                ] ||
-                                    user?.role ||
-                                    t(
-                                        "navbar.shiftMaster",
-                                    )}
-                            </div>
-                        </div>
-
-                        <RiArrowDownSLine
-                            className="hidden text-gray-400 md:block"
-                            size={
-                                18
+                                ${
+                                    userMenuOpen
+                                        ? "bg-gray-100"
+                                        : "hover:bg-gray-100"
+                                }
+                            `}
+                            aria-expanded={
+                                userMenuOpen
                             }
-                        />
+                        >
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                                {getInitials(
+                                    user?.fullName,
+                                )}
+                            </div>
+
+                            <div className="hidden text-left md:block">
+                                <div className="max-w-[180px] truncate text-sm font-semibold text-gray-900">
+                                    {user?.fullName ||
+                                        t(
+                                            "navbar.userName",
+                                        )}
+                                </div>
+
+                                <div className="text-xs text-gray-500">
+                                    {ROLE_LABELS[
+                                        user?.role
+                                    ] ||
+                                        user?.role ||
+                                        t(
+                                            "navbar.shiftMaster",
+                                        )}
+                                </div>
+                            </div>
+
+                            <RiArrowDownSLine
+                                className={`
+                                    hidden
+                                    text-gray-400
+                                    transition
+                                    md:block
+
+                                    ${
+                                        userMenuOpen
+                                            ? "rotate-180"
+                                            : ""
+                                    }
+                                `}
+                                size={
+                                    18
+                                }
+                            />
+                        </button>
+
+
+                        {userMenuOpen && (
+                            <div className="absolute right-0 top-[calc(100%+10px)] w-[280px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+
+                                {/* User */}
+
+                                <div className="border-b border-gray-100 p-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+                                            {getInitials(
+                                                user?.fullName,
+                                            )}
+                                        </div>
+
+                                        <div className="min-w-0">
+                                            <p className="truncate text-sm font-bold text-gray-900">
+                                                {user?.fullName ||
+                                                    "Пользователь"}
+                                            </p>
+
+                                            <p className="mt-0.5 truncate text-xs text-gray-500">
+                                                {ROLE_LABELS[
+                                                    user?.role
+                                                ] ||
+                                                    user?.role ||
+                                                    "—"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                {/* Language */}
+
+                                <div className="border-b border-gray-100 p-3">
+                                    <div className="mb-2 flex items-center gap-2 px-1 text-xs font-semibold text-gray-500">
+                                        <RiGlobalLine />
+
+                                        Язык
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                changeLanguage(
+                                                    "ru",
+                                                )
+                                            }
+                                            className={`
+                                                rounded-lg
+                                                px-3
+                                                py-2
+                                                text-xs
+                                                font-bold
+                                                transition
+
+                                                ${
+                                                    language ===
+                                                    "ru"
+                                                        ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                                }
+                                            `}
+                                        >
+                                            Русский
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                changeLanguage(
+                                                    "kk",
+                                                )
+                                            }
+                                            className={`
+                                                rounded-lg
+                                                px-3
+                                                py-2
+                                                text-xs
+                                                font-bold
+                                                transition
+
+                                                ${
+                                                    language ===
+                                                    "kk"
+                                                        ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                                                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                                }
+                                            `}
+                                        >
+                                            Қазақша
+                                        </button>
+                                    </div>
+                                </div>
+
+
+                                {/* Actions */}
+
+                                <div className="p-2">
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            openSettings
+                                        }
+                                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
+                                    >
+                                        <RiSettings3Line
+                                            size={
+                                                18
+                                            }
+                                        />
+
+                                        Настройки
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            handleLogout
+                                        }
+                                        disabled={
+                                            logoutLoading
+                                        }
+                                        className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                                    >
+                                        {logoutLoading ? (
+                                            <RiLoader4Line
+                                                size={
+                                                    18
+                                                }
+                                                className="animate-spin"
+                                            />
+                                        ) : (
+                                            <RiLogoutBoxRLine
+                                                size={
+                                                    18
+                                                }
+                                            />
+                                        )}
+
+                                        Выйти
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

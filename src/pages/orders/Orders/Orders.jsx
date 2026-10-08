@@ -12,11 +12,13 @@ import {
     RiAddLine,
     RiAlarmWarningLine,
     RiArrowRightLine,
+    RiCheckLine,
     RiCloseLine,
     RiFilter3Line,
     RiLayoutGridLine,
     RiListCheck2,
     RiLoader4Line,
+    RiMicFill,
     RiRefreshLine,
     RiSearchLine,
     RiSparkling2Line,
@@ -57,7 +59,10 @@ import {
 } from "../../../hooks/useRecommendations.js";
 
 import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
-import VoiceInputButton from "../../../components/VoiceInputButton/VoiceInputButton.jsx";
+
+import {
+    useVoiceInput,
+} from "../../../hooks/useVoiceInput.js";
 
 
 // MARK: Config
@@ -227,7 +232,7 @@ function extractError(error) {
         try {
             const parsed =
                 typeof data.details ===
-                "string"
+                    "string"
                     ? JSON.parse(
                         data.details,
                     )
@@ -516,16 +521,16 @@ export default function Orders() {
                     : {}),
 
                 ...(filters.status ===
-                "OVERDUE"
+                    "OVERDUE"
                     ? {
                         overdue: true,
                     }
                     : filters.status
-                      ? {
-                          status:
-                              filters.status,
-                      }
-                      : {}),
+                        ? {
+                            status:
+                                filters.status,
+                        }
+                        : {}),
             }),
             [
                 filters.areaId,
@@ -826,14 +831,14 @@ export default function Orders() {
 
                             {order.equipment
                                 ?.inventoryNumber && (
-                                <div className="mt-1 text-xs text-gray-400">
-                                    {
-                                        order
-                                            .equipment
-                                            .inventoryNumber
-                                    }
-                                </div>
-                            )}
+                                    <div className="mt-1 text-xs text-gray-400">
+                                        {
+                                            order
+                                                .equipment
+                                                .inventoryNumber
+                                        }
+                                    </div>
+                                )}
                         </div>
                     ),
                 },
@@ -1228,24 +1233,24 @@ export default function Orders() {
                             Найдено
                             <span className="font-semibold text-gray-900">
                                 {view ===
-                                "kanban"
+                                    "kanban"
                                     ? boardOrders.length
                                     : filteredOrders.length}
                             </span>
 
                             {activeFiltersCount >
                                 0 && (
-                                <button
-                                    type="button"
-                                    onClick={
-                                        resetFilters
-                                    }
-                                    className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
-                                >
-                                    <RiCloseLine size={14} />
-                                    Сбросить
-                                </button>
-                            )}
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            resetFilters
+                                        }
+                                        className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                                    >
+                                        <RiCloseLine size={14} />
+                                        Сбросить
+                                    </button>
+                                )}
                         </div>
 
                         <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
@@ -1256,12 +1261,11 @@ export default function Orders() {
                                         "kanban",
                                     )
                                 }
-                                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                                    view ===
+                                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view ===
                                     "kanban"
-                                        ? "bg-white text-gray-900 shadow-sm"
-                                        : "text-gray-500 hover:text-gray-900"
-                                }`}
+                                    ? "bg-white text-gray-900 shadow-sm"
+                                    : "text-gray-500 hover:text-gray-900"
+                                    }`}
                             >
                                 <RiLayoutGridLine size={17} />
                                 Kanban
@@ -1274,12 +1278,11 @@ export default function Orders() {
                                         "table",
                                     )
                                 }
-                                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                                    view ===
+                                className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view ===
                                     "table"
-                                        ? "bg-white text-gray-900 shadow-sm"
-                                        : "text-gray-500 hover:text-gray-900"
-                                }`}
+                                    ? "bg-white text-gray-900 shadow-sm"
+                                    : "text-gray-500 hover:text-gray-900"
+                                    }`}
                             >
                                 <RiListCheck2 size={17} />
                                 Таблица
@@ -1421,7 +1424,7 @@ function Kanban({
                         let items =
                             asArray(
                                 columns[
-                                    column.key
+                                column.key
                                 ],
                             );
 
@@ -1440,7 +1443,7 @@ function Kanban({
                                     if (
                                         status &&
                                         status !==
-                                            "OVERDUE"
+                                        "OVERDUE"
                                     ) {
                                         return (
                                             order.status ===
@@ -1457,25 +1460,22 @@ function Kanban({
                                 key={
                                     column.key
                                 }
-                                className={`flex min-h-0 flex-col overflow-hidden rounded-xl border bg-gray-50/70 ${
-                                    column.danger
-                                        ? "border-red-200"
-                                        : "border-gray-200"
-                                }`}
+                                className={`flex min-h-0 flex-col overflow-hidden rounded-xl border bg-gray-50/70 ${column.danger
+                                    ? "border-red-200"
+                                    : "border-gray-200"
+                                    }`}
                             >
                                 <div
-                                    className={`flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur ${
-                                        column.danger
-                                            ? "border-red-100 bg-red-50/80"
-                                            : "border-gray-200 bg-gray-50/95"
-                                    }`}
+                                    className={`flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur ${column.danger
+                                        ? "border-red-100 bg-red-50/80"
+                                        : "border-gray-200 bg-gray-50/95"
+                                        }`}
                                 >
                                     <span
-                                        className={`text-sm font-semibold ${
-                                            column.danger
-                                                ? "text-red-700"
-                                                : "text-gray-800"
-                                        }`}
+                                        className={`text-sm font-semibold ${column.danger
+                                            ? "text-red-700"
+                                            : "text-gray-800"
+                                            }`}
                                     >
                                         {
                                             column.title
@@ -1494,7 +1494,7 @@ function Kanban({
                                     className="min-h-0 flex-1 p-3"
                                 >
                                     {items.length ===
-                                    0 ? (
+                                        0 ? (
                                         <div className="flex h-full min-h-[180px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-3 text-center text-xs text-gray-400">
                                             Нет нарядов
                                         </div>
@@ -1636,6 +1636,11 @@ function CreateOrderModal({
         setError,
     ] = useState("");
 
+    const [
+        isSubmitting,
+        setIsSubmitting,
+    ] = useState(false);
+
     const areasQuery =
         useAreas();
 
@@ -1713,6 +1718,60 @@ function CreateOrderModal({
     const workSuggestion =
         workRecommendation.data;
 
+    const selectedBrigade =
+        useMemo(
+            () =>
+                brigades.find(
+                    (item) =>
+                        String(
+                            item.id,
+                        ) ===
+                        String(
+                            form.brigadeId,
+                        ),
+                ) ?? null,
+            [
+                brigades,
+                form.brigadeId,
+            ],
+        );
+
+    const assignmentExecutors =
+        useMemo(() => {
+            if (
+                form.assignmentMode !==
+                    "brigade_executor" ||
+                !selectedBrigade
+            ) {
+                return executors;
+            }
+
+            const memberIds =
+                new Set(
+                    asArray(
+                        selectedBrigade.members,
+                    ).map(
+                        (member) =>
+                            String(
+                                member.id,
+                            ),
+                    ),
+                );
+
+            return executors.filter(
+                (executor) =>
+                    memberIds.has(
+                        String(
+                            executor.id,
+                        ),
+                    ),
+            );
+        }, [
+            executors,
+            form.assignmentMode,
+            selectedBrigade,
+        ]);
+
     function change(
         field,
         value,
@@ -1724,6 +1783,22 @@ function CreateOrderModal({
             }),
         );
 
+        setError("");
+    }
+
+    function changeDescription(
+        value,
+    ) {
+        setForm(
+            (previous) => ({
+                ...previous,
+                description:
+                    value,
+            }),
+        );
+
+        workRecommendation.reset();
+        executorRecommendation.reset();
         setError("");
     }
 
@@ -1771,18 +1846,132 @@ function CreateOrderModal({
                     value,
                 assigneeId:
                     value ===
-                    "brigade"
+                        "brigade"
                         ? ""
                         : previous.assigneeId,
                 brigadeId:
                     value ===
-                    "executor"
+                        "executor"
                         ? ""
                         : previous.brigadeId,
             }),
         );
 
         executorRecommendation.reset();
+    }
+
+    function changeBrigade(
+        value,
+    ) {
+        const brigade =
+            brigades.find(
+                (item) =>
+                    String(
+                        item.id,
+                    ) ===
+                    String(
+                        value,
+                    ),
+            ) ?? null;
+
+        const memberIds =
+            new Set(
+                asArray(
+                    brigade?.members,
+                ).map(
+                    (member) =>
+                        String(
+                            member.id,
+                        ),
+                ),
+            );
+
+        setForm(
+            (previous) => {
+                let assigneeId =
+                    previous.assigneeId;
+
+                if (
+                    previous.assignmentMode ===
+                        "brigade_executor" &&
+                    assigneeId &&
+                    value &&
+                    !memberIds.has(
+                        String(
+                            assigneeId,
+                        ),
+                    )
+                ) {
+                    assigneeId = "";
+                }
+
+                return {
+                    ...previous,
+                    brigadeId:
+                        value,
+                    assigneeId,
+                };
+            },
+        );
+
+        executorRecommendation.reset();
+        setError("");
+    }
+
+    function handleBeforeFiles(
+        event,
+    ) {
+        const files =
+            Array.from(
+                event.target.files ||
+                [],
+            );
+
+        if (
+            files.length > 5
+        ) {
+            setBeforeFiles([]);
+            setError(
+                "Можно загрузить максимум 5 фотографий",
+            );
+            event.target.value =
+                "";
+            return;
+        }
+
+        const oversized =
+            files.find(
+                (file) =>
+                    file.size >
+                    15 *
+                        1024 *
+                        1024,
+            );
+
+        if (oversized) {
+            setBeforeFiles([]);
+            setError(
+                `Файл ${oversized.name} больше 15 МБ`,
+            );
+            event.target.value =
+                "";
+            return;
+        }
+
+        setBeforeFiles(
+            files,
+        );
+        setError("");
+    }
+
+    function handleClose() {
+        if (
+            isSubmitting
+        ) {
+            return;
+        }
+
+        onClose();
     }
 
     async function recommendExecutors() {
@@ -1804,6 +1993,12 @@ function CreateOrderModal({
                 description:
                     form.description.trim() ||
                     undefined,
+                faultCodeId:
+                    workSuggestion?.faultCodeId
+                        ? Number(
+                            workSuggestion.faultCodeId,
+                        )
+                        : undefined,
                 brigadeId:
                     form.brigadeId
                         ? Number(
@@ -1893,6 +2088,13 @@ function CreateOrderModal({
         event,
     ) {
         event.preventDefault();
+
+        if (
+            isSubmitting
+        ) {
+            return;
+        }
+
         setError("");
 
         if (
@@ -1952,6 +2154,47 @@ function CreateOrderModal({
         }
 
         if (
+            needsExecutor &&
+            needsBrigade
+        ) {
+            const brigade =
+                brigades.find(
+                    (item) =>
+                        String(
+                            item.id,
+                        ) ===
+                        String(
+                            form.brigadeId,
+                        ),
+                );
+
+            const memberIds =
+                new Set(
+                    asArray(
+                        brigade?.members,
+                    ).map(
+                        (member) =>
+                            String(
+                                member.id,
+                            ),
+                    ),
+                );
+
+            if (
+                !memberIds.has(
+                    String(
+                        form.assigneeId,
+                    ),
+                )
+            ) {
+                setError(
+                    "Выбранный исполнитель не состоит в выбранной бригаде",
+                );
+                return;
+            }
+        }
+
+        if (
             !form.deadline &&
             !form.normativeId
         ) {
@@ -1970,6 +2213,21 @@ function CreateOrderModal({
             return;
         }
 
+        if (
+            typeof navigator !==
+                "undefined" &&
+            !navigator.onLine
+        ) {
+            setError(
+                "Нет соединения. Создание наряда не ставится в офлайн-очередь, чтобы не создать дубль.",
+            );
+            return;
+        }
+
+        setIsSubmitting(
+            true,
+        );
+
         try {
             const beforePhotoUrls =
                 [];
@@ -1981,8 +2239,8 @@ function CreateOrderModal({
                 if (
                     file.size >
                     15 *
-                        1024 *
-                        1024
+                    1024 *
+                    1024
                 ) {
                     throw new Error(
                         `Файл ${file.name} больше 15 МБ`,
@@ -2069,10 +2327,22 @@ function CreateOrderModal({
 
             onCreated(order);
         } catch (requestError) {
-            setError(
-                extractError(
-                    requestError,
-                ),
+            if (
+                !requestError?.response
+            ) {
+                setError(
+                    "Соединение оборвалось. Не повторяйте создание сразу: сначала обновите список нарядов и проверьте, не был ли наряд уже создан.",
+                );
+            } else {
+                setError(
+                    extractError(
+                        requestError,
+                    ),
+                );
+            }
+        } finally {
+            setIsSubmitting(
+                false,
             );
         }
     }
@@ -2102,7 +2372,9 @@ function CreateOrderModal({
     return (
         <Modal
             title="Создание наряда"
-            onClose={onClose}
+            onClose={
+                handleClose
+            }
             width="900px"
         >
             <form
@@ -2160,36 +2432,39 @@ function CreateOrderModal({
 
                     <div className="md:col-span-2">
                         <Field label="Описание">
-                            <textarea
-                                value={
-                                    form.description
-                                }
-                                onChange={(
-                                    event,
-                                ) =>
-                                    change(
-                                        "description",
-                                        event
-                                            .target
-                                            .value,
-                                    )
-                                }
-                                rows={4}
-                                minLength={3}
-                                required
-                                className="input min-h-[110px] resize-none py-3"
-                            />
-
-                            <div className="mt-2 flex flex-wrap items-center gap-2">
-                                <VoiceInputButton
-                                    onText={(
-                                        text,
+                            <div className="relative">
+                                <textarea
+                                    value={
+                                        form.description
+                                    }
+                                    onChange={(
+                                        event,
                                     ) =>
-                                        change(
-                                            "description",
+                                        changeDescription(
+                                            event
+                                                .target
+                                                .value,
+                                        )
+                                    }
+                                    rows={4}
+                                    minLength={3}
+                                    required
+                                    placeholder="Опишите неисправность или необходимую работу..."
+                                    className="input min-h-[126px] resize-none py-3 pb-14 pr-16"
+                                />
+
+                                <OrderDescriptionVoice
+                                    disabled={
+                                        isSubmitting ||
+                                        createMutation.isPending
+                                    }
+                                    onText={(
+                                        recognizedText,
+                                    ) =>
+                                        changeDescription(
                                             [
                                                 form.description.trim(),
-                                                text,
+                                                recognizedText,
                                             ]
                                                 .filter(
                                                     Boolean,
@@ -2203,25 +2478,11 @@ function CreateOrderModal({
                                         setError
                                     }
                                 />
-
-                                <button
-                                    type="button"
-                                    onClick={
-                                        recommendWork
-                                    }
-                                    disabled={
-                                        workRecommendation.isPending
-                                    }
-                                    className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-100 disabled:opacity-50"
-                                >
-                                    {workRecommendation.isPending ? (
-                                        <RiLoader4Line className="animate-spin" />
-                                    ) : (
-                                        <RiSparkling2Line />
-                                    )}
-                                    Подобрать шифр и норматив
-                                </button>
                             </div>
+
+                            <p className="mt-2 text-[11px] text-gray-400">
+                                Можно ввести описание вручную или надиктовать его через микрофон.
+                            </p>
                         </Field>
                     </div>
 
@@ -2296,69 +2557,65 @@ function CreateOrderModal({
 
                     {form.assignmentMode !==
                         "executor" && (
-                        <Field label="Бригада">
-                            <FieldSelect
-                                value={
-                                    form.brigadeId
-                                }
-                                onChange={(value) => {
-                                    change(
-                                        "brigadeId",
-                                        value,
-                                    );
-                                    executorRecommendation.reset();
-                                }}
-                                options={[
-                                    {
-                                        value: "",
-                                        label: "Выберите бригаду",
-                                    },
-                                    ...mapOptions(
-                                        brigades,
-                                        (item) =>
-                                            item.name,
-                                        (item) =>
-                                            `${asArray(item.members).length} чел.`,
-                                    ),
-                                ]}
-                                menuWidth={300}
-                                ariaLabel="Бригада"
-                            />
-                        </Field>
-                    )}
+                            <Field label="Бригада">
+                                <FieldSelect
+                                    value={
+                                        form.brigadeId
+                                    }
+                                    onChange={
+                                        changeBrigade
+                                    }
+                                    options={[
+                                        {
+                                            value: "",
+                                            label: "Выберите бригаду",
+                                        },
+                                        ...mapOptions(
+                                            brigades,
+                                            (item) =>
+                                                item.name,
+                                            (item) =>
+                                                `${asArray(item.members).length} чел.`,
+                                        ),
+                                    ]}
+                                    menuWidth={300}
+                                    ariaLabel="Бригада"
+                                />
+                            </Field>
+                        )}
 
                     {form.assignmentMode !==
                         "brigade" && (
-                        <Field label="Исполнитель">
-                            <FieldSelect
-                                value={
-                                    form.assigneeId
-                                }
-                                onChange={(value) =>
-                                    change(
-                                        "assigneeId",
-                                        value,
-                                    )
-                                }
-                                options={[
-                                    {
-                                        value: "",
-                                        label: "Выберите исполнителя",
-                                    },
-                                    ...mapOptions(
-                                        executors,
-                                        (item) =>
-                                            item.fullName,
-                                        (item) =>
-                                            item.statusText ||
-                                            item.specialty,
-                                    ),
-                                ]}
-                                menuWidth={360}
-                                ariaLabel="Исполнитель"
-                            />
-                        </Field>
-                    )}
+                            <Field label="Исполнитель">
+                                <FieldSelect
+                                    value={
+                                        form.assigneeId
+                                    }
+                                    onChange={(value) =>
+                                        change(
+                                            "assigneeId",
+                                            value,
+                                        )
+                                    }
+                                    options={[
+                                        {
+                                            value: "",
+                                            label: "Выберите исполнителя",
+                                        },
+                                        ...mapOptions(
+                                            assignmentExecutors,
+                                            (item) =>
+                                                item.fullName,
+                                            (item) =>
+                                                item.statusText ||
+                                                item.specialty,
+                                        ),
+                                    ]}
+                                    menuWidth={360}
+                                    ariaLabel="Исполнитель"
+                                />
+                            </Field>
+                        )}
 
                     <Field label="Норматив">
                         <FieldSelect
@@ -2413,7 +2670,8 @@ function CreateOrderModal({
                     </Field>
 
                     <div className="md:col-span-2">
-                        <button
+
+                        <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>  <button
                             type="button"
                             onClick={
                                 recommendExecutors
@@ -2430,7 +2688,25 @@ function CreateOrderModal({
                                 <RiUserStarLine />
                             )}
                             Подобрать исполнителя
-                        </button>
+                        </button> <button
+                            type="button"
+                            onClick={
+                                recommendWork
+                            }
+                            disabled={
+                                workRecommendation.isPending
+                            }
+                            className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-100 disabled:opacity-50"
+                        >
+                                {workRecommendation.isPending ? (
+                                    <RiLoader4Line className="animate-spin" />
+                                ) : (
+                                    <RiSparkling2Line />
+                                )}
+                                Подобрать шифр и норматив
+                            </button>
+                        </div>
+
                     </div>
 
                     {workSuggestion && (
@@ -2454,20 +2730,20 @@ function CreateOrderModal({
 
                     {suggestedExecutors.length >
                         0 && (
-                        <div className="md:col-span-2">
-                            <ExecutorRecommendations
-                                items={
-                                    suggestedExecutors
-                                }
-                                selectedId={
-                                    form.assigneeId
-                                }
-                                onSelect={
-                                    selectSuggestedExecutor
-                                }
-                            />
-                        </div>
-                    )}
+                            <div className="md:col-span-2">
+                                <ExecutorRecommendations
+                                    items={
+                                        suggestedExecutors
+                                    }
+                                    selectedId={
+                                        form.assigneeId
+                                    }
+                                    onSelect={
+                                        selectSuggestedExecutor
+                                    }
+                                />
+                            </div>
+                        )}
 
                     <div className="md:col-span-2">
                         <Field label="Комментарий">
@@ -2497,30 +2773,18 @@ function CreateOrderModal({
                                 type="file"
                                 accept="image/*"
                                 multiple
-                                onChange={(
-                                    event,
-                                ) =>
-                                    setBeforeFiles(
-                                        Array.from(
-                                            event
-                                                .target
-                                                .files ||
-                                                [],
-                                        ).slice(
-                                            0,
-                                            5,
-                                        ),
-                                    )
+                                onChange={
+                                    handleBeforeFiles
                                 }
                                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm"
                             />
 
                             {beforeFiles.length >
                                 0 && (
-                                <p className="mt-2 text-xs text-gray-500">
-                                    Выбрано: {beforeFiles.length}
-                                </p>
-                            )}
+                                    <p className="mt-2 text-xs text-gray-500">
+                                        Выбрано: {beforeFiles.length}
+                                    </p>
+                                )}
                         </Field>
                     </div>
                 </div>
@@ -2528,8 +2792,13 @@ function CreateOrderModal({
                 <div className="flex justify-end gap-2 border-t border-gray-100 pt-5">
                     <button
                         type="button"
-                        onClick={onClose}
-                        className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                        onClick={
+                            handleClose
+                        }
+                        disabled={
+                            isSubmitting
+                        }
+                        className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Отмена
                     </button>
@@ -2537,11 +2806,12 @@ function CreateOrderModal({
                     <button
                         type="submit"
                         disabled={
+                            isSubmitting ||
                             createMutation.isPending
                         }
-                        className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                        className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        {createMutation.isPending
+                        {isSubmitting
                             ? "Создание..."
                             : "Создать наряд"}
                     </button>
@@ -2550,6 +2820,133 @@ function CreateOrderModal({
         </Modal>
     );
 }
+
+// MARK: Order description voice
+
+function OrderDescriptionVoice({
+    onText,
+    onError,
+    disabled = false,
+}) {
+    const {
+        recording,
+        transcribing,
+        startRecording,
+        stopRecording,
+        cancelRecording,
+    } = useVoiceInput({
+        disabled,
+
+        onError,
+
+        onText: (
+            recognizedText,
+        ) => {
+            const text =
+                String(
+                    recognizedText ??
+                    "",
+                ).trim();
+
+            if (text) {
+                onText?.(
+                    text,
+                );
+            }
+        },
+    });
+
+    if (recording) {
+        return (
+            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full border border-red-200 bg-white p-1 shadow-sm">
+                <div className="flex items-center gap-1.5 px-2 text-[11px] font-semibold text-red-600">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                    Запись
+                </div>
+
+                <button
+                    type="button"
+                    onClick={
+                        cancelRecording
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+                    title="Отменить запись"
+                >
+                    <RiCloseLine
+                        size={17}
+                    />
+                </button>
+
+                <button
+                    type="button"
+                    onClick={
+                        stopRecording
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700"
+                    title="Остановить и распознать"
+                >
+                    <RiCheckLine
+                        size={17}
+                    />
+                </button>
+            </div>
+        );
+    }
+
+    if (transcribing) {
+        return (
+            <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-2 text-[11px] font-semibold text-blue-600 shadow-sm">
+                <RiLoader4Line
+                    size={15}
+                    className="animate-spin"
+                />
+
+                Распознаём…
+            </div>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={
+                startRecording
+            }
+            disabled={
+                disabled
+            }
+            className="
+                absolute
+                bottom-3
+                right-3
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-gray-200
+                bg-white
+                text-gray-500
+                shadow-sm
+                transition
+                hover:border-blue-200
+                hover:bg-blue-50
+                hover:text-blue-600
+                active:scale-95
+                disabled:cursor-not-allowed
+                disabled:opacity-40
+            "
+            title="Надиктовать описание"
+        >
+            <RiMicFill
+                size={17}
+            />
+        </button>
+    );
+}
+
 
 
 // MARK: Recommendations
@@ -2578,8 +2975,8 @@ function RecommendationCard({
                                 {faultCode
                                     ? `${faultCode.code} — ${faultCode.name}`
                                     : suggestion.faultCodeId
-                                      ? `#${suggestion.faultCodeId}`
-                                      : "Не определён"}
+                                        ? `#${suggestion.faultCodeId}`
+                                        : "Не определён"}
                             </p>
                         </div>
 
@@ -2591,8 +2988,8 @@ function RecommendationCard({
                                 {normative
                                     ? normative.name
                                     : suggestion.normativeId
-                                      ? `#${suggestion.normativeId}`
-                                      : "Не определён"}
+                                        ? `#${suggestion.normativeId}`
+                                        : "Не определён"}
                             </p>
                         </div>
 
@@ -2602,7 +2999,7 @@ function RecommendationCard({
                             </p>
                             <p className="mt-1 font-semibold text-gray-800">
                                 {suggestion.estimatedHours !=
-                                null
+                                    null
                                     ? `${suggestion.estimatedHours} ч`
                                     : "—"}
                             </p>
@@ -2672,11 +3069,10 @@ function ExecutorRecommendations({
                                             item,
                                         )
                                     }
-                                    className={`rounded-xl border p-3 text-left transition ${
-                                        selected
-                                            ? "border-blue-400 bg-white ring-2 ring-blue-100"
-                                            : "border-blue-100 bg-white hover:border-blue-300"
-                                    }`}
+                                    className={`rounded-xl border p-3 text-left transition ${selected
+                                        ? "border-blue-400 bg-white ring-2 ring-blue-100"
+                                        : "border-blue-100 bg-white hover:border-blue-300"
+                                        }`}
                                 >
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
@@ -2693,7 +3089,7 @@ function ExecutorRecommendations({
                                         <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">
                                             {Number(
                                                 item.score ||
-                                                    0,
+                                                0,
                                             ).toFixed(
                                                 1,
                                             )}
@@ -2733,7 +3129,7 @@ function FilterSelect({
         />
     );
 }
-    
+
 function FieldSelect({
     ...props
 }) {
@@ -2756,12 +3152,11 @@ function StatusBadge({
 }) {
     return (
         <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                STATUS_STYLES[
-                    status
-                ] ||
+            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[
+                status
+            ] ||
                 "bg-gray-100 text-gray-600"
-            }`}
+                }`}
         >
             {STATUS_LABELS[
                 status
@@ -2775,12 +3170,11 @@ function PriorityBadge({
 }) {
     return (
         <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                PRIORITY_STYLES[
-                    priority
-                ] ||
+            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${PRIORITY_STYLES[
+                priority
+            ] ||
                 "bg-gray-100 text-gray-600"
-            }`}
+                }`}
         >
             {PRIORITY_LABELS[
                 priority
@@ -2801,11 +3195,10 @@ function SmallStat({
             </p>
 
             <p
-                className={`mt-1 text-xl font-bold ${
-                    danger
-                        ? "text-red-600"
-                        : "text-gray-900"
-                }`}
+                className={`mt-1 text-xl font-bold ${danger
+                    ? "text-red-600"
+                    : "text-gray-900"
+                    }`}
             >
                 {value}
             </p>

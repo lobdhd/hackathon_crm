@@ -23,11 +23,15 @@ import Employees from "../pages/employees/Employees/Employees.jsx";
 import EmployeeDetails from "../pages/employees/EmployeeDetails/EmployeeDetails.jsx";
 
 import Equipment from "../pages/equipment/Equipment/Equipment.jsx";
-import EquipmentDetails from "../pages/equipment/EquipmentDetails/EquipmentDetails.jsx";
+import EquipmentEntry from "../pages/equipment/EquipmentEntry.jsx";
 
 import Rating from "../pages/rating/Rating.jsx";
 import Analytics from "../pages/analytics/Analytics.jsx";
 import Reports from "../pages/reports/Reports.jsx";
+
+import OneC from "../pages/integrations/OneC/OneC.jsx";
+
+import Settings from "../pages/settings/Settings.jsx";
 
 import Admin from "../pages/admin/Admin/Admin.jsx";
 
@@ -36,6 +40,11 @@ import Admin from "../pages/admin/Admin/Admin.jsx";
 
 const ANALYTICS_ROLES = [
     "MASTER",
+    "MANAGER",
+    "ADMIN",
+];
+
+const INTEGRATION_ROLES = [
     "MANAGER",
     "ADMIN",
 ];
@@ -84,11 +93,21 @@ export default function AppRoutes() {
                     {/* MARK: Dashboard */}
 
                     <Route
-                        path="/dashboard"
                         element={
-                            <Dashboard />
+                            <RoleRoute
+                                roles={
+                                    ANALYTICS_ROLES
+                                }
+                            />
                         }
-                    />
+                    >
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <Dashboard />
+                            }
+                        />
+                    </Route>
 
 
                     {/* MARK: Orders */}
@@ -108,7 +127,7 @@ export default function AppRoutes() {
                     />
 
 
-                    {/* MARK: AI Assistant */}
+                    {/* MARK: AI */}
 
                     <Route
                         path="/assistant"
@@ -145,14 +164,44 @@ export default function AppRoutes() {
                     />
 
                     <Route
+                        path="/equipment/scan"
+                        element={
+                            <Navigate
+                                to="/equipment"
+                                replace
+                            />
+                        }
+                    />
+
+                    <Route
                         path="/equipment/:id"
                         element={
-                            <EquipmentDetails />
+                            <EquipmentEntry />
                         }
                     />
 
 
-                    {/* MARK: Analytics access */}
+                    {/* MARK: Rating */}
+
+                    <Route
+                        path="/rating"
+                        element={
+                            <Rating />
+                        }
+                    />
+
+
+                    {/* MARK: Settings */}
+
+                    <Route
+                        path="/settings"
+                        element={
+                            <Settings />
+                        }
+                    />
+
+
+                    {/* MARK: Analytics + reports */}
 
                     <Route
                         element={
@@ -163,13 +212,6 @@ export default function AppRoutes() {
                             />
                         }
                     >
-                        <Route
-                            path="/rating"
-                            element={
-                                <Rating />
-                            }
-                        />
-
                         <Route
                             path="/analytics"
                             element={
@@ -186,7 +228,27 @@ export default function AppRoutes() {
                     </Route>
 
 
-                    {/* MARK: Admin access */}
+                    {/* MARK: 1C */}
+
+                    <Route
+                        element={
+                            <RoleRoute
+                                roles={
+                                    INTEGRATION_ROLES
+                                }
+                            />
+                        }
+                    >
+                        <Route
+                            path="/integrations/1c"
+                            element={
+                                <OneC />
+                            }
+                        />
+                    </Route>
+
+
+                    {/* MARK: Admin */}
 
                     <Route
                         element={

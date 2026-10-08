@@ -12,6 +12,17 @@ import {
 } from "../auth/AuthProvider.jsx";
 
 
+// MARK: Helpers
+
+function getDefaultRoute(role) {
+    if (role === "EXECUTOR") {
+        return "/orders";
+    }
+
+    return "/dashboard";
+}
+
+
 // MARK: Loader
 
 function RoleLoader() {
@@ -63,7 +74,7 @@ export default function RoleRoute({
     ) {
         return (
             <Navigate
-                to="/dashboard"
+                to={getDefaultRoute(user?.role)}
                 replace
             />
         );

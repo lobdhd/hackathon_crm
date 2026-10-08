@@ -20,12 +20,18 @@ import {
     referenceKeys,
 } from "./useReferences.js";
 
+
 // MARK: Keys
 
 export const workOrderKeys = {
-    all: ["work-orders"],
+    all: [
+        "work-orders",
+    ],
 
-    lists: ["work-orders", "list"],
+    lists: [
+        "work-orders",
+        "list",
+    ],
 
     list: (params) => [
         "work-orders",
@@ -33,7 +39,10 @@ export const workOrderKeys = {
         params,
     ],
 
-    boards: ["work-orders", "board"],
+    boards: [
+        "work-orders",
+        "board",
+    ],
 
     board: (params) => [
         "work-orders",
@@ -54,6 +63,7 @@ export const workOrderKeys = {
     ],
 };
 
+
 // MARK: Helpers
 
 async function invalidateOrders(
@@ -62,58 +72,82 @@ async function invalidateOrders(
 ) {
     const jobs = [
         queryClient.invalidateQueries({
-            queryKey: workOrderKeys.lists,
+            queryKey:
+                workOrderKeys.lists,
         }),
 
         queryClient.invalidateQueries({
-            queryKey: workOrderKeys.boards,
+            queryKey:
+                workOrderKeys.boards,
         }),
 
         queryClient.invalidateQueries({
-            queryKey: referenceKeys.executors,
+            queryKey:
+                referenceKeys.executors,
         }),
 
         queryClient.invalidateQueries({
-            queryKey: ["analytics"],
+            queryKey: [
+                "analytics",
+            ],
         }),
 
         queryClient.invalidateQueries({
-            queryKey: ["reports"],
+            queryKey: [
+                "reports",
+            ],
         }),
     ];
 
-    if (id !== null) {
+    if (
+        id !== null
+    ) {
         jobs.push(
             queryClient.invalidateQueries({
-                queryKey: workOrderKeys.detail(id),
+                queryKey:
+                    workOrderKeys.detail(
+                        id,
+                    ),
             }),
         );
 
         jobs.push(
             queryClient.invalidateQueries({
-                queryKey: workOrderKeys.evaluation(id),
+                queryKey:
+                    workOrderKeys.evaluation(
+                        id,
+                    ),
             }),
         );
     }
 
-    await Promise.all(jobs);
+    await Promise.all(
+        jobs,
+    );
 }
 
 function setOrderFromResult(
     queryClient,
     result,
 ) {
-    const order = result?.order ?? result;
+    const order =
+        result?.order ??
+        result;
 
-    if (order?.id) {
+    if (
+        order?.id
+    ) {
         queryClient.setQueryData(
-            workOrderKeys.detail(order.id),
+            workOrderKeys.detail(
+                order.id,
+            ),
             order,
         );
     }
 
     return order;
 }
+
 
 // MARK: Queries
 
@@ -122,8 +156,16 @@ export function useWorkOrders(
     options = {},
 ) {
     return useQuery({
-        queryKey: workOrderKeys.list(params),
-        queryFn: () => getWorkOrders(params),
+        queryKey:
+            workOrderKeys.list(
+                params,
+            ),
+
+        queryFn: () =>
+            getWorkOrders(
+                params,
+            ),
+
         ...options,
     });
 }
@@ -133,9 +175,19 @@ export function useWorkOrderBoard(
     options = {},
 ) {
     return useQuery({
-        queryKey: workOrderKeys.board(params),
-        queryFn: () => getWorkOrderBoard(params),
-        staleTime: 15 * 1000,
+        queryKey:
+            workOrderKeys.board(
+                params,
+            ),
+
+        queryFn: () =>
+            getWorkOrderBoard(
+                params,
+            ),
+
+        staleTime:
+            15 * 1000,
+
         ...options,
     });
 }
@@ -144,14 +196,26 @@ export function useWorkOrder(
     id,
     options = {},
 ) {
-    const numericId = Number(id);
+    const numericId =
+        Number(id);
 
     return useQuery({
-        queryKey: workOrderKeys.detail(numericId),
-        queryFn: () => getWorkOrder(numericId),
+        queryKey:
+            workOrderKeys.detail(
+                numericId,
+            ),
+
+        queryFn: () =>
+            getWorkOrder(
+                numericId,
+            ),
+
         enabled:
-            Number.isFinite(numericId) &&
+            Number.isFinite(
+                numericId,
+            ) &&
             numericId > 0,
+
         ...options,
     });
 }
@@ -160,28 +224,64 @@ export function useWorkOrderEvaluation(
     id,
     options = {},
 ) {
-    const numericId = Number(id);
+    const numericId =
+        Number(id);
 
     return useQuery({
-        queryKey: workOrderKeys.evaluation(numericId),
-        queryFn: () => getWorkOrderEvaluation(numericId),
+        queryKey:
+            workOrderKeys.evaluation(
+                numericId,
+            ),
+
+        queryFn: () =>
+            getWorkOrderEvaluation(
+                numericId,
+            ),
+
         enabled:
-            Number.isFinite(numericId) &&
+            Number.isFinite(
+                numericId,
+            ) &&
             numericId > 0,
-        staleTime: 30 * 1000,
+
+        staleTime:
+            30 * 1000,
+
         ...options,
     });
 }
 
+
 // MARK: Create
 
 export function useCreateWorkOrder() {
-    const queryClient = useQueryClient();
+    const queryClient =
+        useQueryClient();
 
     return useMutation({
-        mutationFn: createWorkOrder,
+        mutationFn:
+            createWorkOrder,
 
-        onSuccess: async (order) => {
+        /*
+         * POST /api/work-orders НЕ идемпотентен:
+         * повторная отправка создаёт второй наряд.
+         *
+         * Поэтому создание нельзя автоматически
+         * повторять после сетевой ошибки.
+         */
+        retry: 0,
+
+        /*
+         * Не даём React Query ставить создание
+         * в paused/offline mutation и отправлять
+         * его позже автоматически.
+         */
+        networkMode:
+            "always",
+
+        onSuccess: async (
+            order,
+        ) => {
             setOrderFromResult(
                 queryClient,
                 order,
@@ -194,22 +294,35 @@ export function useCreateWorkOrder() {
     });
 }
 
+
 // MARK: Update
 
 export function useUpdateWorkOrder() {
-    const queryClient = useQueryClient();
+    const queryClient =
+        useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, payload }) =>
-            updateWorkOrder(id, payload),
+        mutationFn: ({
+            id,
+            payload,
+        }) =>
+            updateWorkOrder(
+                id,
+                payload,
+            ),
 
-        onSuccess: async (order) => {
-            const updated = setOrderFromResult(
-                queryClient,
-                order,
-            );
+        onSuccess: async (
+            order,
+        ) => {
+            const updated =
+                setOrderFromResult(
+                    queryClient,
+                    order,
+                );
 
-            if (updated?.id) {
+            if (
+                updated?.id
+            ) {
                 await invalidateOrders(
                     queryClient,
                     updated.id,
@@ -219,25 +332,35 @@ export function useUpdateWorkOrder() {
     });
 }
 
+
 // MARK: Reassign
 
 export function useReassignWorkOrder() {
-    const queryClient = useQueryClient();
+    const queryClient =
+        useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, assigneeId }) =>
+        mutationFn: ({
+            id,
+            assigneeId,
+        }) =>
             reassignWorkOrder(
                 id,
                 assigneeId,
             ),
 
-        onSuccess: async (order) => {
-            const updated = setOrderFromResult(
-                queryClient,
-                order,
-            );
+        onSuccess: async (
+            order,
+        ) => {
+            const updated =
+                setOrderFromResult(
+                    queryClient,
+                    order,
+                );
 
-            if (updated?.id) {
+            if (
+                updated?.id
+            ) {
                 await invalidateOrders(
                     queryClient,
                     updated.id,
@@ -246,26 +369,40 @@ export function useReassignWorkOrder() {
         },
     });
 }
+
 
 // MARK: Comment
 
 export function useAddWorkOrderComment() {
-    const queryClient = useQueryClient();
+    const queryClient =
+        useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, comment, clientActionId }) =>
-            addWorkOrderComment(id, {
-                comment,
-                clientActionId,
-            }),
+        mutationFn: ({
+            id,
+            comment,
+            clientActionId,
+        }) =>
+            addWorkOrderComment(
+                id,
+                {
+                    comment,
+                    clientActionId,
+                },
+            ),
 
-        onSuccess: async (result) => {
-            const updated = setOrderFromResult(
-                queryClient,
-                result,
-            );
+        onSuccess: async (
+            result,
+        ) => {
+            const updated =
+                setOrderFromResult(
+                    queryClient,
+                    result,
+                );
 
-            if (updated?.id) {
+            if (
+                updated?.id
+            ) {
                 await invalidateOrders(
                     queryClient,
                     updated.id,
@@ -275,25 +412,35 @@ export function useAddWorkOrderComment() {
     });
 }
 
+
 // MARK: Action
 
 export function useWorkOrderAction() {
-    const queryClient = useQueryClient();
+    const queryClient =
+        useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, payload }) =>
+        mutationFn: ({
+            id,
+            payload,
+        }) =>
             performWorkOrderAction(
                 id,
                 payload,
             ),
 
-        onSuccess: async (result) => {
-            const updated = setOrderFromResult(
-                queryClient,
-                result,
-            );
+        onSuccess: async (
+            result,
+        ) => {
+            const updated =
+                setOrderFromResult(
+                    queryClient,
+                    result,
+                );
 
-            if (updated?.id) {
+            if (
+                updated?.id
+            ) {
                 await invalidateOrders(
                     queryClient,
                     updated.id,
