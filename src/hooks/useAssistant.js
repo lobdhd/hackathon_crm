@@ -1,6 +1,7 @@
 import {
     useMutation,
     useQuery,
+    useQueryClient,
 } from "@tanstack/react-query";
 
 import {
@@ -8,46 +9,37 @@ import {
     sendAssistantMessage,
 } from "../api/assistant.api.js";
 
-
 // MARK: Keys
 
 export const assistantKeys = {
-    all: [
-        "assistant",
-    ],
+    all: ["assistant"],
 
-    history: [
-        "assistant",
-        "history",
-    ],
+    history: ["assistant", "history"],
 };
-
 
 // MARK: History
 
-export function useAssistantHistory(
-    options = {},
-) {
+export function useAssistantHistory(options = {}) {
     return useQuery({
-        queryKey:
-            assistantKeys.history,
-
-        queryFn:
-            getAssistantHistory,
-
-        staleTime:
-            30 * 1000,
-
+        queryKey: assistantKeys.history,
+        queryFn: getAssistantHistory,
+        staleTime: 30 * 1000,
         ...options,
     });
 }
 
-
 // MARK: Chat
 
 export function useAssistantChat() {
+    const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn:
-            sendAssistantMessage,
+        mutationFn: sendAssistantMessage,
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: assistantKeys.history,
+            });
+        },
     });
 }
