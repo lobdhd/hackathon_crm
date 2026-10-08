@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -13,11 +13,25 @@ import {
     RiShieldCheckLine,
 } from "react-icons/ri";
 
-import { t as i18nT, useI18n } from "../../../i18n/index.js";
+import loginPhoto from "../../../assets/l.avif";
 
-import { useAuth } from "../../../auth/AuthProvider.jsx";
-import { getDefaultRoute } from "../../../auth/roles.js";
-import { ApiError } from "../../../api/client.js";
+import {
+    t as i18nT,
+    useI18n,
+} from "../../../i18n/index.js";
+
+import {
+    useAuth,
+} from "../../../auth/AuthProvider.jsx";
+
+import {
+    getDefaultRoute,
+} from "../../../auth/roles.js";
+
+import {
+    ApiError,
+} from "../../../api/client.js";
+
 
 // MARK: Helpers
 
@@ -38,35 +52,34 @@ function resolveTarget(location, role) {
     return getDefaultRoute(role);
 }
 
-// MARK: Brand Logo
+
+// MARK: Brand
 
 function BrandLogo({ dark = false }) {
     return (
         <div
             className={[
-                "relative flex h-11 w-11 shrink-0 items-center justify-center",
-                "overflow-hidden rounded-[15px] p-[3px]",
-                "transition-transform duration-300 hover:scale-105",
+                "flex h-11 w-11 shrink-0 items-center justify-center",
+                "overflow-hidden rounded-[14px] p-[3px]",
                 dark
-                    ? "border border-white/20 bg-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.20)]"
-                    : "border border-blue-100 bg-white shadow-[0_6px_20px_rgba(37,99,235,0.12)]",
+                    ? "border border-white/25 bg-white/90 shadow-lg"
+                    : "border border-blue-100 bg-white shadow-sm",
             ].join(" ")}
         >
             <img
                 src="/icon.png"
                 alt="НарядAI"
-                className="block h-full w-full rounded-[11px] object-cover object-center"
                 draggable={false}
+                className="h-full w-full rounded-[10px] object-cover"
             />
         </div>
     );
 }
 
-// MARK: Component
+
+// MARK: Login
 
 export default function Login() {
-    const __i18nLocaleToken = i18nT("sidebar.home");
-
     useI18n();
 
     const navigate = useNavigate();
@@ -88,7 +101,13 @@ export default function Login() {
     const [errorMessage, setErrorMessage] = useState("");
     const [retryAfter, setRetryAfter] = useState(0);
 
-    // MARK: Redirect authorized user
+    const isDisabled =
+        isSubmitting ||
+        retryAfter > 0 ||
+        !phone.trim() ||
+        !password;
+
+    // MARK: Redirect
 
     useEffect(() => {
         if (!isBootstrapping && isAuthenticated) {
@@ -112,28 +131,13 @@ export default function Login() {
         }
 
         const timer = window.setInterval(() => {
-            setRetryAfter((current) => Math.max(0, current - 1));
+            setRetryAfter((current) =>
+                Math.max(0, current - 1),
+            );
         }, 1000);
 
         return () => window.clearInterval(timer);
     }, [retryAfter]);
-
-    // MARK: Form state
-
-    const isDisabled = useMemo(
-        () =>
-            isSubmitting ||
-            retryAfter > 0 ||
-            !phone.trim() ||
-            !password,
-        [
-            isSubmitting,
-            retryAfter,
-            phone,
-            password,
-            __i18nLocaleToken,
-        ],
-    );
 
     // MARK: Submit
 
@@ -175,111 +179,104 @@ export default function Login() {
     // MARK: Render
 
     return (
-        <div className="min-h-screen bg-[#f7f8fa]">
-            <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="min-h-screen bg-white">
+            <div className="grid min-h-screen lg:grid-cols-[1.08fr_0.92fr]">
 
-                {/* MARK: Left side */}
+                {/* MARK: Photo panel */}
 
-                <section className="relative hidden overflow-hidden bg-[#111827] p-10 text-white lg:flex lg:flex-col">
+                <section className="relative isolate hidden min-h-screen overflow-hidden bg-slate-950 text-white lg:flex lg:flex-col">
 
-                    <div className="pointer-events-none absolute -left-28 top-[-120px] h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
+                    {/* Background image */}
+                    <img
+                        src={loginPhoto}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+                    />
 
-                    <div className="pointer-events-none absolute bottom-[-160px] right-[-80px] h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+                    {/* Photo overlays */}
+                    <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-slate-950/55 via-slate-950/5 to-slate-950/90" />
 
-                    {/* Brand */}
+                    <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/35 via-transparent to-transparent" />
 
-                    <div className="relative z-10 flex items-center gap-3">
+                    {/* Header */}
+                    <div className="flex items-center gap-3 p-8 xl:p-12">
                         <BrandLogo dark />
 
-                        <span className="text-lg font-semibold tracking-tight">
-                            {i18nT("sidebar.brand")}
-                        </span>
+                        <div>
+                            <div className="text-base font-bold tracking-tight">
+                                {i18nT("sidebar.brand")}
+                            </div>
+                            <div className="mt-0.5 text-[11px] font-medium tracking-[0.15em] text-white/65">
+                                ҚОСТАНАЙ МИНЕРАЛДАРЫ
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Main content */}
+                    {/* Bottom content */}
+                    <div className="mt-auto px-8 pb-10 xl:px-12 xl:pb-12">
 
-                    <div className="relative z-10 my-auto max-w-xl">
-
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-gray-300">
-                            <RiShieldCheckLine
-                                size={16}
-                                className="text-blue-400"
-                            />
-
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-medium text-white/90 backdrop-blur-md">
+                            <RiShieldCheckLine size={16} />
                             {i18nT("pages.auth.login.login.04bd1d8")}
                         </div>
 
-                        <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-tight">
+                        <h1 className="max-w-[610px] text-[38px] font-semibold leading-[1.12] tracking-tight xl:text-[48px]">
                             {i18nT("pages.auth.login.login.8fe0dac")}
                         </h1>
 
-                        <p className="mt-5 max-w-lg text-sm leading-7 text-gray-400">
+                        <p className="mt-5 max-w-[480px] text-sm leading-7 text-white/80">
                             {i18nT("pages.auth.login.login.1991a6e")}
                         </p>
 
-                        {/* Features */}
+                        <div className="mt-10 h-px w-full max-w-[600px] bg-white/20" />
 
-                        <div className="mt-10 grid max-w-lg grid-cols-2 gap-3">
-                            {[
-                                ["Контроль", "Наряды и сроки"],
-                                ["Аналитика", "Простои и эффективность"],
-                                ["AI", "Проверка выполнения"],
-                                ["Realtime", "Актуальные статусы"],
-                            ].map(([title, description]) => (
-                                <div
-                                    key={title}
-                                    className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
-                                >
-                                    <div className="text-xs text-gray-500">
-                                        {title}
-                                    </div>
+                        <div className="mt-5 flex items-center justify-between gap-4 text-xs text-white/60">
+                            <span>
+                                {i18nT("sidebar.brand")}
+                            </span>
 
-                                    <div className="mt-1 text-sm font-medium text-gray-200">
-                                        {description}
-                                    </div>
-                                </div>
-                            ))}
+                            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-medium tracking-wide text-white/80 backdrop-blur-md">
+                                AI · INDUSTRY
+                            </span>
                         </div>
-                    </div>
-
-                    {/* Footer */}
-
-                    <div className="relative z-10 text-xs text-gray-600">
-                        {i18nT("sidebar.brand")}
                     </div>
                 </section>
 
-                {/* MARK: Login side */}
+                {/* MARK: Form panel */}
 
-                <main className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
-                    <div className="w-full max-w-[430px]">
+                <main className="relative flex min-h-screen items-center justify-center bg-[#fafbfc] px-5 py-12 sm:px-10 lg:px-12 xl:px-20">
 
-                        {/* Mobile brand */}
+                    <div className="w-full max-w-[420px]">
 
-                        <div className="mb-9 flex items-center gap-3 lg:hidden">
+                        {/* Mobile logo */}
+                        <div className="mb-12 flex items-center gap-3 lg:hidden">
                             <BrandLogo />
 
-                            <span className="font-semibold tracking-tight text-gray-900">
+                            <span className="text-lg font-bold tracking-tight text-slate-900">
                                 {i18nT("sidebar.brand")}
                             </span>
                         </div>
 
-                        {/* Heading */}
+                        {/* Header */}
+                        <div className="mb-9">
+                            <div className="mb-4 h-1 w-10 rounded-full bg-blue-600" />
 
-                        <div className="mb-8">
-                            <h2 className="text-[28px] font-bold tracking-tight text-gray-950">
+                            <h2 className="text-[30px] font-bold tracking-tight text-slate-950 sm:text-[34px]">
                                 {i18nT("pages.auth.login.login.700a3f1")}
                             </h2>
 
-                            <p className="mt-2 text-sm leading-6 text-gray-500">
+                            <p className="mt-3 text-sm leading-6 text-slate-500">
                                 {i18nT("pages.auth.login.login.5657149")}
                             </p>
                         </div>
 
                         {/* Error */}
-
                         {errorMessage && (
-                            <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            <div
+                                role="alert"
+                                className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700"
+                            >
                                 <RiInformationLine
                                     size={19}
                                     className="mt-0.5 shrink-0"
@@ -290,18 +287,16 @@ export default function Login() {
                         )}
 
                         {/* MARK: Form */}
-
                         <form
                             onSubmit={handleSubmit}
-                            className="space-y-5"
+                            className="space-y-6"
                         >
 
                             {/* Phone */}
-
                             <div>
                                 <label
                                     htmlFor="phone"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-2.5 block text-sm font-semibold text-slate-700"
                                 >
                                     {i18nT("employeeModal.phone")}
                                 </label>
@@ -309,7 +304,7 @@ export default function Login() {
                                 <div className="relative">
                                     <RiPhoneLine
                                         size={19}
-                                        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                                     />
 
                                     <input
@@ -324,17 +319,16 @@ export default function Login() {
                                             setErrorMessage("");
                                         }}
                                         placeholder="+7 700 000 00 00"
-                                        className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                                        className="h-[54px] w-full rounded-xl border border-slate-200 bg-white pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                                     />
                                 </div>
                             </div>
 
                             {/* Password */}
-
                             <div>
                                 <label
                                     htmlFor="password"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-2.5 block text-sm font-semibold text-slate-700"
                                 >
                                     {i18nT("login.password")}
                                 </label>
@@ -342,17 +336,13 @@ export default function Login() {
                                 <div className="relative">
                                     <RiLockPasswordLine
                                         size={19}
-                                        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                                        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                                     />
 
                                     <input
                                         id="password"
                                         name="password"
-                                        type={
-                                            showPassword
-                                                ? "text"
-                                                : "password"
-                                        }
+                                        type={showPassword ? "text" : "password"}
                                         autoComplete="current-password"
                                         value={password}
                                         onChange={(event) => {
@@ -360,7 +350,7 @@ export default function Login() {
                                             setErrorMessage("");
                                         }}
                                         placeholder={i18nT("login.passwordPlaceholder")}
-                                        className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-11 pr-12 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                                        className="h-[54px] w-full rounded-xl border border-slate-200 bg-white pl-12 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                                     />
 
                                     <button
@@ -368,12 +358,12 @@ export default function Login() {
                                         onClick={() =>
                                             setShowPassword((current) => !current)
                                         }
-                                        className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
                                         aria-label={
                                             showPassword
                                                 ? "Скрыть пароль"
                                                 : "Показать пароль"
                                         }
+                                        className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                                     >
                                         {showPassword ? (
                                             <RiEyeOffLine size={19} />
@@ -384,12 +374,11 @@ export default function Login() {
                                 </div>
                             </div>
 
-                            {/* MARK: Submit button */}
-
+                            {/* Submit */}
                             <button
                                 type="submit"
                                 disabled={isDisabled}
-                                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                                className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(37,99,235,0.18)] transition-all duration-200 hover:bg-blue-700 hover:shadow-[0_8px_24px_rgba(37,99,235,0.24)] disabled:cursor-not-allowed disabled:bg-blue-300 disabled:shadow-none"
                             >
                                 {isSubmitting ? (
                                     <>
@@ -401,39 +390,25 @@ export default function Login() {
                                     </>
                                 ) : retryAfter > 0 ? (
                                     <>
-                                        {i18nT("pages.auth.login.login.dd74643")}{" "}
+                                        {i18nT("pages.auth.login.login.dd74643")}
+                                        {" "}
                                         {formatRetryTime(retryAfter)}
                                     </>
                                 ) : (
                                     <>
                                         {i18nT("login.signIn")}
-                                        <RiArrowRightLine size={18} />
+                                        <RiArrowRightLine size={19} />
                                     </>
                                 )}
                             </button>
                         </form>
 
-                        {/* MARK: Access information */}
-
-                        <div className="mt-6 rounded-xl border border-gray-200 bg-white px-4 py-3.5">
-                            <div className="flex items-start gap-3">
-                                <RiInformationLine
-                                    size={19}
-                                    className="mt-0.5 shrink-0 text-gray-400"
-                                />
-
-                                <div>
-                                    <div className="text-sm font-medium text-gray-800">
-                                        {i18nT("pages.auth.login.login.d4d259d")}
-                                    </div>
-
-                                    <p className="mt-1 text-xs leading-5 text-gray-500">
-                                        {i18nT("pages.auth.login.login.f5ad1a4")}
-                                    </p>
-                                </div>
-                            </div>
+                        {/* Footer */}
+                        <div className="mt-10 border-t border-slate-200 pt-6">
+                            <p className="text-center text-xs leading-5 text-slate-400">
+                                {i18nT("sidebar.brand")}
+                            </p>
                         </div>
-
                     </div>
                 </main>
             </div>
