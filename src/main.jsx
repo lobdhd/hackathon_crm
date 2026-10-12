@@ -15,7 +15,6 @@ import {
 
 import "./index.css";
 
-
 // MARK: Query client
 
 const queryClient = new QueryClient({

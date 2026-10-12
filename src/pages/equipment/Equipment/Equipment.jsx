@@ -365,18 +365,7 @@ export default function Equipment() {
                             <RiQrScan2Line size={18} />
                             {i18nT("qrScanner.scan")}
                         </button>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                equipmentQuery.refetch()
-                            }
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                        >
-                            <RiRefreshLine
-                                size={18}
-                            />
-                            {i18nT("components.layout.appnavbar.dbe5444")}
-                        </button>
+                   
                         {canCreate && (
                             <button
                                 type="button"

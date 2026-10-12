@@ -1,0 +1,12 @@
+.os-theme-crm {
+    --os-size: 8px;
+    --os-padding-perpendicular: 2px;
+    --os-track-bg: transparent;
+    --os-track-bg-hover: transparent;
+    --os-track-border: none;
+    --os-handle-bg: rgba(100, 116, 139, 0.45);
+    --os-handle-bg-hover: rgba(71, 85, 105, 0.7);
+    --os-handle-bg-active: #475569;
+    --os-handle-border-radius: 999px;
+    --os-handle-min-size: 32px;
+}

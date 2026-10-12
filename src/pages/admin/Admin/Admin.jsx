@@ -2101,7 +2101,7 @@ export default function Admin() {
         }, [
             search,
             users,
-         __i18nLocaleToken]);
+            __i18nLocaleToken]);
 
     const filteredAreas =
         useMemo(() => {
@@ -2123,7 +2123,7 @@ export default function Admin() {
         }, [
             areas,
             search,
-         __i18nLocaleToken]);
+            __i18nLocaleToken]);
 
     const filteredEquipment =
         useMemo(() => {
@@ -2157,7 +2157,7 @@ export default function Admin() {
         }, [
             equipment,
             search,
-         __i18nLocaleToken]);
+            __i18nLocaleToken]);
 
     const executors =
         users.filter(
@@ -2532,8 +2532,8 @@ export default function Admin() {
                                     <button
                                         type="button"
                                         className={`admin-switch ${user.isOnShift
-                                                ? "active"
-                                                : ""
+                                            ? "active"
+                                            : ""
                                             }`}
                                         disabled={
                                             pending
@@ -2561,9 +2561,7 @@ export default function Admin() {
                 <table className="admin-table">
                     <thead>
                         <tr>
-                            <th>
-                                ID
-                            </th>
+                          
                             <th>
                                 {i18nT("pages.admin.admin.admin.602680e")}
                             </th>
@@ -2579,12 +2577,7 @@ export default function Admin() {
                                         area.id
                                     }
                                 >
-                                    <td className="admin-muted">
-                                        #
-                                        {
-                                            area.id
-                                        }
-                                    </td>
+                                
 
                                     <td>
                                         <strong>
@@ -3054,11 +3047,6 @@ export default function Admin() {
         <div className="admin-page">
             <div className="admin-page__header">
                 <div>
-                    <div className="admin-page__eyebrow">
-                        <RiAdminLine />
-                        {i18nT("pages.admin.admin.admin.13bc085")}
-                    </div>
-
                     <h1>
                         {i18nT("pages.admin.admin.admin.0dce296")}
                     </h1>
@@ -3068,16 +3056,7 @@ export default function Admin() {
                     </p>
                 </div>
 
-                <button
-                    type="button"
-                    className="admin-button admin-button--secondary"
-                    onClick={
-                        refreshActive
-                    }
-                >
-                    <RiRefreshLine />
-                    {i18nT("components.layout.appnavbar.dbe5444")}
-                </button>
+
             </div>
 
             <div className="admin-summary">

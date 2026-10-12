@@ -4,34 +4,30 @@ import {
     useRef,
     useState,
 } from "react";
-
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import "overlayscrollbars/overlayscrollbars.css";
 import "./SmartTable.css";
-
+import "./SmartTableScrollbars.css";
 
 // MARK: Modes
-
 const MODES = {
     basic: {
         sortable: false,
         selectable: false,
     },
-
     sort: {
         sortable: true,
         selectable: false,
     },
-
     checkbox: {
         sortable: false,
         selectable: true,
     },
-
     "sort-checkbox": {
         sortable: true,
         selectable: true,
     },
 };
-
 
 // MARK: Helpers
 
@@ -42,7 +38,6 @@ function getByPath(
     if (!path) {
         return undefined;
     }
-
     return String(path)
         .split(".")
         .reduce(
@@ -60,20 +55,17 @@ function normalizeSortValue(
     if (value == null) {
         return null;
     }
-
     if (
         value instanceof Date
     ) {
         return value.getTime();
     }
-
     if (
         typeof value ===
         "number"
     ) {
         return value;
     }
-
     if (
         typeof value ===
         "boolean"
@@ -82,10 +74,8 @@ function normalizeSortValue(
             ? 1
             : 0;
     }
-
     const raw =
         String(value).trim();
-
     const maybeNumber =
         Number(
             raw
@@ -98,7 +88,6 @@ function normalizeSortValue(
                     ".",
                 ),
         );
-
     if (
         raw !== "" &&
         Number.isFinite(
@@ -107,7 +96,6 @@ function normalizeSortValue(
     ) {
         return maybeNumber;
     }
-
     return raw.toLocaleLowerCase();
 }
 
@@ -121,15 +109,12 @@ function compareValues(
     ) {
         return 0;
     }
-
     if (a == null) {
         return 1;
     }
-
     if (b == null) {
         return -1;
     }
-
     if (
         typeof a ===
             "number" &&
@@ -138,7 +123,6 @@ function compareValues(
     ) {
         return a - b;
     }
-
     return String(a).localeCompare(
         String(b),
         "ru",
@@ -149,7 +133,6 @@ function compareValues(
         },
     );
 }
-
 
 // MARK: Checkbox
 
@@ -162,7 +145,6 @@ function TableCheckbox({
 }) {
     const ref =
         useRef(null);
-
     useEffect(() => {
         if (ref.current) {
             ref.current.indeterminate =
@@ -171,7 +153,6 @@ function TableCheckbox({
     }, [
         indeterminate,
     ]);
-
     return (
         <input
             ref={ref}
@@ -187,152 +168,84 @@ function TableCheckbox({
     );
 }
 
-
 // MARK: Component
 
 export default function SmartTable({
     data = [],
     columns = [],
     dataKey = "id",
-
     // basic | sort | checkbox | sort-checkbox
     mode = "sort",
-
     sortable,
     selectable,
-
     removableSort = true,
     defaultSortField = null,
     defaultSortOrder = "asc",
     onSort,
-
     selectedKeys,
     defaultSelectedKeys = [],
     onSelectionChange,
-
     selectOnRowClick = false,
     isRowSelectable,
-
     emptyText = "Нет данных",
     emptyDescription = "",
-
     className = "",
-
     compact = false,
     striped = false,
     stickyHeader = false,
-
     minWidth = 720,
-
     // Например:
     // "520px"
     // "calc(100dvh - 430px)"
     // "clamp(380px, calc(100dvh - 430px), 660px)"
     scrollHeight = null,
-
+    scrollbarAutoHideDelay = 900,
     accentColor = "#111827",
     surfaceColor = "#ffffff",
     headerColor = "#f8fafc",
     borderColor = "#e5e7eb",
     textColor = "#111827",
     mutedColor = "#6b7280",
-
     rowClassName,
     onRowClick,
 }) {
     const modeConfig =
         MODES[mode] ??
         MODES.sort;
-
     const canSort =
         sortable ??
         modeConfig.sortable;
-
     const canSelect =
         selectable ??
         modeConfig.selectable;
 
-
     // MARK: Sort
-
     const [
         sortState,
         setSortState,
     ] = useState(() => ({
         field:
             defaultSortField,
-
         order:
             defaultSortField
                 ? defaultSortOrder
                 : null,
     }));
 
-
-    // MARK: Scroll state
-
-    const [
-        isScrolling,
-        setIsScrolling,
-    ] = useState(false);
-
-    const scrollTimerRef =
-        useRef(null);
-
-    function handleScroll() {
-        if (!isScrolling) {
-            setIsScrolling(
-                true,
-            );
-        }
-
-        if (
-            scrollTimerRef.current
-        ) {
-            clearTimeout(
-                scrollTimerRef.current,
-            );
-        }
-
-        scrollTimerRef.current =
-            setTimeout(() => {
-                setIsScrolling(
-                    false,
-                );
-            }, 700);
-    }
-
-    useEffect(() => {
-        return () => {
-            if (
-                scrollTimerRef.current
-            ) {
-                clearTimeout(
-                    scrollTimerRef.current,
-                );
-            }
-        };
-    }, []);
-
-
     // MARK: Selection
-
     const [
         innerSelectedKeys,
         setInnerSelectedKeys,
     ] = useState(
         defaultSelectedKeys,
     );
-
     const controlledSelection =
         selectedKeys !==
         undefined;
-
     const activeSelectedKeys =
         controlledSelection
             ? selectedKeys
             : innerSelectedKeys;
-
     const selectedSet =
         useMemo(
             () =>
@@ -348,7 +261,6 @@ export default function SmartTable({
                 activeSelectedKeys,
             ],
         );
-
     const keyOf = (
         row,
     ) =>
@@ -358,7 +270,6 @@ export default function SmartTable({
                 dataKey,
             ),
         );
-
     const selectableRows =
         useMemo(
             () =>
@@ -375,7 +286,6 @@ export default function SmartTable({
                 isRowSelectable,
             ],
         );
-
     const allSelected =
         canSelect &&
         selectableRows.length >
@@ -386,7 +296,6 @@ export default function SmartTable({
                     keyOf(row),
                 ),
         );
-
     const someSelected =
         canSelect &&
         !allSelected &&
@@ -397,9 +306,7 @@ export default function SmartTable({
                 ),
         );
 
-
     // MARK: Sorted data
-
     const sortedData =
         useMemo(() => {
             if (
@@ -409,7 +316,6 @@ export default function SmartTable({
             ) {
                 return data;
             }
-
             const column =
                 columns.find(
                     (col) =>
@@ -419,17 +325,14 @@ export default function SmartTable({
                         ) ===
                         sortState.field,
                 );
-
             if (!column) {
                 return data;
             }
-
             const direction =
                 sortState.order ===
                 "desc"
                     ? -1
                     : 1;
-
             return data
                 .map(
                     (
@@ -458,27 +361,23 @@ export default function SmartTable({
                                         column.sortField ??
                                             column.field,
                                     );
-
                         const valueA =
                             normalizeSortValue(
                                 getSortValue(
                                     a.item,
                                 ),
                             );
-
                         const valueB =
                             normalizeSortValue(
                                 getSortValue(
                                     b.item,
                                 ),
                             );
-
                         const result =
                             compareValues(
                                 valueA,
                                 valueB,
                             );
-
                         return result ===
                             0
                             ? a.index -
@@ -498,9 +397,7 @@ export default function SmartTable({
             sortState,
         ]);
 
-
     // MARK: Selection handlers
-
     function emitSelection(
         nextKeys,
     ) {
@@ -511,7 +408,6 @@ export default function SmartTable({
                 ),
             ),
         ];
-
         if (
             !controlledSelection
         ) {
@@ -519,12 +415,10 @@ export default function SmartTable({
                 uniqueKeys,
             );
         }
-
         const nextSet =
             new Set(
                 uniqueKeys,
             );
-
         const selectedRows =
             data.filter(
                 (row) =>
@@ -532,20 +426,17 @@ export default function SmartTable({
                         keyOf(row),
                     ),
             );
-
         onSelectionChange?.(
             selectedRows,
             uniqueKeys,
         );
     }
-
     function toggleRow(
         row,
     ) {
         if (!canSelect) {
             return;
         }
-
         if (
             isRowSelectable &&
             !isRowSelectable(
@@ -554,15 +445,12 @@ export default function SmartTable({
         ) {
             return;
         }
-
         const key =
             keyOf(row);
-
         const next =
             new Set(
                 selectedSet,
             );
-
         if (
             next.has(key)
         ) {
@@ -574,22 +462,18 @@ export default function SmartTable({
                 key,
             );
         }
-
         emitSelection(
             [...next],
         );
     }
-
     function toggleAll() {
         if (!canSelect) {
             return;
         }
-
         const next =
             new Set(
                 selectedSet,
             );
-
         if (allSelected) {
             selectableRows.forEach(
                 (row) =>
@@ -609,15 +493,12 @@ export default function SmartTable({
                     ),
             );
         }
-
         emitSelection(
             [...next],
         );
     }
 
-
     // MARK: Sort handler
-
     function changeSort(
         column,
     ) {
@@ -628,18 +509,14 @@ export default function SmartTable({
         ) {
             return;
         }
-
         const field =
             column.sortField ??
             column.field;
-
         if (!field) {
             return;
         }
-
         let nextOrder =
             "asc";
-
         if (
             sortState.field ===
             field
@@ -660,33 +537,27 @@ export default function SmartTable({
                         : "asc";
             }
         }
-
         const nextState = {
             field:
                 nextOrder
                     ? field
                     : null,
-
             order:
                 nextOrder,
         };
-
         setSortState(
             nextState,
         );
-
         onSort?.(
             nextState,
         );
     }
-
     function getAriaSort(
         column,
     ) {
         const field =
             column.sortField ??
             column.field;
-
         if (
             !canSort ||
             column.sortable ===
@@ -696,16 +567,13 @@ export default function SmartTable({
         ) {
             return "none";
         }
-
         return sortState.order ===
             "asc"
             ? "ascending"
             : "descending";
     }
 
-
     // MARK: Cell
-
     function renderCell(
         column,
         row,
@@ -719,36 +587,28 @@ export default function SmartTable({
                 rowIndex,
             );
         }
-
         const value =
             getByPath(
                 row,
                 column.field,
             );
-
         return value ?? "—";
     }
 
-
     // MARK: Render
-
     return (
         <div
             className={[
                 "smart-table",
-
                 compact
                     ? "smart-table--compact"
                     : "",
-
                 striped
                     ? "smart-table--striped"
                     : "",
-
                 stickyHeader
                     ? "smart-table--sticky"
                     : "",
-
                 className,
             ]
                 .filter(
@@ -758,49 +618,34 @@ export default function SmartTable({
             style={{
                 "--st-accent":
                     accentColor,
-
                 "--st-surface":
                     surfaceColor,
-
                 "--st-header":
                     headerColor,
-
                 "--st-border":
                     borderColor,
-
                 "--st-text":
                     textColor,
-
                 "--st-muted":
                     mutedColor,
             }}
         >
-            <div
-                className={[
-                    "smart-table__scroll",
-
-                    isScrolling
-                        ? "smart-table__scroll--scrolling"
-                        : "",
-                ]
-                    .filter(
-                        Boolean,
-                    )
-                    .join(" ")}
-                style={
-                    scrollHeight
-                        ? {
-                            height:
-                                scrollHeight,
-
-                            maxHeight:
-                                scrollHeight,
-                        }
-                        : undefined
-                }
-                onScroll={
-                    handleScroll
-                }
+            <OverlayScrollbarsComponent
+                defer
+                element="div"
+                className="smart-table__scroll"
+                style={scrollHeight ? { height: scrollHeight, maxHeight: scrollHeight } : undefined}
+                options={{
+                    overflow: { x: "scroll", y: "scroll" },
+                    scrollbars: {
+                        theme: "os-theme-smart-table",
+                        visibility: "auto",
+                        autoHide: "scroll",
+                        autoHideDelay: scrollbarAutoHideDelay,
+                        autoHideSuspend: true,
+                        dragScroll: true,
+                    },
+                }}
             >
                 <table
                     className="smart-table__table"
@@ -833,7 +678,6 @@ export default function SmartTable({
                                     />
                                 </th>
                             )}
-
                             {columns.map(
                                 (
                                     column,
@@ -846,16 +690,13 @@ export default function SmartTable({
                                             column.sortField ??
                                                 column.field,
                                         );
-
                                     const field =
                                         column.sortField ??
                                         column.field;
-
                                     const active =
                                         sortState.field ===
                                             field &&
                                         sortState.order;
-
                                     return (
                                         <th
                                             key={
@@ -865,11 +706,9 @@ export default function SmartTable({
                                             }
                                             className={[
                                                 "smart-table__head-cell",
-
                                                 sortableColumn
                                                     ? "smart-table__head-cell--sortable"
                                                     : "",
-
                                                 column.align
                                                     ? `smart-table__cell--${column.align}`
                                                     : "",
@@ -883,7 +722,6 @@ export default function SmartTable({
                                             style={{
                                                 width:
                                                     column.width,
-
                                                 minWidth:
                                                     column.minWidth,
                                             }}
@@ -911,11 +749,9 @@ export default function SmartTable({
                                                             column.header
                                                         }
                                                     </span>
-
                                                     <span
                                                         className={[
                                                             "smart-table__sort-icon",
-
                                                             active
                                                                 ? "smart-table__sort-icon--active"
                                                                 : "",
@@ -950,7 +786,6 @@ export default function SmartTable({
                             )}
                         </tr>
                     </thead>
-
                     <tbody className="smart-table__body">
                         {sortedData.length >
                         0 ? (
@@ -963,20 +798,17 @@ export default function SmartTable({
                                         keyOf(
                                             row,
                                         );
-
                                     const selected =
                                         canSelect &&
                                         selectedSet.has(
                                             rowKey,
                                         );
-
                                     const rowSelectable =
                                         isRowSelectable
                                             ? isRowSelectable(
                                                 row,
                                             )
                                             : true;
-
                                     return (
                                         <tr
                                             key={
@@ -984,15 +816,12 @@ export default function SmartTable({
                                             }
                                             className={[
                                                 "smart-table__row",
-
                                                 selected
                                                     ? "smart-table__row--selected"
                                                     : "",
-
                                                 !rowSelectable
                                                     ? "smart-table__row--disabled"
                                                     : "",
-
                                                 rowClassName
                                                     ? rowClassName(
                                                         row,
@@ -1019,7 +848,6 @@ export default function SmartTable({
                                                     rowIndex,
                                                     event,
                                                 );
-
                                                 if (
                                                     canSelect &&
                                                     selectOnRowClick &&
@@ -1056,7 +884,6 @@ export default function SmartTable({
                                                     />
                                                 </td>
                                             )}
-
                                             {columns.map(
                                                 (
                                                     column,
@@ -1069,11 +896,9 @@ export default function SmartTable({
                                                         }
                                                         className={[
                                                             "smart-table__cell",
-
                                                             column.align
                                                                 ? `smart-table__cell--${column.align}`
                                                                 : "",
-
                                                             column.className ??
                                                                 "",
                                                         ]
@@ -1114,13 +939,11 @@ export default function SmartTable({
                                         >
                                             ≡
                                         </div>
-
                                         <div className="smart-table__empty-title">
                                             {
                                                 emptyText
                                             }
                                         </div>
-
                                         {emptyDescription ? (
                                             <div className="smart-table__empty-description">
                                                 {
@@ -1134,7 +957,7 @@ export default function SmartTable({
                         )}
                     </tbody>
                 </table>
-            </div>
+            </OverlayScrollbarsComponent>
         </div>
     );
 }

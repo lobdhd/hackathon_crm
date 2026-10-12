@@ -601,20 +601,7 @@ export default function Dashboard() {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <button
-                        type="button"
-                        onClick={
-                            refreshAll
-                        }
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                    >
-                        <RiRefreshLine
-                            size={
-                                18
-                            }
-                        />
-                        {i18nT("components.layout.appnavbar.dbe5444")}
-                    </button>
+               
                     <button
                         type="button"
                         onClick={() =>

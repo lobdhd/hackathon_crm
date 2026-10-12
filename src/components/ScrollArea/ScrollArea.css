@@ -1,70 +1,40 @@
+/* Единый overlay-scrollbar для карточек, панелей, списков и других областей. */
 .app-scroll {
+    position: relative;
     min-width: 0;
-    min-height: 0;
+    max-width: 100%;
+}
 
+.app-scroll [data-overlayscrollbars-viewport] {
     overscroll-behavior: contain;
-
-    scrollbar-width: thin;
-    scrollbar-color:
-        transparent transparent;
 }
 
-
-/* MARK: Axes */
-
-.app-scroll--y {
-    overflow-x: hidden;
-    overflow-y: auto;
+.os-theme-crm.os-scrollbar {
+    --os-size: 8px;
+    --os-padding-perpendicular: 1px;
+    --os-padding-axis: 2px;
+    --os-track-bg: transparent;
+    --os-track-bg-hover: transparent;
+    --os-track-bg-active: transparent;
+    --os-track-border: none;
+    --os-handle-bg: rgba(100, 116, 139, 0.42);
+    --os-handle-bg-hover: rgba(71, 85, 105, 0.66);
+    --os-handle-bg-active: rgba(51, 65, 85, 0.78);
+    --os-handle-border: none;
+    --os-handle-border-radius: 999px;
+    --os-handle-min-size: 32px;
 }
 
-.app-scroll--x {
-    overflow-x: auto;
-    overflow-y: hidden;
+.os-theme-crm.os-scrollbar-horizontal {
+    --os-size: 7px;
 }
 
-.app-scroll--both {
-    overflow: auto;
+.os-theme-crm.os-scrollbar .os-scrollbar-handle {
+    transition: background-color 180ms ease;
 }
-
-
-/* MARK: Chrome / Edge / Safari */
-
-.app-scroll::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-}
-
-.app-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.app-scroll::-webkit-scrollbar-corner {
-    background: transparent;
-}
-
-.app-scroll::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-
-    background: transparent;
-}
-
-
-/* MARK: Visible only while scrolling */
-
-.app-scroll--scrolling {
-    scrollbar-color:
-        #2563eb transparent;
-}
-
-.app-scroll--scrolling::-webkit-scrollbar-thumb {
-    background: #2563eb;
-}
-
-
-/* MARK: Reduced motion */
 
 @media (prefers-reduced-motion: reduce) {
-    .app-scroll::-webkit-scrollbar-thumb {
+    .os-theme-crm.os-scrollbar .os-scrollbar-handle {
         transition: none;
     }
 }

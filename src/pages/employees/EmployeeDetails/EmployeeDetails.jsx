@@ -1,13 +1,11 @@
 import {
     useMemo,
 } from "react";
-
 import {
     Link,
     useNavigate,
     useParams,
 } from "react-router-dom";
-
 import {
     RiArrowLeftLine,
     RiBriefcaseLine,
@@ -22,24 +20,20 @@ import {
     RiToolsLine,
     RiUserLine,
 } from "react-icons/ri";
-
 import EmployeeStatus from "../../../components/employees/EmployeeStatus";
 import StatusBadge from "../../../components/common/StatusBadge";
+import SmartTable from "../../../react-components/SmartTable/SmartTable.jsx";
 import PriorityBadge from "../../../components/common/PriorityBadge";
-
 import {
     useExecutors,
 } from "../../../hooks/useReferences.js";
-
 import {
     useWorkOrders,
 } from "../../../hooks/useWorkOrders.js";
-
 import {
     t as i18nT,
     useI18n,
 } from "../../../i18n/index.js";
-
 const TERMINAL_STATUSES =
     new Set([
         "CLOSED",
@@ -50,20 +44,15 @@ const TERMINAL_STATUSES =
 export default function EmployeeDetails() {
     const __i18nLocaleToken = i18nT("sidebar.home");
     useI18n();
-
     const {
         id,
     } = useParams();
-
     const navigate =
         useNavigate();
-
     const employeeId =
         Number(id);
-
     const executorsQuery =
         useExecutors();
-
     const ordersQuery =
         useWorkOrders(
             {
@@ -81,14 +70,12 @@ export default function EmployeeDetails() {
                     employeeId > 0,
             },
         );
-
     const employees =
         Array.isArray(
             executorsQuery.data,
         )
             ? executorsQuery.data
             : [];
-
     const employee =
         useMemo(
             () =>
@@ -104,18 +91,16 @@ export default function EmployeeDetails() {
             [
                 employees,
                 employeeId,
-             __i18nLocaleToken],
+                __i18nLocaleToken],
         );
-
     const employeeOrders =
         Array.isArray(
             ordersQuery.data
                 ?.items,
         )
             ? ordersQuery.data
-                  .items
+                .items
             : [];
-
     const activeOrders =
         useMemo(
             () =>
@@ -129,7 +114,6 @@ export default function EmployeeDetails() {
                 ),
             [employeeOrders, __i18nLocaleToken],
         );
-
     const closedOrders =
         useMemo(
             () =>
@@ -142,7 +126,6 @@ export default function EmployeeDetails() {
                 ),
             [employeeOrders, __i18nLocaleToken],
         );
-
     const overdueOrders =
         useMemo(
             () =>
@@ -151,7 +134,6 @@ export default function EmployeeDetails() {
                 ),
             [employeeOrders, __i18nLocaleToken],
         );
-
     const aiReviewOrders =
         useMemo(
             () =>
@@ -164,7 +146,6 @@ export default function EmployeeDetails() {
                 ),
             [employeeOrders, __i18nLocaleToken],
         );
-
     if (
         executorsQuery.isLoading
     ) {
@@ -179,7 +160,6 @@ export default function EmployeeDetails() {
             />
         );
     }
-
     if (
         executorsQuery.isError
     ) {
@@ -214,7 +194,6 @@ export default function EmployeeDetails() {
             />
         );
     }
-
     if (!employee) {
         return (
             <StateView
@@ -245,7 +224,6 @@ export default function EmployeeDetails() {
             />
         );
     }
-
     return (
         <div className="mx-auto max-w-[1600px]">
             <Link
@@ -255,12 +233,10 @@ export default function EmployeeDetails() {
                 <RiArrowLeftLine
                     size={18}
                 />
-
                 {i18nT(
                     "employeeDetails.allEmployees",
                 )}
             </Link>
-
             <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div className="flex flex-col justify-between gap-5 p-6 lg:flex-row lg:items-center">
                     <div className="flex items-center gap-4">
@@ -269,7 +245,6 @@ export default function EmployeeDetails() {
                                 employee.fullName,
                             )}
                         </div>
-
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                                 <h1 className="text-2xl font-bold text-gray-900">
@@ -277,14 +252,12 @@ export default function EmployeeDetails() {
                                         employee.fullName
                                     }
                                 </h1>
-
                                 <EmployeeStatus
                                     status={
                                         employee.employeeStatus
                                     }
                                 />
                             </div>
-
                             <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500">
                                 <span className="inline-flex items-center gap-1.5">
                                     <RiBriefcaseLine
@@ -292,11 +265,9 @@ export default function EmployeeDetails() {
                                             16
                                         }
                                     />
-
                                     {employee.specialty ||
                                         "Специальность не указана"}
                                 </span>
-
                                 {employee.grade && (
                                     <span className="inline-flex items-center gap-1.5">
                                         <RiMedalLine
@@ -304,7 +275,6 @@ export default function EmployeeDetails() {
                                                 16
                                             }
                                         />
-
                                         {
                                             employee.grade
                                         }{" "}
@@ -314,15 +284,13 @@ export default function EmployeeDetails() {
                             </div>
                         </div>
                     </div>
-
                     <div
                         className={`
                             flex items-center gap-3
                             rounded-xl border px-5 py-3
-                            ${
-                                employee.isOnShift
-                                    ? "border-green-100 bg-green-50/70"
-                                    : "border-gray-200 bg-gray-50"
+                            ${employee.isOnShift
+                                ? "border-green-100 bg-green-50/70"
+                                : "border-gray-200 bg-gray-50"
                             }
                         `}
                     >
@@ -334,12 +302,10 @@ export default function EmployeeDetails() {
                                     : "text-gray-400"
                             }
                         />
-
                         <div>
                             <p className="text-xs text-gray-500">
                                 {i18nT("reportModal.shift")}
                             </p>
-
                             <p className="text-sm font-bold text-gray-900">
                                 {employee.isOnShift
                                     ? i18nT("pages.admin.admin.admin.958b816")
@@ -349,7 +315,6 @@ export default function EmployeeDetails() {
                     </div>
                 </div>
             </div>
-
             <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="min-w-0 space-y-6">
                     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -363,7 +328,6 @@ export default function EmployeeDetails() {
                             }
                             tone="blue"
                         />
-
                         <SmallKpi
                             label="Активные"
                             value={
@@ -374,7 +338,6 @@ export default function EmployeeDetails() {
                             }
                             tone="orange"
                         />
-
                         <SmallKpi
                             label="Закрытые"
                             value={
@@ -385,7 +348,6 @@ export default function EmployeeDetails() {
                             }
                             tone="green"
                         />
-
                         <SmallKpi
                             label={i18nT("pages.orders.orders.orders.97a53e1")}
                             value={
@@ -396,13 +358,12 @@ export default function EmployeeDetails() {
                             }
                             tone={
                                 overdueOrders.length >
-                                0
+                                    0
                                     ? "red"
                                     : "violet"
                             }
                         />
                     </div>
-
                     <Section
                         title={i18nT(
                             "employeeDetails.currentOrders",
@@ -416,7 +377,7 @@ export default function EmployeeDetails() {
                         {ordersQuery.isLoading ? (
                             <InlineLoading />
                         ) : activeOrders.length >
-                          0 ? (
+                            0 ? (
                             <div className="space-y-3">
                                 {activeOrders.map(
                                     (
@@ -441,7 +402,6 @@ export default function EmployeeDetails() {
                             </EmptyText>
                         )}
                     </Section>
-
                     <Section
                         title={i18nT(
                             "employeeDetails.workHistory",
@@ -462,53 +422,8 @@ export default function EmployeeDetails() {
                                     i18nT("pages.orders.orders.orders.ac0c6fb")}
                             </div>
                         ) : employeeOrders.length >
-                          0 ? (
-                            <div className="overflow-hidden rounded-xl border border-gray-200">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[780px] text-left">
-                                        <thead className="bg-gray-50">
-                                            <tr className="text-xs uppercase text-gray-400">
-                                                <th className="px-4 py-3 font-semibold">
-                                                    {i18nT("pages.employees.employeedetails.employeedetails.5072957")}
-                                                </th>
-
-                                                <th className="px-4 py-3 font-semibold">
-                                                    {i18nT("sidebar.equipment")}
-                                                </th>
-
-                                                <th className="px-4 py-3 font-semibold">
-                                                    {i18nT("pages.employees.employeedetails.employeedetails.a0f9f1a")}
-                                                </th>
-
-                                                <th className="px-4 py-3 font-semibold">
-                                                    {i18nT("employeeModal.status")}
-                                                </th>
-
-                                                <th className="px-4 py-3 font-semibold">
-                                                    {i18nT("pages.employees.employeedetails.employeedetails.bae913f")}
-                                                </th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody className="divide-y divide-gray-100">
-                                            {employeeOrders.map(
-                                                (
-                                                    order,
-                                                ) => (
-                                                    <HistoryRow
-                                                        key={
-                                                            order.id
-                                                        }
-                                                        order={
-                                                            order
-                                                        }
-                                                    />
-                                                ),
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            0 ? (
+                            <HistoryTable orders={employeeOrders} />
                         ) : (
                             <EmptyText>
                                 {i18nT(
@@ -518,7 +433,6 @@ export default function EmployeeDetails() {
                         )}
                     </Section>
                 </div>
-
                 <aside className="space-y-5">
                     <Section
                         title={i18nT(
@@ -532,7 +446,6 @@ export default function EmployeeDetails() {
                         <p className="text-xs text-gray-500">
                             {i18nT("employeeModal.status")}
                         </p>
-
                         <div className="mt-2">
                             <EmployeeStatus
                                 status={
@@ -540,7 +453,6 @@ export default function EmployeeDetails() {
                                 }
                             />
                         </div>
-
                         <div className="mt-5 grid grid-cols-2 gap-3">
                             <MiniValue
                                 label="Активных"
@@ -548,7 +460,6 @@ export default function EmployeeDetails() {
                                     activeOrders.length
                                 }
                             />
-
                             <MiniValue
                                 label="На проверке"
                                 value={
@@ -556,7 +467,6 @@ export default function EmployeeDetails() {
                                 }
                             />
                         </div>
-
                         <div className="mt-3">
                             <MiniValue
                                 label="Назначено по данным сервера"
@@ -565,13 +475,12 @@ export default function EmployeeDetails() {
                                         employee
                                             ?._count
                                             ?.assignedOrders ??
-                                            0,
+                                        0,
                                     )
                                 }
                             />
                         </div>
                     </Section>
-
                     <Section
                         title={i18nT(
                             "employeeDetails.data",
@@ -582,20 +491,12 @@ export default function EmployeeDetails() {
                         tone="violet"
                     >
                         <InfoRow
-                            label="ID"
-                            value={
-                                employee.id
-                            }
-                        />
-
-                        <InfoRow
                             label={i18nT("components.employees.createemployeemodal.500aacb")}
                             value={
                                 employee.specialty ||
                                 "—"
                             }
                         />
-
                         <InfoRow
                             label={i18nT(
                                 "employeeModal.grade",
@@ -606,7 +507,6 @@ export default function EmployeeDetails() {
                                     : "—"
                             }
                         />
-
                         <InfoRow
                             label={i18nT("pages.admin.admin.admin.958b816")}
                             value={
@@ -615,7 +515,6 @@ export default function EmployeeDetails() {
                                     : "Нет"
                             }
                         />
-
                         <InfoRow
                             label={i18nT("employeeModal.status")}
                             value={employeeStatusLabel(
@@ -629,86 +528,90 @@ export default function EmployeeDetails() {
         </div>
     );
 }
+// MARK: Employee work history — local scrolling inside SmartTable.
 
-function HistoryRow({
-    order,
-}) {
+function HistoryTable({ orders }) {
     useI18n();
-    const navigate =
-        useNavigate();
-
-    return (
-        <tr
-            onClick={() =>
-                navigate(
-                    `/orders/${order.id}`,
-                )
-            }
-            className="cursor-pointer transition hover:bg-gray-50"
-        >
-            <td className="px-4 py-4">
-                <p className="text-sm font-semibold text-gray-900">
-                    {order.number}
-                </p>
-
-                <p className="mt-1 max-w-[240px] truncate text-xs text-gray-400">
-                    {order.description ||
-                        "Без описания"}
-                </p>
-            </td>
-
-            <td className="px-4 py-4">
-                <p className="text-sm font-medium text-gray-700">
-                    {order
-                        .equipment
-                        ?.name ??
-                        "—"}
-                </p>
-
-                {order.equipment
-                    ?.inventoryNumber && (
-                    <p className="mt-1 text-xs text-gray-400">
-                        {
-                            order
-                                .equipment
-                                .inventoryNumber
-                        }
+    const navigate = useNavigate();
+    const localeToken = i18nT("sidebar.home");
+    const columns = useMemo(() => [
+        {
+            field: "number",
+            header: i18nT("pages.employees.employeedetails.employeedetails.5072957"),
+            minWidth: 185,
+            render: (order) => (
+                <div className="min-w-0">
+                    <Link to={`/orders/${order.id}`} className="text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline">
+                        {order.number}
+                    </Link>
+                    <p className="mt-1 max-w-[230px] truncate text-xs text-gray-400" title={order.description || ""}>
+                        {order.description || "Без описания"}
                     </p>
-                )}
-            </td>
-
-            <td className="px-4 py-4">
-                <PriorityBadge
-                    priority={
-                        order.priority
-                    }
-                />
-            </td>
-
-            <td className="px-4 py-4">
-                <StatusBadge
-                    status={
-                        order.status
-                    }
-                />
-            </td>
-
-            <td className="px-4 py-4 text-sm">
-                {isOverdue(
-                    order,
-                ) ? (
-                    <span className="font-semibold text-red-600">
-                        {i18nT("pages.assistant.assistant.assistant.0a04820")}
-                    </span>
-                ) : (
-                    <span className="text-gray-600">
-                        {formatDate(
-                            order.deadline,
-                        )}
-                    </span>
-                )}
-            </td>
-        </tr>
+                </div>
+            ),
+        },
+        {
+            key: "equipment",
+            header: i18nT("sidebar.equipment"),
+            minWidth: 195,
+            sortField: "equipmentName",
+            sortValue: (order) => order.equipment?.name || "",
+            render: (order) => (
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-700" title={order.equipment?.name || ""}>
+                        {order.equipment?.name || "—"}
+                    </p>
+                    {order.equipment?.inventoryNumber && (
+                        <p className="mt-1 truncate text-xs text-gray-400">{order.equipment.inventoryNumber}</p>
+                    )}
+                </div>
+            ),
+        },
+        {
+            field: "priority",
+            header: i18nT("pages.employees.employeedetails.employeedetails.a0f9f1a"),
+            minWidth: 135,
+            sortValue: (order) => ({ EMERGENCY: 4, HIGH: 3, NORMAL: 2, PLANNED: 1 })[order.priority] ?? 0,
+            render: (order) => <PriorityBadge priority={order.priority} />,
+        },
+        {
+            field: "status",
+            header: i18nT("employeeModal.status"),
+            minWidth: 150,
+            render: (order) => <StatusBadge status={order.status} />,
+        },
+        {
+            field: "deadline",
+            header: i18nT("pages.employees.employeedetails.employeedetails.bae913f"),
+            minWidth: 165,
+            sortValue: (order) => order.deadline ? new Date(order.deadline).getTime() : null,
+            render: (order) => isOverdue(order) ? (
+                <span className="font-semibold text-red-600">
+                    {i18nT("pages.assistant.assistant.assistant.0a04820")}
+                </span>
+            ) : (
+                <span className="text-sm text-gray-600">{formatDate(order.deadline)}</span>
+            ),
+        },
+    ], [localeToken]);
+    return (
+        <SmartTable
+            data={orders}
+            columns={columns}
+            dataKey="id"
+            mode="sort"
+            removableSort
+            compact
+            stickyHeader
+            scrollHeight="min(480px, 55dvh)"
+            minWidth={830}
+            rowClassName={() => "cursor-pointer"}
+            onRowClick={(order, _index, event) => {
+                if (event?.target?.closest?.("a, button, input")) return;
+                navigate(`/orders/${order.id}`);
+            }}
+            emptyText="История работ пуста"
+        />
     );
 }
 
@@ -718,7 +621,6 @@ function OrderRow({
     useI18n();
     const navigate =
         useNavigate();
-
     return (
         <button
             type="button"
@@ -736,39 +638,32 @@ function OrderRow({
                             order.number
                         }
                     </span>
-
                     <PriorityBadge
                         priority={
                             order.priority
                         }
                     />
-
                     <StatusBadge
                         status={
                             order.status
                         }
                     />
                 </div>
-
                 <p className="mt-2 truncate text-sm font-medium text-gray-800">
                     {order.description ||
                         "Без описания"}
                 </p>
-
                 <p className="mt-1 text-xs text-gray-400">
                     {order.area
                         ?.name ??
                         "Участок не указан"}
-
                     {" • "}
-
                     {order
                         .equipment
                         ?.name ??
                         "Оборудование не указано"}
                 </p>
             </div>
-
             <div className="shrink-0">
                 {isOverdue(
                     order,
@@ -806,7 +701,6 @@ function Section({
         violet:
             "bg-violet-50 text-violet-600",
     };
-
     return (
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
@@ -814,7 +708,6 @@ function Section({
                     <h2 className="text-[15px] font-semibold text-gray-900">
                         {title}
                     </h2>
-
                     {description && (
                         <p className="mt-1 text-xs text-gray-500">
                             {
@@ -823,7 +716,6 @@ function Section({
                         </p>
                     )}
                 </div>
-
                 {Icon && (
                     <div
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tones[tone] ?? tones.blue}`}
@@ -834,7 +726,6 @@ function Section({
                     </div>
                 )}
             </div>
-
             <div className="p-5">
                 {children}
             </div>
@@ -860,7 +751,6 @@ function SmallKpi({
         red:
             "bg-red-50 text-red-600",
     };
-
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
@@ -868,12 +758,10 @@ function SmallKpi({
                     <p className="text-xs text-gray-500">
                         {label}
                     </p>
-
                     <p className="mt-2 text-2xl font-bold text-gray-900">
                         {value}
                     </p>
                 </div>
-
                 <div
                     className={`flex h-9 w-9 items-center justify-center rounded-lg ${tones[tone] ?? tones.blue}`}
                 >
@@ -895,7 +783,6 @@ function MiniValue({
             <p className="text-xs text-gray-500">
                 {label}
             </p>
-
             <p className="mt-1 text-xl font-bold text-gray-900">
                 {value}
             </p>
@@ -914,17 +801,15 @@ function InfoRow({
                 flex items-center
                 justify-between
                 gap-4 py-3
-                ${
-                    last
-                        ? ""
-                        : "border-b border-gray-100"
+                ${last
+                    ? ""
+                    : "border-b border-gray-100"
                 }
             `}
         >
             <span className="text-xs text-gray-500">
                 {label}
             </span>
-
             <span className="text-right text-sm font-semibold text-gray-900">
                 {value}
             </span>
@@ -950,7 +835,6 @@ function InlineLoading() {
                 size={19}
                 className="animate-spin"
             />
-
             {i18nT("pages.employees.employeedetails.employeedetails.43e40d4")}
         </div>
     );
@@ -976,15 +860,12 @@ function StateView({
                         }
                     />
                 </div>
-
                 <h1 className="mt-4 text-xl font-bold text-gray-900">
                     {title}
                 </h1>
-
                 <p className="mt-2 text-sm text-gray-500">
                     {text}
                 </p>
-
                 {action}
             </div>
         </div>
@@ -995,7 +876,6 @@ function isOverdue(order) {
     if (!order?.deadline) {
         return false;
     }
-
     if (
         [
             "CLOSED",
@@ -1007,7 +887,6 @@ function isOverdue(order) {
     ) {
         return false;
     }
-
     return (
         new Date(
             order.deadline,
@@ -1035,10 +914,8 @@ function formatDate(value) {
     if (!value) {
         return "—";
     }
-
     const date =
         new Date(value);
-
     if (
         Number.isNaN(
             date.getTime(),
@@ -1046,7 +923,6 @@ function formatDate(value) {
     ) {
         return "—";
     }
-
     return date.toLocaleString(
         "ru-RU",
         {
@@ -1071,7 +947,6 @@ function employeeStatusLabel(
         OFF_SHIFT:
             "Не на смене",
     };
-
     return (
         labels[status] ??
         status ??

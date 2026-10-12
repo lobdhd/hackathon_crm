@@ -537,16 +537,7 @@ export default function Analytics() {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <button
-                        type="button"
-                        onClick={
-                            refreshAll
-                        }
-                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                    >
-                        <RiRefreshLine />
-                        {i18nT("components.layout.appnavbar.dbe5444")}
-                    </button>
+            
                     <button
                         type="button"
                         onClick={

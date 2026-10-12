@@ -237,7 +237,6 @@ export default function Employees() {
             render: (employee) => (
                 <div className="min-w-0">
                     <div className="truncate font-semibold text-gray-900">{employee.fullName}</div>
-                    <div className="mt-1 text-xs text-gray-400">ID {employee.id}</div>
                 </div>
             ),
         },

@@ -1,0 +1,27 @@
+/* Scrollbar for the document itself. Matches ScrollArea and SmartTable. */
+.os-theme-dashboard.os-scrollbar {
+    --os-size: 8px;
+    --os-padding-perpendicular: 1px;
+    --os-padding-axis: 2px;
+    --os-track-bg: transparent;
+    --os-track-bg-hover: transparent;
+    --os-track-bg-active: transparent;
+    --os-track-border: none;
+    --os-handle-bg: rgba(100, 116, 139, 0.42);
+    --os-handle-bg-hover: rgba(71, 85, 105, 0.66);
+    --os-handle-bg-active: rgba(51, 65, 85, 0.78);
+    --os-handle-border: none;
+    --os-handle-border-radius: 999px;
+    --os-handle-min-size: 32px;
+}
+.os-theme-dashboard.os-scrollbar-horizontal {
+    --os-size: 7px;
+}
+.os-theme-dashboard.os-scrollbar .os-scrollbar-handle {
+    transition: background-color 180ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+    .os-theme-dashboard.os-scrollbar .os-scrollbar-handle {
+        transition: none;
+    }
+}

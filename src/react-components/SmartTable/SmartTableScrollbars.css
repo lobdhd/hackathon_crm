@@ -1,0 +1,43 @@
+/* SmartTable overlay scrollbars — complements your existing SmartTable.css */
+.smart-table .smart-table__scroll[data-overlayscrollbars] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* The OS viewport provides the actual scrolling. Native tracks stay hidden. */
+.smart-table .smart-table__scroll [data-overlayscrollbars-viewport] {
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+}
+
+.os-theme-smart-table.os-scrollbar {
+    --os-size: 8px;
+    --os-padding-perpendicular: 1px;
+    --os-padding-axis: 2px;
+    --os-track-bg: transparent;
+    --os-track-bg-hover: transparent;
+    --os-track-bg-active: transparent;
+    --os-track-border: none;
+    --os-handle-bg: rgba(100, 116, 139, 0.42);
+    --os-handle-bg-hover: rgba(71, 85, 105, 0.66);
+    --os-handle-bg-active: rgba(51, 65, 85, 0.78);
+    --os-handle-border: none;
+    --os-handle-border-radius: 999px;
+    --os-handle-min-size: 32px;
+}
+
+.os-theme-smart-table.os-scrollbar-horizontal {
+    --os-size: 7px;
+}
+
+.os-theme-smart-table.os-scrollbar .os-scrollbar-handle {
+    transition: background-color 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .os-theme-smart-table.os-scrollbar .os-scrollbar-handle {
+        transition: none;
+    }
+}
