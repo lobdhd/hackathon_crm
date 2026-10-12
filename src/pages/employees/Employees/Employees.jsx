@@ -186,7 +186,7 @@ export default function Employees() {
         }, [
             employees,
             filters,
-         __i18nLocaleToken]);
+            __i18nLocaleToken]);
     const stats =
         useMemo(() => {
             return {
@@ -273,7 +273,7 @@ export default function Employees() {
             sortValue: (employee) => Number(employee._count?.assignedOrders ?? 0),
             render: (employee) => <span className="font-semibold text-gray-800">{employee._count?.assignedOrders ?? 0}</span>,
         },
-    ], [ __i18nLocaleToken]);
+    ], [__i18nLocaleToken]);
 
     if (
         executorsQuery.isLoading
@@ -556,14 +556,6 @@ export default function Employees() {
                                 )}
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
-                                type="button"
-                                onClick={() => executorsQuery.refetch()}
-                                className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 transition hover:text-blue-600"
-                            >
-                                <RiRefreshLine size={15} />
-                                {i18nT("components.layout.appnavbar.dbe5444")}
-                            </button>
 
                             <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
                                 <button
