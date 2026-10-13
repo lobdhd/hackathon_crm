@@ -1,8 +1,8 @@
 .rubber-segment {
---rs-track: #ffffff;
---rs-thumb: #5b50e6;
---rs-ink: #5b50e6;
---rs-ink-active: #ffffff;
+  --rs-track: #ffffff;
+  --rs-thumb: #2563eb;
+  --rs-ink: #2563eb;
+  --rs-ink-active: #ffffff;
   --rs-radius: 10px;
   --rs-inset: 3px;
   --rs-thumb-radius: 7px;

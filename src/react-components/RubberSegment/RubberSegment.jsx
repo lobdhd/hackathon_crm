@@ -49,8 +49,8 @@ export default function RubberSegment({
   defaultValue,
   onChange,
   trackColor = '#ffffff',
-  thumbColor = '#5b50e6',
-  textColor = '#5b50e6',
+  thumbColor = '#2563eb',
+  textColor = '#2563eb',
   activeTextColor = '#ffffff',
   size = 'md',
   radius = 10,
@@ -197,7 +197,7 @@ export default function RubberSegment({
     box.current = trackRef.current.getBoundingClientRect();
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch { }
+    } catch {}
     const x = localX(e);
     const onThumb = draggable && x >= edgeL.get() && x <= edgeR.get();
     drag.current = { id: e.pointerId, x0: x, slot: i, onThumb, live: false, offset: 0, w: 0, hist: [[e.timeStamp, x]] };

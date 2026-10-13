@@ -4,7 +4,7 @@
     flex: 0 0 auto;
     max-width: 100%;
     border-radius: 8px;
-    background: #e7e4f5;
+    background: #dbeafe;
     animation: an-skeleton-pulse 1.5s ease-in-out infinite;
 }
 @keyframes an-skeleton-pulse {
@@ -18,7 +18,7 @@
     width: min(100%, 300px);
     height: min(150px, 100%);
     margin: auto auto 0;
-    border: 20px solid #e7e4f5;
+    border: 20px solid #dbeafe;
     border-bottom: 0;
     border-radius: 180px 180px 0 0;
     animation: an-skeleton-pulse 1.5s ease-in-out infinite;
@@ -30,7 +30,7 @@
     gap: 11px;
     height: 255px;
     padding: 12px 6px 16px;
-    border-bottom: 1px solid rgba(129, 140, 248, .15);
+    border-bottom: 1px solid rgba(59, 130, 246, .15);
 }
 .an .an-skeleton-bar { flex: 1 1 0; width: auto !important; border-radius: 7px 7px 2px 2px; }
 .an-skeleton-forecast-row {
@@ -44,7 +44,7 @@
 .an .an-skeleton-ring {
     width: 130px;
     height: 130px;
-    border: 17px solid #e7e4f5;
+    border: 17px solid #dbeafe;
     border-radius: 50%;
     background: transparent;
 }
@@ -58,7 +58,7 @@
     height: 170px;
     margin: 4px 0 12px;
     border-radius: 50%;
-    background: #e7e4f5;
+    background: #dbeafe;
     animation: an-skeleton-pulse 1.5s ease-in-out infinite;
 }
 .an-skeleton-donut::after {
@@ -66,14 +66,14 @@
     position: absolute;
     inset: 38px;
     border-radius: 50%;
-    background: #fbfaff;
+    background: #f8fbff;
 }
 .an-skeleton-anomaly-row {
     display: flex;
     flex-direction: column;
     gap: 11px;
     padding: 16px;
-    border-bottom: 1px solid rgba(129,140,248,.14);
+    border-bottom: 1px solid rgba(59, 130, 246,.14);
 }
 .an-skeleton-table { display: flex; flex-direction: column; gap: 0; min-height: 440px; width: 100%; }
 .an-skeleton-table-row {
@@ -83,7 +83,7 @@
     align-items: center;
     height: 56px;
     padding: 0 12px;
-    border-bottom: 1px solid rgba(129,140,248,.12);
+    border-bottom: 1px solid rgba(59, 130, 246,.12);
 }
 .an-inline-error {
     display: flex;
@@ -93,21 +93,21 @@
     justify-content: center;
     gap: 12px;
     min-height: 150px;
-    color: #817b9e;
+    color: #647e9b;
     font-size: 13px;
     text-align: center;
 }
 .an-inline-error button {
     padding: 7px 13px;
-    border: 1px solid rgba(91, 80, 230, .22);
+    border: 1px solid rgba(37, 99, 235, .22);
     border-radius: 9px;
-    color: #5b50e6;
+    color: #2563eb;
     font: inherit;
     font-weight: 600;
     background: #fff;
     cursor: pointer;
 }
-.an-inline-error button:hover { border-color: #5b50e6; }
+.an-inline-error button:hover { border-color: #2563eb; }
 @media (prefers-reduced-motion: reduce) {
     .an .an-skeleton, .an .an-skeleton-gauge, .an-skeleton-donut { animation: none; opacity: .72; }
 }

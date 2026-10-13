@@ -29,7 +29,7 @@ import { t as i18nT } from "../../i18n/index.js";
 import "./Analytics.css";
 import "./AnalyticsLoading.css";
 // MARK: Tokens
-const INDIGO = "#5b50e6";
+const INDIGO = "#2563eb";
 // Сплошной цвет по проценту риска: зелёный → жёлтый → оранжевый → красный.
 const RISK_STOPS = [
     [0, "#20b36b"],
@@ -294,8 +294,8 @@ export default function Analytics() {
                     value={period}
                     onChange={setPeriod}
                     trackColor="#ffffff"
-                    thumbColor="#5b50e6"
-                    textColor="#5b50e6"
+                    thumbColor="#2563eb"
+                    textColor="#2563eb"
                     activeTextColor="#ffffff"
                     size="md"
                     radius={10}
@@ -734,7 +734,7 @@ function ClosedGauge({ percent }) {
     // Центр полукруга совпадает с нижним краем, но концы дуги
     // остаются внутри viewport с запасом под скругления.
     const endCapInset = gaugeWidth * 0.034;
-    const chartOffsetY = Math.round((gaugeWidth - chartSize) / 2 - endCapInset -5);
+    const chartOffsetY = Math.round((gaugeWidth - chartSize) / 2 - endCapInset - 5);
     const options = useMemo(() => ({
         chart: {
             type: "gauge",
@@ -756,7 +756,7 @@ function ClosedGauge({ percent }) {
                     show: true,
                     startAngle: -90,
                     endAngle: 90,
-                    background: "#e9e7f6",
+                    background: "#dbeafe",
                     strokeWidth: "100%",
                     margin: 0,
                 },
@@ -806,7 +806,7 @@ function LoadRing({ label, value }) {
         plotOptions: {
             radialBar: {
                 hollow: { size: "66%" },
-                track: { background: "#e9e6fb", strokeWidth: "100%" },
+                track: { background: "#dbeafe", strokeWidth: "100%" },
                 dataLabels: {
                     name: { show: false },
                     value: {
@@ -814,7 +814,7 @@ function LoadRing({ label, value }) {
                         offsetY: 6,
                         fontSize: "20px",
                         fontWeight: 800,
-                        color: "#1e1b4b",
+                        color: "#153454",
                         formatter: (n) => `${Math.round(n)}%`,
                     },
                 },
@@ -907,7 +907,14 @@ function Ranking({ items, titleKey, valueKey, suffix }) {
         </div>
     );
 }
-
+// MARK: State
+function InlineLoader() {
+    return (
+        <div className="an-loader">
+            <RiLoader4Line size={26} className="an-spin" />
+        </div>
+    );
+}
 function EmptyBlock({ text }) {
     return <div className="an-empty">{text}</div>;
 }
@@ -950,7 +957,7 @@ function ForecastChart({ items, height = 240 }) {
         dataLabels: { enabled: false },
         xaxis: {
             categories: names.map((_, i) => `${i + 1}`),
-            labels: { style: { colors: "#aaa6cf", fontSize: "11px" } },
+            labels: { style: { colors: "#91a7bf", fontSize: "11px" } },
             axisBorder: { show: false },
             axisTicks: { show: false },
             tooltip: { enabled: false },
@@ -961,11 +968,11 @@ function ForecastChart({ items, height = 240 }) {
             tickAmount: 4,
             labels: {
                 formatter: (v) => `${Math.round(v)}%`,
-                style: { colors: "#aaa6cf", fontSize: "11px" },
+                style: { colors: "#91a7bf", fontSize: "11px" },
             },
         },
         grid: {
-            borderColor: "#e4e0f7",
+            borderColor: "#dbeafe",
             strokeDashArray: 5,
             padding: { top: 5, right: 14, left: 6, bottom: 0 },
         },
@@ -996,7 +1003,7 @@ function SeverityChart({ items }) {
         chart: { type: "donut", fontFamily: "inherit", animations: { enabled: true, speed: 400 } },
         labels: ["1 · Низкая", "2 · Умеренная", "3 · Средняя", "4 · Высокая", "5 · Критическая"],
         colors: ["#20b36b", "#a2ca57", "#e5b940", "#f48035", "#e94553"],
-        stroke: { width: 3, colors: ["#fbfaff"] },
+        stroke: { width: 3, colors: ["#f8fbff"] },
         plotOptions: {
             pie: {
                 expandOnClick: false,
@@ -1004,18 +1011,18 @@ function SeverityChart({ items }) {
                     size: "76%",
                     labels: {
                         show: true,
-                        name: { show: true, fontSize: "11px", color: "#aaa6cf", offsetY: -7 },
+                        name: { show: true, fontSize: "11px", color: "#91a7bf", offsetY: -7 },
                         value: {
                             show: true,
                             fontSize: "26px",
                             fontWeight: 800,
-                            color: "#1e1b4b",
+                            color: "#153454",
                             offsetY: 5,
                         },
                         total: {
                             show: true,
                             label: i18nT("analytics.status.total"),
-                            color: "#aaa6cf",
+                            color: "#91a7bf",
                             formatter: () => String(items.length),
                         },
                     },
@@ -1027,7 +1034,7 @@ function SeverityChart({ items }) {
             show: true,
             position: "right",
             fontSize: "12px",
-            labels: { colors: "#6d6a96" },
+            labels: { colors: "#57718e" },
             markers: { size: 7 },
             itemMargin: { vertical: 4 },
         },

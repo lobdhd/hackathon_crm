@@ -1,11 +1,11 @@
 /* Analytics: soft glass, unified solid-color data visualizations. */
 .an {
-    --ink: #1e1b4b;
-    --ink-2: #4a4673;
-    --muted: #8480b0;
-    --faint: #aaa6cf;
-    --brand: #5b50e6;
-    --pink: #f9a8c4;
+    --ink: #153454;
+    --ink-2: #355474;
+    --muted: #647e9b;
+    --faint: #91a7bf;
+    --brand: #2563eb;
+    --pink: #93c5fd;
     --line: rgba(255, 255, 255, 0.85);
     position: relative;
     isolation: isolate;
@@ -14,7 +14,7 @@
     padding: 28px;
     overflow: hidden;
     color: var(--ink);
-    background: linear-gradient(135deg, #e6e4fb65 0%, #f2effb78 55%, #fcebf267 100%);
+    background: linear-gradient(135deg, #dbeafe75 0%, #eff6ff99 55%, #e0f2fe78 100%);
 }
 .an *,
 .an *::before,
@@ -34,20 +34,20 @@
     height: 560px;
     left: -180px;
     top: -200px;
-    background: radial-gradient(circle, rgba(129, 141, 248, 0.092), transparent 70%);
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.092), transparent 70%);
 }
 .an::after {
     width: 600px;
     height: 600px;
     right: -200px;
     bottom: -180px;
-    background: radial-gradient(circle, rgba(249, 168, 196, 0.09), transparent 70%);
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.09), transparent 70%);
 }
 /* ---------- glass ---------- */
 .an-glass {
     background: rgba(255, 255, 255, 0.62);
     border: 1px solid var(--line);
-    box-shadow: 0 18px 50px -26px rgba(79, 70, 229, 0.38);
+    box-shadow: 0 18px 50px -26px rgba(37, 99, 235, 0.38);
 }
 .an-soft {
     background: rgba(255, 255, 255, 0);
@@ -117,7 +117,7 @@
 .an-seg__btn.is-active {
     background: #fff;
     color: var(--brand);
-    box-shadow: 0 8px 18px -10px rgba(79, 70, 229, 0.6);
+    box-shadow: 0 8px 18px -10px rgba(37, 99, 235, 0.6);
 }
 .an-select {
     appearance: none;
@@ -128,7 +128,7 @@
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.9);
     background-color: rgba(255, 255, 255, 0.7);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238480b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23647e9b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
     background-repeat: no-repeat;
     background-position: right 14px center;
     font: inherit;
@@ -140,8 +140,8 @@
     transition: box-shadow 0.2s, border-color 0.2s;
 }
 .an-select:focus {
-    border-color: #a5b4fc;
-    box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.25);
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
 }
 .an-iconbtn {
     display: inline-flex;
@@ -172,8 +172,8 @@
     font-size: 14px;
     font-weight: 700;
     color: #fff;
-    background: linear-gradient(135deg, #7667f5, #4f46e5);
-    box-shadow: 0 16px 30px -14px rgba(79, 70, 229, 0.85);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    box-shadow: 0 16px 30px -14px rgba(37, 99, 235, 0.85);
     transition: filter 0.2s;
 }
 .an-primary:hover {
@@ -240,7 +240,7 @@
     border-radius: 30px;
     border: 1px solid rgba(255, 255, 255, 0.9);
     background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 16px 32px -25px rgba(35, 32, 84, 0.2);
+    box-shadow: 0 16px 32px -25px rgba(21, 52, 84, 0.2);
     color: var(--ink);
 }
 .an-hero__top {
@@ -259,8 +259,8 @@
     height: 38px;
     flex: 0 0 auto;
     border-radius: 13px;
-    color: #5b50e6;
-    background: #f1f0ff;
+    color: #2563eb;
+    background: #eff6ff;
 }
 .an-hero__summary {
     display: flex;
@@ -280,7 +280,7 @@
 }
 .an-hero__value { font-weight: 750; color: var(--ink); }
 .an-hero__sub { font-weight: 650; color: var(--muted); }
-/* Адаптивный полукруг. Ширина — от внутренних границ карточки.*
+/* Адаптивный полукруг. Ширина — от внутренних границ карточки.
 *   Высота дуги = половина ширины, без изменения высоты родителя. */
 .an-gauge {
     position: relative;
@@ -326,7 +326,7 @@
     pointer-events: none;
 }
 .an-gauge__percent {
-    color: #252252;
+    color: #153454;
     font-size: clamp(28px, 2.4vw, 38px);
     font-weight: 800;
     line-height: 1;
@@ -334,7 +334,7 @@
     font-variant-numeric: tabular-nums;
 }
 .an-gauge__caption {
-    color: #9291b0;
+    color: #829bb4;
     font-size: 11px;
     font-weight: 600;
     line-height: 1.15;
@@ -395,8 +395,8 @@
     border-radius: 18px;
 }
 .an-tone--indigo {
-    background: #ebe9fd;
-    color: #5b50e6;
+    background: #dbeafe;
+    color: #2563eb;
 }
 .an-tone--rose {
     background: #ffe8ee;
@@ -407,8 +407,8 @@
     color: #e8920b;
 }
 .an-tone--pink {
-    background: #fde7f1;
-    color: #db5a97;
+    background: #e0f2fe;
+    color: #0284c7;
 }
 /* ---------- card ---------- */
 .an-card {
@@ -473,7 +473,7 @@
     flex-direction: column;
     gap: 0;
     padding: 8px 10px 8px 12px;
-    border: 1px solid rgba(129, 140, 248, 0.22);
+    border: 1px solid rgba(59, 130, 246, 0.22);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.24);
 }
@@ -481,7 +481,7 @@
     width: 6px;
 }
 .an-scroll::-webkit-scrollbar-thumb {
-    background: rgba(129, 140, 248, 0.35);
+    background: rgba(59, 130, 246, 0.35);
     border-radius: 6px;
 }
 /* ---------- workload ---------- */
@@ -530,7 +530,7 @@
     line-height: 1.75;
     color: var(--ink-2);
 }
-/* Рекомендации без фиолетовых плашек — только акцентная черта слева. */
+/* Рекомендации без цветных плашек — только акцентная черта слева. */
 .an-rec {
     margin-top: 10px;
     padding: 3px 0 3px 12px;
@@ -539,7 +539,7 @@
     border-radius: 0;
     font-size: 12px;
     line-height: 1.55;
-    color: #514c86;
+    color: #426585;
     background: transparent;
 }
 /* ---------- forecast list ---------- */
@@ -559,14 +559,14 @@
     min-width: 0;
     padding: 17px 16px;
     border: 0;
-    border-bottom: 1px solid rgba(91, 80, 230, 0.13);
+    border-bottom: 1px solid rgba(37, 99, 235, 0.13);
     border-radius: 0;
     background: transparent;
     box-shadow: none;
 }
 /* Вертикальный разделитель строго между двумя колонками. */
 .an-flist > .an-fitem:nth-child(odd) {
-    border-right: 1px solid rgba(91, 80, 230, 0.13);
+    border-right: 1px solid rgba(37, 99, 235, 0.13);
 }
 /* Последний ряд не получает лишнюю горизонтальную черту. */
 .an-flist > .an-fitem:last-child,
@@ -616,8 +616,8 @@
 /* Текст риска всегда одного цвета: меняется только заливка прогресс-бара. */
 .an-pill--forecast {
     flex-shrink: 0;
-    color: #3730a3;
-    background: #eeecff;
+    color: #1d4ed8;
+    background: #eff6ff;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
@@ -642,8 +642,8 @@
     color: #0f9d58;
 }
 .an-pill--indigo {
-    background: #ebe9fd;
-    color: #4f46e5;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 .an-track {
     height: 6px;
@@ -659,20 +659,20 @@
 .an-fill-bar {
     height: 100%;
     border-radius: 999px;
-    background-color: #5b50e6;
+    background-color: #2563eb;
 }
 /* ---------- anomalies ---------- */
 .an-scroll .an-anom {
     background: transparent;
     border: 0;
-    border-bottom: 1px solid #e5e7f0;
+    border-bottom: 1px solid #e2eaf3;
     border-radius: 0;
     padding: 16px 8px 17px;
     transition: background-color 150ms ease;
 }
 .an-scroll .an-anom:first-child { padding-top: 10px; }
 .an-scroll .an-anom:last-child { border-bottom: 0; }
-.an-scroll .an-anom:hover { background: rgba(246, 245, 255, 0.5); }
+.an-scroll .an-anom:hover { background: rgba(239, 246, 255, 0.5); }
 .an-anom__row {
     display: flex;
     align-items: flex-start;
@@ -689,7 +689,7 @@
     margin: 4px 0 0;
     font-size: 12px;
     line-height: 1.55;
-    color: #6d6a96;
+    color: #57718e;
 }
 /* ---------- ranking ---------- */
 .an-rank {
@@ -717,8 +717,8 @@
     color: var(--muted);
 }
 /* ---------- table ---------- */
-/* Единственная рамка таблицы простоев — этот внешний контейнер.*
-*   Глобальный SmartTable рисует вторую рамку с радиусом 14px;*
+/* Единственная рамка таблицы простоев — этот внешний контейнер.
+*   Глобальный SmartTable рисует вторую рамку с радиусом 14px;
 *   отключаем её ЛОКАЛЬНО, чтобы убрать белые просветы у серой шапки. */
 .an-tablewrap {
     border-radius: 20px;
@@ -748,7 +748,7 @@
     color: #e11d48;
 }
 .an-cell-off {
-    color: #c3c0e0;
+    color: #b3c6da;
 }
 /* Таблица имеет устойчивую минимальную ширину; лишнее прокручивается внутри SmartTable. */
 .an-tablewrap .smart-table,
@@ -765,7 +765,7 @@
     font-size: 12px;
     vertical-align: middle;
 }
-/* Только ВНЕШНЯЯ рамка задаёт скругление.*
+/* Только ВНЕШНЯЯ рамка задаёт скругление.
 *   Скругления отдельных th/td создавали белые просветы на фоне шапки. */
 .an-tablewrap .smart-table__table {
     border-collapse: separate;
@@ -780,7 +780,7 @@
     font-weight: 700;
     white-space: nowrap;
 }
-/* Стили только таблицы простоев. Не даём глобальному SmartTable*
+/* Стили только таблицы простоев. Не даём глобальному SmartTable
 *   обрезать заголовки; при нехватке места работает горизонтальный скролл. */
 .an-tablewrap .smart-table__head-title {
     display: inline-block;
@@ -822,7 +822,7 @@
     justify-content: center;
     min-height: 160px;
     border-radius: 20px;
-    border: 1px dashed rgba(129, 140, 248, 0.45);
+    border: 1px dashed rgba(59, 130, 246, 0.45);
     background: rgba(255, 255, 255, 0.4);
     font-size: 14px;
     color: var(--faint);
@@ -920,7 +920,7 @@
         border-right: 0;
     }
     .an-flist > .an-fitem:nth-last-child(2):nth-child(odd) {
-        border-bottom: 1px solid rgba(91, 80, 230, 0.13);
+        border-bottom: 1px solid rgba(37, 99, 235, 0.13);
     }
     .an-flist > .an-fitem:last-child {
         border-bottom: 0;
