@@ -1,8 +1,5 @@
 import Chart from "react-apexcharts";
-import {
-    useMemo,
-    useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     RiAlarmWarningLine,
     RiBarChartBoxLine,
@@ -23,468 +20,218 @@ import {
     useFailureForecast,
     useRunAnalyticsAnomalies,
 } from "../../hooks/useAnalytics.js";
-import {
-    useDowntimeReport,
-    useShiftReport,
-} from "../../hooks/useReports.js";
-import {
-    useAreas,
-} from "../../hooks/useReferences.js";
-import {
-    useI18n,
-} from "../../i18n/index.js";
+import { useDowntimeReport, useShiftReport } from "../../hooks/useReports.js";
+import { useAreas } from "../../hooks/useReferences.js";
+import { useI18n } from "../../i18n/index.js";
 import { t as i18nT } from "../../i18n/index.js";
-// MARK: Config
-const PERIODS = () => ([
-    {
-        value: "shift",
-        label: i18nT("reportModal.shift"),
-        days: 1,
-    },
-    {
-        value: "day",
-        label: i18nT("pages.analytics.analytics.81e7619"),
-        days: 1,
-    },
-    {
-        value: "week",
-        label: i18nT("analyticsPage.week"),
-        days: 7,
-    },
-    {
-        value: "month",
-        label: i18nT("reportModal.thirtyDays"),
-        days: 30,
-    },
-]);
-const ANOMALY_TYPES = () => ([
-    {
-        value: "",
-        label: i18nT("pages.analytics.analytics.32a2cfd"),
-    },
-    {
-        value: "FREQUENT_FAILURES",
-        label: i18nT("pages.analytics.analytics.91b6362"),
-    },
-    {
-        value: "REPEATED_FAULT",
-        label: i18nT("pages.analytics.analytics.a6d8e7b"),
-    },
-    {
-        value:
-            "FAILURE_AFTER_PLANNED_MAINTENANCE",
-        label:
-            i18nT("pages.analytics.analytics.ebc8df2"),
-    },
-    {
-        value: "MATERIAL_ANOMALY",
-        label:
-            i18nT("pages.analytics.analytics.db68c6c"),
-    },
-    {
-        value: "AREA_HOTSPOT",
-        label:
-            i18nT("pages.analytics.analytics.a871901"),
-    },
-    {
-        value: "SHIFT_PATTERN",
-        label:
-            i18nT("pages.analytics.analytics.349d3d9"),
-    },
-    {
-        value: "TIME_OF_DAY",
-        label:
-            i18nT("pages.analytics.analytics.e3d751f"),
-    },
-    {
-        value:
-            "EXECUTOR_REPEAT_FAILURES",
-        label:
-            i18nT("pages.analytics.analytics.1d44cc6"),
-    },
-    {
-        value:
-            "BRIGADE_REPEAT_FAILURES",
-        label:
-            i18nT("pages.analytics.analytics.15a05ac"),
-    },
-]);
-// MARK: Helpers
-function asArray(value) {
-    return Array.isArray(
-        value,
-    )
-        ? value
-        : [];
+import "./Analytics.css";
+
+// MARK: Tokens
+const INDIGO = "#5b50e6";
+// Сплошной цвет по проценту риска: зелёный → жёлтый → оранжевый → красный.
+const RISK_STOPS = [
+    [0, "#20b36b"],
+    [30, "#8fcf5c"],
+    [50, "#e5b940"],
+    [80, "#f48035"],
+    [100, "#e94553"],
+];
+function clampPercent(value) {
+    return Math.max(0, Math.min(100, Number(value) || 0));
 }
-function formatMinutes(
-    value,
-) {
-    const minutes =
-        Math.max(
-            0,
-            Math.round(
-                Number(
-                    value,
-                ) || 0,
-            ),
-        );
-    if (minutes < 60) {
-        return `${minutes} мин`;
-    }
-    const hours =
-        Math.floor(
-            minutes / 60,
-        );
-    const rest =
-        minutes % 60;
-    if (!rest) {
-        return `${hours} ч`;
-    }
+// API: probability в долях (0..1); также принимаем уже готовые проценты (0..100).
+function probabilityPercent(value) {
+    const hasPercentSign = typeof value === "string" && value.includes("%");
+    const parsed = typeof value === "string"
+        ? Number(value.replace("%", "").replace(",", ".").trim())
+        : Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+    return clampPercent(!hasPercentSign && parsed <= 1 ? parsed * 100 : parsed);
+}
+const percentFormatter = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 });
+function displayPercent(value) {
+    return `${percentFormatter.format(Math.round(clampPercent(value) * 10) / 10)}%`;
+}
+function riskColor(value) {
+    const percent = clampPercent(value);
+    const highIndex = RISK_STOPS.findIndex(([limit]) => percent <= limit);
+    if (highIndex <= 0) return RISK_STOPS[0][1];
+    const [start, from] = RISK_STOPS[highIndex - 1];
+    const [end, to] = RISK_STOPS[highIndex];
+    const mix = (percent - start) / (end - start);
+    const channels = [1, 3, 5].map((index) => {
+        const a = parseInt(from.slice(index, index + 2), 16);
+        const b = parseInt(to.slice(index, index + 2), 16);
+        return Math.round(a + (b - a) * mix).toString(16).padStart(2, "0");
+    });
+    return `#${channels.join("")}`;
+}
+
+// MARK: Config
+const PERIODS = () => [
+    { value: "shift", label: i18nT("reportModal.shift"), days: 1 },
+    { value: "day", label: i18nT("pages.analytics.analytics.81e7619"), days: 1 },
+    { value: "week", label: i18nT("analyticsPage.week"), days: 7 },
+    { value: "month", label: i18nT("reportModal.thirtyDays"), days: 30 },
+];
+const ANOMALY_TYPES = () => [
+    { value: "", label: i18nT("pages.analytics.analytics.32a2cfd") },
+    { value: "FREQUENT_FAILURES", label: i18nT("pages.analytics.analytics.91b6362") },
+    { value: "REPEATED_FAULT", label: i18nT("pages.analytics.analytics.a6d8e7b") },
+    {
+        value: "FAILURE_AFTER_PLANNED_MAINTENANCE",
+        label: i18nT("pages.analytics.analytics.ebc8df2"),
+    },
+    { value: "MATERIAL_ANOMALY", label: i18nT("pages.analytics.analytics.db68c6c") },
+    { value: "AREA_HOTSPOT", label: i18nT("pages.analytics.analytics.a871901") },
+    { value: "SHIFT_PATTERN", label: i18nT("pages.analytics.analytics.349d3d9") },
+    { value: "TIME_OF_DAY", label: i18nT("pages.analytics.analytics.e3d751f") },
+    {
+        value: "EXECUTOR_REPEAT_FAILURES",
+        label: i18nT("pages.analytics.analytics.1d44cc6"),
+    },
+    {
+        value: "BRIGADE_REPEAT_FAILURES",
+        label: i18nT("pages.analytics.analytics.15a05ac"),
+    },
+];
+
+// MARK: Helpers
+// Поддерживает старые локали, пока в ru.json/kk.json не обновлены переводы.
+function completionCardTitle() {
+    const label = i18nT("ratingPodium.closed");
+    if (label === "Закрыто") return "Показатель завершения работ";
+    if (label === "Жабылды") return "Жұмыстардың аяқталу көрсеткіші";
+    return label;
+}
+function asArray(value) {
+    return Array.isArray(value) ? value : [];
+}
+function formatMinutes(value) {
+    const minutes = Math.max(0, Math.round(Number(value) || 0));
+    if (minutes < 60) return `${minutes} мин`;
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    if (!rest) return `${hours} ч`;
     return `${hours} ч ${rest} мин`;
 }
-function formatPercent(
-    value,
-) {
-    const number =
-        Number(value);
-    if (
-        !Number.isFinite(
-            number,
-        )
-    ) {
-        return "—";
-    }
-    return `${Math.round(
-        number * 100,
-    )}%`;
+function formatPercent(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return "—";
+    return `${Math.round(number * 100)}%`;
 }
-function extractError(
-    error,
-) {
-    return (
-        error?.response?.data
-            ?.error ||
-        error?.message ||
-        "Ошибка загрузки данных"
-    );
+function extractError(error) {
+    return error?.response?.data?.error || error?.message || "Ошибка загрузки данных";
 }
-function createPeriodRange(
-    period,
-) {
-    const now =
-        new Date();
-    const from =
-        new Date(
-            now,
-        );
-    if (
-        period ===
-        "shift"
-    ) {
-        from.setHours(
-            from.getHours() -
-                12,
-        );
-    } else if (
-        period ===
-        "day"
-    ) {
-        from.setDate(
-            from.getDate() -
-                1,
-        );
-    } else if (
-        period ===
-        "week"
-    ) {
-        from.setDate(
-            from.getDate() -
-                7,
-        );
-    } else {
-        from.setDate(
-            from.getDate() -
-                30,
-        );
-    }
-    return {
-        from:
-            from.toISOString(),
-        to:
-            now.toISOString(),
-    };
+function createPeriodRange(period) {
+    const now = new Date();
+    const from = new Date(now);
+    if (period === "shift") from.setHours(from.getHours() - 12);
+    else if (period === "day") from.setDate(from.getDate() - 1);
+    else if (period === "week") from.setDate(from.getDate() - 7);
+    else from.setDate(from.getDate() - 30);
+    return { from: from.toISOString(), to: now.toISOString() };
 }
+
 // MARK: Page
 export default function Analytics() {
     const __i18nLocaleToken = i18nT("sidebar.home");
     useI18n();
-    const [
-        period,
-        setPeriod,
-    ] = useState(
-        "week",
+    const [period, setPeriod] = useState("week");
+    const [areaId, setAreaId] = useState("");
+    const [anomalyType, setAnomalyType] = useState("");
+    const areasQuery = useAreas();
+    const dashboardQuery = useAnalyticsDashboard();
+    const currentPeriod = PERIODS().find((item) => item.value === period) ?? PERIODS()[2];
+    const reportParams = useMemo(
+        () => ({ period, ...(areaId ? { areaId: Number(areaId) } : {}) }),
+        [period, areaId, __i18nLocaleToken],
     );
-    const [
-        areaId,
-        setAreaId,
-    ] = useState("");
-    const [
-        anomalyType,
-        setAnomalyType,
-    ] = useState("");
-    const areasQuery =
-        useAreas();
-    const dashboardQuery =
-        useAnalyticsDashboard();
-    const currentPeriod =
-        PERIODS().find(
-            (item) =>
-                item.value ===
-                period,
-        ) ??
-        PERIODS()[2];
-    const reportParams =
-        useMemo(
-            () => ({
-                period,
-                ...(areaId
-                    ? {
-                        areaId:
-                            Number(
-                                areaId,
-                            ),
-                    }
-                    : {}),
-            }),
-            [
-                period,
-                areaId,
-             __i18nLocaleToken],
-        );
-    const shiftQuery =
-        useShiftReport(
-            reportParams,
-        );
-    const downtimeQuery =
-        useDowntimeReport(
-            reportParams,
-        );
-    const forecastQuery =
-        useFailureForecast(
-            currentPeriod.days,
-        );
-    const anomaliesQuery =
-        useAnalyticsAnomalies({
-            ...(areaId
-                ? {
-                    areaId:
-                        Number(
-                            areaId,
-                        ),
-                }
-                : {}),
-            ...(anomalyType
-                ? {
-                    type:
-                        anomalyType,
-                }
-                : {}),
-        });
-    const runMutation =
-        useRunAnalyticsAnomalies();
-    const areas =
-        asArray(
-            areasQuery.data,
-        );
-    const dashboard =
-        dashboardQuery.data ??
-        {};
-    const shift =
-        shiftQuery.data ??
-        {};
-    const downtime =
-        downtimeQuery.data ??
-        {};
-    const forecasts =
-        asArray(
-            forecastQuery.data,
-        );
-    const anomalies =
-        asArray(
-            anomaliesQuery.data,
-        );
-    const sortedForecast =
-        useMemo(
-            () =>
-                [...forecasts].sort(
-                    (
-                        a,
-                        b,
-                    ) =>
-                        Number(
-                            b.probability,
-                        ) -
-                        Number(
-                            a.probability,
-                        ),
+    const shiftQuery = useShiftReport(reportParams);
+    const downtimeQuery = useDowntimeReport(reportParams);
+    const forecastQuery = useFailureForecast(currentPeriod.days);
+    const anomaliesQuery = useAnalyticsAnomalies({
+        ...(areaId ? { areaId: Number(areaId) } : {}),
+        ...(anomalyType ? { type: anomalyType } : {}),
+    });
+    const runMutation = useRunAnalyticsAnomalies();
+    const areas = asArray(areasQuery.data);
+    const dashboard = dashboardQuery.data ?? {};
+    const shift = shiftQuery.data ?? {};
+    const downtime = downtimeQuery.data ?? {};
+    const forecasts = asArray(forecastQuery.data);
+    const anomalies = asArray(anomaliesQuery.data);
+    const sortedForecast = useMemo(
+        () => [...forecasts].sort((a, b) => probabilityPercent(b.probability) - probabilityPercent(a.probability)),
+        [forecasts, __i18nLocaleToken],
+    );
+    const sortedAnomalies = useMemo(
+        () => [...anomalies].sort((a, b) => Number(b.severity) - Number(a.severity)),
+        [anomalies, __i18nLocaleToken],
+    );
+    const downtimeEquipment = asArray(downtime.byEquipment);
+    const aiResult = runMutation.data?.ai;
+    const executors = Number(shift.workload?.executorsOnShift ?? 0);
+    const busy = Number(shift.workload?.busy ?? 0);
+    const loadPercent = executors ? (busy / executors) * 100 : 0;
+    const issued = Number(shift.issued ?? 0);
+    const closed = Number(shift.closed ?? 0);
+    const closedPercent = issued > 0 ? clampPercent((closed / issued) * 100) : null;
+    const downtimeColumns = useMemo(
+        () => [
+            {
+                key: "equipment",
+                header: i18nT("sidebar.equipment"),
+                width: "34%",
+                minWidth: 200,
+                sortField: "equipmentName",
+                sortValue: (row) => row.equipment?.name ?? row.equipment ?? "",
+                render: (row) => (
+                    <div className="an-equip-cell">
+                        <div className="an-cell-name">{row.equipment?.name || row.equipment || "—"}</div>
+                        {row.area?.name && <div className="an-cell-sub">{row.area.name}</div>}
+                    </div>
                 ),
-            [
-                forecasts,
-             __i18nLocaleToken],
-        );
-    const sortedAnomalies =
-        useMemo(
-            () =>
-                [...anomalies].sort(
-                    (
-                        a,
-                        b,
-                    ) =>
-                        Number(
-                            b.severity,
-                        ) -
-                        Number(
-                            a.severity,
-                        ),
+            },
+            { field: "count", header: "События", width: "10%", minWidth: 82, align: "center" },
+            {
+                field: "minutes",
+                header: "Простой",
+                width: "16%",
+                minWidth: 110,
+                sortValue: (row) => Number(row.minutes),
+                render: (row) => <span className="an-cell-time">{formatMinutes(row.minutes)}</span>,
+            },
+            {
+                field: "plannedMinutes",
+                header: "План.",
+                width: "13%",
+                minWidth: 96,
+                render: (row) => <span className="an-cell-time">{formatMinutes(row.plannedMinutes)}</span>,
+            },
+            {
+                field: "unplannedMinutes",
+                header: "Аварий.",
+                width: "17%",
+                minWidth: 112,
+                render: (row) => (
+                    <span className="an-cell-time an-cell-danger">{formatMinutes(row.unplannedMinutes)}</span>
                 ),
-            [
-                anomalies,
-             __i18nLocaleToken],
-        );
-    const downtimeEquipment =
-        asArray(
-            downtime.byEquipment,
-        );
-    const aiResult =
-        runMutation.data
-            ?.ai;
-    const downtimeColumns =
-        useMemo(
-            () => [
-                {
-                    key:
-                        "equipment",
-                    header:
-                        i18nT("sidebar.equipment"),
-                    minWidth:
-                        220,
-                    sortValue:
-                        (
-                            row,
-                        ) =>
-                            row.equipment
-                                ?.name ??
-                            row.equipment ??
-                            "",
-                    render:
-                        (
-                            row,
-                        ) => (
-                            <div>
-                                <p className="font-semibold text-gray-900">
-                                    {row
-                                        .equipment
-                                        ?.name ||
-                                        row.equipment ||
-                                        "—"}
-                                </p>
-                                <p className="mt-1 text-xs text-gray-400">
-                                    {row.area
-                                        ?.name ||
-                                        "Участок не указан"}
-                                </p>
-                            </div>
-                        ),
-                },
-                {
-                    field:
-                        "count",
-                    header:
-                        "Событий",
-                    minWidth:
-                        100,
-                },
-                {
-                    field:
-                        "minutes",
-                    header:
-                        i18nT("analytics.downtime.label"),
-                    minWidth:
-                        130,
-                    sortValue:
-                        (
-                            row,
-                        ) =>
-                            Number(
-                                row.minutes,
-                            ),
-                    render:
-                        (
-                            row,
-                        ) =>
-                            formatMinutes(
-                                row.minutes,
-                            ),
-                },
-                {
-                    field:
-                        "plannedMinutes",
-                    header:
-                        i18nT("priority.planned"),
-                    minWidth:
-                        130,
-                    render:
-                        (
-                            row,
-                        ) =>
-                            formatMinutes(
-                                row.plannedMinutes,
-                            ),
-                },
-                {
-                    field:
-                        "unplannedMinutes",
-                    header:
-                        i18nT("priority.emergency"),
-                    minWidth:
-                        130,
-                    render:
-                        (
-                            row,
-                        ) => (
-                            <span className="font-semibold text-red-600">
-                                {formatMinutes(
-                                    row.unplannedMinutes,
-                                )}
-                            </span>
-                        ),
-                },
-                {
-                    field:
-                        "ongoing",
-                    header:
-                        i18nT("pages.dashboard.dashboard.2c2777e"),
-                    minWidth:
-                        100,
-                    render:
-                        (
-                            row,
-                        ) =>
-                            row.ongoing
-                                ? (
-                                    <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
-                                        {i18nT("pages.analytics.analytics.e04af96")}
-                                    </span>
-                                )
-                                : (
-                                    <span className="text-gray-400">
-                                        {i18nT("pages.analytics.analytics.d0cd224")}
-                                    </span>
-                                ),
-                },
-            ],
-        [ __i18nLocaleToken],
+            },
+            {
+                field: "ongoing",
+                header: "Сейчас",
+                width: "10%",
+                minWidth: 82,
+                align: "center",
+                render: (row) => row.ongoing ? (
+                    <span className="an-pill an-pill--rose">{i18nT("pages.analytics.analytics.e04af96")}</span>
+                ) : (
+                    <span className="an-cell-off">{i18nT("pages.analytics.analytics.d0cd224")}</span>
+                ),
+            },
+        ],
+        [__i18nLocaleToken],
     );
     async function refreshAll() {
         await Promise.all([
@@ -496,925 +243,722 @@ export default function Analytics() {
         ]);
     }
     async function recalculate() {
-        const range =
-            createPeriodRange(
-                period,
-            );
+        const range = createPeriodRange(period);
         try {
             await runMutation.mutateAsync({
                 ...range,
-                ...(areaId
-                    ? {
-                        areaId:
-                            Number(
-                                areaId,
-                            ),
-                    }
-                    : {}),
+                ...(areaId ? { areaId: Number(areaId) } : {}),
             });
         } catch {
-// Ошибка отображается ниже.
+            // Ошибка отображается ниже.
         }
     }
-    const loading =
-        shiftQuery.isLoading &&
-        !shiftQuery.data;
+    const loading = shiftQuery.isLoading && !shiftQuery.data;
     if (loading) {
         return (
-            <PageLoader />
+            <div className="an">
+                <div className="an-loader an-loader--page">
+                    <RiLoader4Line size={34} className="an-spin" />
+                </div>
+            </div>
         );
     }
     return (
-        <div className="mx-auto max-w-[1800px]">
+        <div className="an">
             {/* HEADER */}
-            <div className="mb-6 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+            <div className="an-head">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                        {i18nT("pages.analytics.analytics.4047521")}
-                    </h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                        {i18nT("pages.analytics.analytics.5520929")}
-                    </p>
+                    <h1 className="an-title">{i18nT("pages.analytics.analytics.4047521")}</h1>
+                    <p className="an-subtitle">{i18nT("pages.analytics.analytics.5520929")}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-            
+                <div className="an-btn-row">
                     <button
                         type="button"
-                        onClick={
-                            recalculate
-                        }
-                        disabled={
-                            runMutation.isPending
-                        }
-                        className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                        className="an-iconbtn"
+                        onClick={refreshAll}
+                        aria-label="Обновить данные"
                     >
-                        {runMutation.isPending
-                            ? (
-                                <RiLoader4Line className="animate-spin" />
-                            )
-                            : (
-                                <RiSparkling2Line />
-                            )}
-                        {runMutation.isPending
-                            ? "AI анализирует..."
-                            : "Пересчитать аномалии"}
+                        <RiRefreshLine size={18} />
+                    </button>
+                    <button
+                        type="button"
+                        className="an-primary"
+                        onClick={recalculate}
+                        disabled={runMutation.isPending}
+                    >
+                        {runMutation.isPending ? (
+                            <RiLoader4Line size={18} className="an-spin" />
+                        ) : (
+                            <RiSparkling2Line size={18} />
+                        )}
+                        {runMutation.isPending ? "AI анализирует..." : "Пересчитать аномалии"}
                     </button>
                 </div>
             </div>
-            {/* FILTERS */}
-            <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="flex flex-wrap gap-2">
-                        {PERIODS().map(
-                            (
-                                item,
-                            ) => (
-                                <PeriodButton
-                                    key={
-                                        item.value
-                                    }
-                                    active={
-                                        period ===
-                                        item.value
-                                    }
-                                    onClick={() =>
-                                        setPeriod(
-                                            item.value,
-                                        )
-                                    }
-                                >
-                                    {
-                                        item.label
-                                    }
-                                </PeriodButton>
-                            ),
-                        )}
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                        <select
-                            value={
-                                areaId
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                setAreaId(
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            className="min-w-[220px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+            {/* TOOLBAR */}
+            <div className="an-glass an-toolbar">
+                <div className="an-seg">
+                    {PERIODS().map((item) => (
+                        <button
+                            key={item.value}
+                            type="button"
+                            className={`an-seg__btn${period === item.value ? " is-active" : ""}`}
+                            onClick={() => setPeriod(item.value)}
                         >
-                            <option value="">
-                                {i18nT("reportModal.allAreas")}
+                            {item.label}
+                        </button>
+                    ))}
+                </div>
+                <div className="an-toolbar__group">
+                    <select
+                        className="an-select"
+                        value={areaId}
+                        onChange={(event) => setAreaId(event.target.value)}
+                    >
+                        <option value="">{i18nT("reportModal.allAreas")}</option>
+                        {areas.map((area) => (
+                            <option key={area.id} value={area.id}>
+                                {area.name}
                             </option>
-                            {areas.map(
-                                (
-                                    area,
-                                ) => (
-                                    <option
-                                        key={
-                                            area.id
-                                        }
-                                        value={
-                                            area.id
-                                        }
-                                    >
-                                        {
-                                            area.name
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                        <select
-                            value={
-                                anomalyType
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                setAnomalyType(
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            className="min-w-[240px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-                        >
-                            {ANOMALY_TYPES().map(
-                                (
-                                    item,
-                                ) => (
-                                    <option
-                                        key={
-                                            item.value
-                                        }
-                                        value={
-                                            item.value
-                                        }
-                                    >
-                                        {
-                                            item.label
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    </div>
+                        ))}
+                    </select>
+                    <select
+                        className="an-select"
+                        value={anomalyType}
+                        onChange={(event) => setAnomalyType(event.target.value)}
+                    >
+                        {ANOMALY_TYPES().map((item) => (
+                            <option key={item.value} value={item.value}>
+                                {item.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
-            {/* ERRORS */}
-            {(shiftQuery.isError ||
-                downtimeQuery.isError) && (
-                <ErrorBox
-                    text={extractError(
-                        shiftQuery.error ||
-                            downtimeQuery.error,
-                    )}
-                />
+            {(shiftQuery.isError || downtimeQuery.isError) && (
+                <div className="an-error">{extractError(shiftQuery.error || downtimeQuery.error)}</div>
             )}
-            {/* KPI */}
-            <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-5">
-                <KpiCard
-                    label={i18nT("ratingPodium.closed")}
-                    value={
-                        shift.closed ??
-                        0
-                    }
-                    helper="За период"
-                    icon={
-                        RiCheckboxCircleLine
-                    }
-                    tone="green"
-                />
-                <KpiCard
-                    label={i18nT("status.inProgress")}
-                    value={
-                        shift.inProgress ??
-                        0
-                    }
-                    helper="Активные работы"
-                    icon={
-                        RiToolsLine
-                    }
-                    tone="blue"
-                />
-                <KpiCard
-                    label={i18nT("kanban.overdue")}
-                    value={
-                        shift.overdue ??
-                        0
-                    }
-                    helper={i18nT("pages.dashboard.dashboard.06745d6")}
-                    icon={
-                        RiAlarmWarningLine
-                    }
-                    tone="red"
-                />
-                <KpiCard
-                    label="Общий простой"
-                    value={formatMinutes(
-                        downtime.totals
-                            ?.minutes,
-                    )}
-                    helper={`${downtime.totals?.ongoing ?? 0} активных`}
-                    icon={
-                        RiTimeLine
-                    }
-                    tone="orange"
-                />
-                <KpiCard
-                    label={i18nT("pages.dashboard.dashboard.849a585")}
-                    value={formatMinutes(
-                        dashboard.averageReactionMinutes,
-                    )}
-                    helper={`Выполнение ${formatMinutes(
-                        dashboard.averageCompletionMinutes,
-                    )}`}
-                    icon={
-                        RiSpeedLine
-                    }
-                    tone="violet"
-                />
-            </div>
-            {/* WORKLOAD */}
-            <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-                <Section
-                    title={i18nT("pages.analytics.analytics.f9f5658")}
-                    subtitle="Состояние исполнителей за выбранный период"
-                    icon={
-                        RiBarChartBoxLine
-                    }
-                >
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                        <MiniStat
-                            title={i18nT("pages.admin.admin.admin.958b816")}
-                            value={
-                                shift.workload
-                                    ?.executorsOnShift ??
-                                0
-                            }
-                        />
-                        <MiniStat
-                            title={i18nT("pages.analytics.analytics.90fc82e")}
-                            value={
-                                shift.workload
-                                    ?.busy ??
-                                0
-                            }
-                        />
-                        <MiniStat
-                            title={i18nT("pages.analytics.analytics.f3fd6df")}
-                            value={
-                                shift.workload
-                                    ?.free ??
-                                0
-                            }
-                        />
-                        <MiniStat
-                            title={i18nT("pages.analytics.analytics.0f7ca97")}
-                            value={
-                                shift.downtime
-                                    ?.equipmentInDowntimeNow ??
-                                0
-                            }
-                        />
+            {/* HERO + KPI */}
+            <div className="an-grid an-grid--top">
+                <div className="an-hero">
+                    <div className="an-hero__top">
+                        <span>{completionCardTitle()}</span>
+                        <span className="an-hero__icon"><RiCheckboxCircleLine size={19} /></span>
                     </div>
-                    <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <ProgressMetric
-                            label="Загрузка исполнителей"
-                            value={
-                                shift.workload
-                                    ?.executorsOnShift
-                                    ? (
-                                        Number(
-                                            shift.workload
-                                                .busy ??
-                                                0,
-                                        ) /
-                                        Number(
-                                            shift.workload
-                                                .executorsOnShift,
-                                        )
-                                    ) *
-                                    100
-                                    : 0
-                            }
-                        />
-                        <ProgressMetric
-                            label="Закрытые / выданные"
-                            value={
-                                shift.issued
-                                    ? (
-                                        Number(
-                                            shift.closed ??
-                                                0,
-                                        ) /
-                                        Number(
-                                            shift.issued,
-                                        )
-                                    ) *
-                                    100
-                                    : 0
-                            }
-                        />
+                    <div className="an-hero__summary">
+                        <strong className="an-hero__value">{closed}</strong>
+                        <span className="an-hero__sub">из {issued} выданных за период</span>
                     </div>
-                </Section>
-                <Section
-                    title={i18nT("pages.analytics.analytics.e3c205a")}
-                    subtitle="Вывод сервера по периоду"
-                    icon={
-                        RiSparkling2Line
-                    }
-                >
-                    <p className="text-sm leading-6 text-gray-600">
-                        {aiResult
-                            ?.summary ||
-                            shift.aiSummary ||
-                            "AI-сводка пока отсутствует."}
-                    </p>
-                    {asArray(
-                        aiResult
-                            ?.recommendations,
-                    ).length >
-                        0 && (
-                        <div className="mt-4 space-y-2">
-                            {aiResult.recommendations.map(
-                                (
-                                    item,
-                                    index,
-                                ) => (
-                                    <div
-                                        key={`${item}-${index}`}
-                                        className="rounded-lg bg-violet-50 px-3 py-2 text-xs leading-5 text-violet-800"
-                                    >
-                                        {
-                                            item
-                                        }
-                                    </div>
-                                ),
-                            )}
-                        </div>
-                    )}
-                </Section>
+                    <ClosedGauge percent={closedPercent} />
+                </div>
+                <div className="an-kpis">
+                    <KpiCard
+                        label={i18nT("status.inProgress")}
+                        value={shift.inProgress ?? 0}
+                        helper="Активные работы"
+                        icon={RiToolsLine}
+                        tone="indigo"
+                    />
+                    <KpiCard
+                        label={i18nT("kanban.overdue")}
+                        value={shift.overdue ?? 0}
+                        helper={i18nT("pages.dashboard.dashboard.06745d6")}
+                        icon={RiAlarmWarningLine}
+                        tone="rose"
+                    />
+                    <KpiCard
+                        label="Общий простой"
+                        value={formatMinutes(downtime.totals?.minutes)}
+                        helper={`${downtime.totals?.ongoing ?? 0} активных`}
+                        icon={RiTimeLine}
+                        tone="amber"
+                    />
+                    <KpiCard
+                        label={i18nT("pages.dashboard.dashboard.849a585")}
+                        value={formatMinutes(dashboard.averageReactionMinutes)}
+                        helper={`Выполнение ${formatMinutes(dashboard.averageCompletionMinutes)}`}
+                        icon={RiSpeedLine}
+                        tone="pink"
+                    />
+                </div>
             </div>
-            {/* FORECAST */}
-            <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <div className="min-w-0">
-                <Section
+            {/* FORECAST + WORKLOAD/AI */}
+            <div className="an-grid an-grid--mid">
+                <Card
                     title={i18nT("pages.analytics.analytics.b89121c")}
                     subtitle={`Горизонт: ${currentPeriod.days} дн.`}
-                    icon={
-                        RiFlashlightLine
-                    }
+                    icon={RiFlashlightLine}
                 >
                     {forecastQuery.isLoading ? (
                         <InlineLoader />
-                    ) : sortedForecast.length >
-                      0 ? (
-                        <div className="space-y-3">
-<p className="text-[11px] text-gray-400">{i18nT("pages.analytics.analytics.f8c7a7a")}</p>
-                            <ForecastChart items={sortedForecast.slice(0, 8)} height={220} />
-                            {sortedForecast
-                                .slice(
-                                    0,
-                                    8,
-                                )
-                                .map(
-                                    (
-                                        item,
-                                    ) => (
-                                        <ForecastItem
-                                            key={
-                                                item.equipmentId
-                                            }
-                                            item={
-                                                item
-                                            }
-                                        />
-                                    ),
-                                )}
-                        </div>
+                    ) : sortedForecast.length > 0 ? (
+                        <>
+                            <p className="an-hint">{i18nT("pages.analytics.analytics.f8c7a7a")}</p>
+                            <ForecastChart items={sortedForecast.slice(0, 8)} height={260} />
+                            <div className="an-flist">
+                                {sortedForecast.slice(0, 8).map((item, index) => (
+                                    <ForecastItem key={item.equipmentId} item={item} index={index} />
+                                ))}
+                            </div>
+                        </>
                     ) : (
                         <EmptyBlock text="Прогноз отсутствует" />
                     )}
-                </Section>
+                </Card>
+                <div className="an-stack">
+                    <Card
+                        title={i18nT("pages.analytics.analytics.f9f5658")}
+                        subtitle="Состояние исполнителей за выбранный период"
+                        icon={RiBarChartBoxLine}
+                    >
+                        <div className="an-load">
+                            <LoadRing label="Загрузка исполнителей" value={loadPercent} />
+                            <div className="an-stats">
+                                <MiniStat
+                                    title={i18nT("pages.admin.admin.admin.958b816")}
+                                    value={shift.workload?.executorsOnShift ?? 0}
+                                />
+                                <MiniStat
+                                    title={i18nT("pages.analytics.analytics.90fc82e")}
+                                    value={shift.workload?.busy ?? 0}
+                                />
+                                <MiniStat
+                                    title={i18nT("pages.analytics.analytics.f3fd6df")}
+                                    value={shift.workload?.free ?? 0}
+                                />
+                                <MiniStat
+                                    title={i18nT("pages.analytics.analytics.0f7ca97")}
+                                    value={shift.downtime?.equipmentInDowntimeNow ?? 0}
+                                />
+                            </div>
+                        </div>
+                    </Card>
+                    <Card
+                        title={i18nT("pages.analytics.analytics.e3c205a")}
+                        subtitle="Вывод сервера по периоду"
+                        icon={RiSparkling2Line}
+                    >
+                        <p className="an-ai__text">
+                            {aiResult?.summary || shift.aiSummary || "AI-сводка пока отсутствует."}
+                        </p>
+                        {asArray(aiResult?.recommendations).map((item, index) => (
+                            <div key={`${item}-${index}`} className="an-rec">
+                                {item}
+                            </div>
+                        ))}
+                    </Card>
                 </div>
-                <div className="min-w-0 xl:relative xl:min-h-0">
-                    <div className={sortedForecast.length && !forecastQuery.isLoading ? "xl:absolute xl:inset-0" : ""}>
-                <Section
+            </div>
+            {/* ANOMALIES + DOWNTIME */}
+            <div className="an-grid an-grid--low">
+                <Card
                     title={i18nT("pages.analytics.analytics.fb6342c")}
                     subtitle={`${sortedAnomalies.length} найдено`}
                     icon={RiSparkling2Line}
-                    fillHeight
                 >
                     {anomaliesQuery.isLoading ? (
                         <InlineLoader />
-                    ) : sortedAnomalies.length >
-                      0 ? (
-                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                            <div className="shrink-0"><SeverityChart items={sortedAnomalies} /></div>
-                            <div className={`min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1 ${sortedForecast.length && !forecastQuery.isLoading ? "max-h-[520px] xl:max-h-none" : "max-h-[520px]"}`}>
-                            {sortedAnomalies.map(
-                                (
-                                    item,
-                                ) => (
-                                    <AnomalyItem
-                                        key={
-                                            item.id
-                                        }
-                                        item={
-                                            item
-                                        }
-                                    />
-                                ),
-                            )}
+                    ) : sortedAnomalies.length > 0 ? (
+                        <div className="an-fill">
+                            <div className="an-fill__in">
+                                <SeverityChart items={sortedAnomalies} />
+                                <div className="an-scroll">
+                                    {sortedAnomalies.map((item) => (
+                                        <AnomalyItem key={item.id} item={item} />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-</div>
                     ) : (
                         <EmptyBlock text="Аномалий не найдено" />
                     )}
-                </Section>
+                </Card>
+                <Card
+                    title={i18nT("analytics.downtime.title")}
+                    subtitle="Разбивка по оборудованию"
+                    icon={RiTimeLine}
+                >
+                    <div className="an-tablewrap">
+                        <div className="an-tablewrap__desktop">
+                            <SmartTable
+                                data={downtimeEquipment}
+                                columns={downtimeColumns}
+                                dataKey="equipmentId"
+                                mode="sort"
+                                compact
+                                striped
+                                stickyHeader
+                                className="an-downtime-table"
+                                minWidth={0}
+                                scrollHeight="clamp(440px, 56vh, 560px)"
+                                emptyText="Простоев нет"
+                                emptyDescription="За выбранный период простоев оборудования не зарегистрировано"
+                            />
+                        </div>
+                        <div className="an-tablewrap__mobile">
+                            <DowntimeMobileList items={downtimeEquipment} />
+                        </div>
                     </div>
-                </div>
+                </Card>
             </div>
-            {/* DOWNTIME */}
-            <Section
-                title={i18nT("analytics.downtime.title")}
-                subtitle="Разбивка по оборудованию"
-                icon={
-                    RiTimeLine
-                }
-            >
-                <div className="[&_.smart-table__table]:h-full">
-                <SmartTable
-                    data={
-                        downtimeEquipment
-                    }
-                    columns={
-                        downtimeColumns
-                    }
-                    dataKey="equipmentId"
-                    mode="sort"
-                    compact
-                    striped
-                    stickyHeader
-                    minWidth={
-                        900
-                    }
-                    scrollHeight="clamp(500px, 61vh, 640px)"
-                    emptyText="Простоев нет"
-                    emptyDescription="За выбранный период простоев оборудования не зарегистрировано"
-                />
-                </div>
-            </Section>
             {/* TOPS */}
-            <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <Section
+            <div className="an-grid an-grid--two" style={{ marginBottom: 0 }}>
+                <Card
                     title={i18nT("pages.analytics.analytics.101358d")}
                     subtitle="Аварийные наряды за 30 дней"
-                    icon={
-                        RiToolsLine
-                    }
+                    icon={RiToolsLine}
                 >
                     <Ranking
-                        items={asArray(
-                            dashboard.topEquipment,
-                        )}
+                        items={asArray(dashboard.topEquipment)}
                         titleKey="name"
                         valueKey="_count"
                         suffix="аварий"
                     />
-                </Section>
-                <Section
+                </Card>
+                <Card
                     title={i18nT("pages.analytics.analytics.e536c9b")}
                     subtitle="Аварийность на единицу оборудования"
-                    icon={
-                        RiMapPinLine
-                    }
+                    icon={RiMapPinLine}
                 >
                     <Ranking
-                        items={asArray(
-                            dashboard.topAreas,
-                        )}
+                        items={asArray(dashboard.topAreas)}
                         titleKey="name"
                         valueKey="emergenciesPerUnit"
                         suffix="/ ед."
                     />
-                </Section>
+                </Card>
             </div>
         </div>
     );
 }
-// MARK: Period
-function PeriodButton({
-    active,
-    onClick,
-    children,
-}) {
+
+// MARK: Card
+function Card({ title, subtitle, icon: Icon, children }) {
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                active
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-            }`}
-        >
-            {children}
-        </button>
-    );
-}
-// MARK: KPI
-function KpiCard({
-    label,
-    value,
-    helper,
-    icon: Icon,
-    tone,
-}) {
-    const tones = {
-        green:
-            "bg-green-50 text-green-600",
-        blue:
-            "bg-blue-50 text-blue-600",
-        red:
-            "bg-red-50 text-red-600",
-        orange:
-            "bg-orange-50 text-orange-600",
-        violet:
-            "bg-violet-50 text-violet-600",
-    };
-    return (
-        <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-gray-500">
-                    {label}
-                </p>
-                <p className="mt-1 truncate text-2xl font-bold text-gray-900">
-                    {value}
-                </p>
-                <p className="mt-1 truncate text-[10px] text-gray-400">
-                    {helper}
-                </p>
-            </div>
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                tones[tone] ||
-                tones.blue
-            }`}>
-                <Icon
-                    size={
-                        20
-                    }
-                />
-            </div>
-        </div>
-    );
-}
-// MARK: Section
-function Section({
-    title,
-    subtitle,
-    icon: Icon,
-    children,
-    fillHeight = false,
-}) {
-    return (
-        <section className={`${fillHeight ? "flex h-full min-h-0 flex-col" : ""} overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm`}>
-            <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
+        <section className="an-glass an-card">
+            <div className="an-card__head">
                 <div>
-                    <h2 className="text-[15px] font-semibold text-gray-900">
-                        {title}
-                    </h2>
-                    <p className="mt-1 text-xs text-gray-500">
-                        {subtitle}
-                    </p>
+                    <h2 className="an-card__title">{title}</h2>
+                    <p className="an-card__sub">{subtitle}</p>
                 </div>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                    <Icon
-                        size={
-                            18
-                        }
-                    />
-                </div>
+                <span className="an-card__ico">
+                    <Icon size={18} />
+                </span>
             </div>
-            <div className={fillHeight ? "flex min-h-0 flex-1 flex-col p-5" : "p-5"}>
-                {children}
-            </div>
+            <div className="an-card__body">{children}</div>
         </section>
     );
 }
-// MARK: Mini Stats
-function MiniStat({
-    title,
-    value,
-}) {
+
+// MARK: KPI
+function KpiCard({ label, value, helper, icon: Icon, tone }) {
     return (
-        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-            <p className="text-xs text-gray-500">
-                {title}
-            </p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">
-                {value}
-            </p>
+        <div className="an-glass an-kpi">
+            <div className="an-kpi__text">
+                <div className="an-kpi__label">{label}</div>
+                <div className="an-kpi__value">{value}</div>
+                <div className="an-kpi__help">{helper}</div>
+            </div>
+            <span className={`an-kpi__icon an-tone--${tone}`}>
+                <Icon size={24} />
+            </span>
         </div>
     );
 }
-function ProgressMetric({ label, value }) {
+function MiniStat({ title, value }) {
+    return (
+        <div className="an-soft an-stat">
+            <div className="an-stat__title">{title}</div>
+            <div className="an-stat__value">{value}</div>
+        </div>
+    );
+}
+
+// MARK: Rings
+// Semi-Circle Gauge на ApexCharts. Дуга занимает ширину карточки,
+// а высоту карточки определяет только .an-grid--top (не размер графика).
+function ClosedGauge({ percent }) {
+    const gaugeRef = useRef(null);
+    const [space, setSpace] = useState({ width: 0, height: 0 });
+    const hasData = percent !== null && percent !== undefined && Number.isFinite(Number(percent));
+    const value = hasData ? clampPercent(percent) : 0;
+
+    useEffect(() => {
+        const element = gaugeRef.current;
+        if (!element) return undefined;
+
+        const measure = () => {
+            const rect = element.getBoundingClientRect();
+            const nextWidth = Math.max(0, Math.round(rect.width));
+            const nextHeight = Math.max(0, Math.round(rect.height));
+            setSpace((previous) => previous.width === nextWidth && previous.height === nextHeight
+                ? previous : { width: nextWidth, height: nextHeight });
+        };
+        measure();
+        const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+        if (observer) observer.observe(element);
+        else window.addEventListener("resize", measure);
+        return () => {
+            observer?.disconnect();
+            if (!observer) window.removeEventListener("resize", measure);
+        };
+    }, []);
+
+    // ApexCharts резервирует часть холста вокруг дуги. Чуть больший
+    // квадратный canvas компенсирует ВНУТРЕННИЕ поля библиотеки.
+    // Радиус вычисляется от доступной ширины, а не от высоты блока.
+    // В широких адаптивных карточках высота может ограничивать полукруг.
+    // Для настоящих 180° максимальная ширина = две доступные высоты.
+    const gaugeWidth = Math.max(0, Math.floor(Math.min(space.width, space.height * 2)));
+    const chartSize = Math.round(gaugeWidth * 1.10);
+    // Центр полукруга совпадает с нижним краем, но концы дуги
+    // остаются внутри viewport с запасом под скругления.
+    const endCapInset = gaugeWidth * 0.034;
+    const chartOffsetY = Math.round((gaugeWidth - chartSize) / 2 - endCapInset);
+
+    const options = useMemo(() => ({
+        chart: {
+            type: "gauge",
+            sparkline: { enabled: true },
+            toolbar: { show: false },
+            fontFamily: "inherit",
+            animations: { enabled: true, speed: 400, animateGradually: { enabled: false } },
+        },
+        colors: [INDIGO],
+        fill: { type: "solid", opacity: 1 },
+        stroke: { lineCap: "round" },
+        plotOptions: {
+            radialBar: {
+                startAngle: -90,
+                endAngle: 90,
+                offsetY: chartOffsetY,
+                hollow: { size: "68%", background: "transparent", margin: 0 },
+                track: {
+                    show: true,
+                    startAngle: -90,
+                    endAngle: 90,
+                    background: "#e9e7f6",
+                    strokeWidth: "100%",
+                    margin: 0,
+                },
+                dataLabels: { show: false },
+            },
+        },
+        grid: { padding: { top: 0, right: 0, bottom: 0, left: 0 } },
+        tooltip: { enabled: false },
+        states: {
+            hover: { filter: { type: "none" } },
+            active: { filter: { type: "none" } },
+        },
+    }), [chartOffsetY]);
+
+    return (
+        <div
+            ref={gaugeRef}
+            className="an-gauge"
+            role="img"
+            aria-label={hasData ? `Завершено ${displayPercent(value)} нарядов` : "Нет выданных нарядов"}
+        >
+            <div className="an-gauge__viewport" style={{ width: gaugeWidth ? `${gaugeWidth}px` : "100%" }}>
+                {gaugeWidth > 0 && (
+                    <div className="an-gauge__canvas">
+                        <Chart
+                            type="gauge"
+                            options={options}
+                            series={[value]}
+                            width={chartSize}
+                            height={chartSize}
+                        />
+                    </div>
+                )}
+                <div className="an-gauge__metric" aria-hidden="true">
+                    <strong className="an-gauge__percent">{hasData ? displayPercent(value) : "—"}</strong>
+                    <span className="an-gauge__caption">завершено</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+function LoadRing({ label, value }) {
     const percent = Math.max(0, Math.min(100, Number(value) || 0));
     const options = {
-        chart: { type: "radialBar", sparkline: { enabled: true }, animations: { enabled: true, speed: 400 } },
-        colors: ["#2563eb"],
-        plotOptions: { radialBar: { hollow: { size: "68%" }, track: { background: "#eff3f8", strokeWidth: "100%" }, dataLabels: { name: { show: false }, value: { show: true, offsetY: 6, fontSize: "17px", fontWeight: 700, color: "#0f172a", formatter: (n) => `${Math.round(n)}%` } } } },
-        stroke: { lineCap: "round" }
+        chart: { type: "radialBar", sparkline: { enabled: true }, fontFamily: "inherit" },
+        colors: [INDIGO],
+        fill: { type: "solid", opacity: 1 },
+        plotOptions: {
+            radialBar: {
+                hollow: { size: "66%" },
+                track: { background: "#e9e6fb", strokeWidth: "100%" },
+                dataLabels: {
+                    name: { show: false },
+                    value: {
+                        show: true,
+                        offsetY: 6,
+                        fontSize: "20px",
+                        fontWeight: 800,
+                        color: "#1e1b4b",
+                        formatter: (n) => `${Math.round(n)}%`,
+                    },
+                },
+            },
+        },
+        stroke: { lineCap: "round" },
     };
     return (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-4 py-2">
-            <span className="max-w-[140px] text-xs font-medium leading-5 text-gray-600">{label}</span>
-            <div className="shrink-0"><Chart type="radialBar" options={options} series={[percent]} width={106} height={106} /></div>
+        <div className="an-ring">
+            <Chart type="radialBar" options={options} series={[percent]} width={140} height={140} />
+            <span className="an-ring__label">{label}</span>
         </div>
     );
 }
+
 // MARK: Forecast
-function ForecastItem({
-    item,
-}) {
+function ForecastItem({ item, index }) {
     useI18n();
-    const probability =
-        Number(
-            item.probability,
-        ) || 0;
-    const percent =
-        Math.round(
-            probability * 100,
-        );
+    const percent = probabilityPercent(item.probability);
     return (
-        <div className="rounded-xl border border-gray-200 p-4">
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                        {item.equipment
-                            ?.name ||
-                            item.equipment ||
-                            `Оборудование #${item.equipmentId}`}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                        {i18nT("pages.analytics.analytics.d633feb")}{" "}
-                        {
-                            item.recentFailures
-                        }
-                        {" • "}
-                        {i18nT("pages.analytics.analytics.caf02f6")}{" "}
-                        {
-                            item.previousFailures
-                        }
-                    </p>
+        <div className="an-soft an-fitem">
+            <div className="an-fitem__row">
+                <div className="an-fitem__who">
+                    <span className="an-badge">№{index + 1}</span>
+                    <div style={{ minWidth: 0 }}>
+                        <div className="an-fitem__name">
+                            {item.equipment?.name || item.equipment || `Оборудование #${item.equipmentId}`}
+                        </div>
+                        <div className="an-fitem__meta">
+                            {i18nT("pages.analytics.analytics.d633feb")} {item.recentFailures}
+                            {" • "}
+                            {i18nT("pages.analytics.analytics.caf02f6")} {item.previousFailures}
+                        </div>
+                    </div>
                 </div>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                    percent >= 65
-                        ? "bg-red-50 text-red-700"
-                        : percent >= 40
-                          ? "bg-orange-50 text-orange-700"
-                          : "bg-green-50 text-green-700"
-                }`}>
-                    {formatPercent(
-                        probability,
-                    )}
+                <span className="an-pill an-pill--forecast">
+                    {displayPercent(percent)}
                 </span>
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
-                <div
-                    className="h-full rounded-full bg-blue-600"
-                    style={{
-                        width:
-                            `${percent}%`,
-                    }}
-                />
+            <div className="an-track">
+                <div className="an-fill-bar" style={{ width: `${percent}%`, backgroundColor: riskColor(percent) }} />
             </div>
         </div>
     );
 }
+
 // MARK: Anomaly
-function AnomalyItem({
-    item,
-}) {
-    const severity =
-        Number(
-            item.severity,
-        ) || 1;
+function AnomalyItem({ item }) {
+    const severity = Number(item.severity) || 1;
+    const pill = severity >= 4 ? "an-pill--rose" : severity >= 3 ? "an-pill--amber" : "an-pill--indigo";
     return (
-        <div className="rounded-xl border border-gray-200 p-4">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900">
-                        {
-                            item.title
-                        }
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-gray-500">
-                        {
-                            item.description
-                        }
-                    </p>
+        <div className="an-soft an-anom">
+            <div className="an-anom__row">
+                <div style={{ minWidth: 0 }}>
+                    <p className="an-anom__title">{item.title}</p>
+                    <p className="an-anom__desc">{item.description}</p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
-                    severity >= 4
-                        ? "bg-red-50 text-red-700"
-                        : severity >= 3
-                          ? "bg-orange-50 text-orange-700"
-                          : "bg-blue-50 text-blue-700"
-                }`}>
-                    {
-                        severity
-                    }
-                    /5
-                </span>
+                <span className={`an-pill ${pill}`}>{severity}/5</span>
             </div>
-            {item.recommendation && (
-                <div className="mt-3 rounded-lg bg-violet-50 px-3 py-2 text-xs leading-5 text-violet-800">
-                    {
-                        item.recommendation
-                    }
-                </div>
-            )}
+            {item.recommendation && <div className="an-rec">{item.recommendation}</div>}
         </div>
     );
 }
+
 // MARK: Ranking
-function Ranking({
-    items,
-    titleKey,
-    valueKey,
-    suffix,
-}) {
-    if (
-        !items.length
-    ) {
-        return (
-            <EmptyBlock text="Данных нет" />
-        );
-    }
-    const max =
-        Math.max(
-            ...items.map(
-                (item) =>
-                    Number(
-                        item[valueKey],
-                    ) || 0,
-            ),
-            1,
-        );
+function Ranking({ items, titleKey, valueKey, suffix }) {
+    if (!items.length) return <EmptyBlock text="Данных нет" />;
+    const max = Math.max(...items.map((item) => Number(item[valueKey]) || 0), 1);
     return (
-        <div className="space-y-3">
-            {items
-                .slice(
-                    0,
-                    5,
-                )
-                .map(
-                    (
-                        item,
-                        index,
-                    ) => {
-                        const value =
-                            Number(
-                                item[
-                                    valueKey
-                                ],
-                            ) || 0;
-                        return (
+        <div className="an-rank">
+            {items.slice(0, 5).map((item, index) => {
+                const value = Number(item[valueKey]) || 0;
+                const relativePercent = clampPercent((value / max) * 100);
+                return (
+                    <div key={item.id ?? item.areaId ?? item.equipmentId ?? index}>
+                        <div className="an-rank__row">
+                            <span className="an-rank__name">{item[titleKey]}</span>
+                            <span className="an-rank__val">
+                                {value.toFixed(value % 1 ? 2 : 0)} {suffix}
+                            </span>
+                        </div>
+                        <div className="an-track an-track--lg">
                             <div
-                                key={
-                                    item.id ??
-                                    item.areaId ??
-                                    item.equipmentId ??
-                                    index
-                                }
-                            >
-                                <div className="flex justify-between gap-4">
-                                    <span className="truncate text-sm font-semibold text-gray-800">
-                                        {
-                                            item[
-                                                titleKey
-                                            ]
-                                        }
-                                    </span>
-                                    <span className="shrink-0 text-xs font-semibold text-gray-500">
-                                        {value.toFixed(
-                                            value %
-                                                1
-                                                ? 2
-                                                : 0,
-                                        )}{" "}
-                                        {
-                                            suffix
-                                        }
-                                    </span>
-                                </div>
-                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                                    <div
-                                        className="h-full rounded-full bg-blue-600"
-                                        style={{
-                                            width:
-                                                `${Math.max(
-                                                    4,
-                                                    value /
-                                                        max *
-                                                        100,
-                                                )}%`,
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        );
-                    },
-                )}
+                                className="an-fill-bar"
+                                style={{
+                                    width: `${relativePercent}%`,
+                                    backgroundColor: riskColor(relativePercent),
+                                }}
+                            />
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 }
+
 // MARK: State
+function DowntimeMobileList({ items }) {
+    if (!items.length) return <EmptyBlock text="Простоев нет" />;
+    return (
+        <div className="an-downtime-mobile">
+            {items.map((row, index) => (
+                <article className="an-downtime-mobile__item" key={row.equipmentId ?? index}>
+                    <div className="an-downtime-mobile__head">
+                        <div>
+                            <strong>{row.equipment?.name || row.equipment || "—"}</strong>
+                            {row.area?.name && <small>{row.area.name}</small>}
+                        </div>
+                        {row.ongoing && <span className="an-pill an-pill--rose">Сейчас</span>}
+                    </div>
+                    <div className="an-downtime-mobile__stats">
+                        <div><span>Событий</span><strong>{row.count ?? 0}</strong></div>
+                        <div><span>Всего</span><strong>{formatMinutes(row.minutes)}</strong></div>
+                        <div><span>Плановый</span><strong>{formatMinutes(row.plannedMinutes)}</strong></div>
+                        <div><span>Аварийный</span><strong className="an-cell-danger">{formatMinutes(row.unplannedMinutes)}</strong></div>
+                    </div>
+                </article>
+            ))}
+        </div>
+    );
+}
 function InlineLoader() {
     return (
-        <div className="flex min-h-[180px] items-center justify-center">
-            <RiLoader4Line
-                size={26}
-                className="animate-spin text-blue-600"
-            />
+        <div className="an-loader">
+            <RiLoader4Line size={26} className="an-spin" />
         </div>
     );
 }
-function PageLoader() {
-    return (
-        <div className="flex min-h-[500px] items-center justify-center">
-            <RiLoader4Line
-                size={32}
-                className="animate-spin text-blue-600"
-            />
-        </div>
-    );
+function EmptyBlock({ text }) {
+    return <div className="an-empty">{text}</div>;
 }
-function EmptyBlock({
-    text,
-}) {
-    return (
-        <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-sm text-gray-400">
-            {text}
-        </div>
-    );
-}
-function ErrorBox({
-    text,
-}) {
-    return (
-        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {text}
-        </div>
-    );
-}
-
 
 // MARK: Forecast chart — риск по оборудованию, отсортированному по вероятности
-function ForecastChart({ items, height = 200 }) {
+function ForecastChart({ items, height = 240 }) {
     const selected = items.slice(0, 8);
     if (!selected.length) return null;
-    const names = selected.map((item) => typeof item.equipment === "string" ? item.equipment : item.equipment?.name || item.name || `#${item.equipmentId ?? "—"}`);
-    const values = selected.map((item) => {
-        const n = Number(item.probability);
-        return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n * (n <= 1 ? 100 : 1)))) : 0;
-    });
+    const names = selected.map((item) =>
+        typeof item.equipment === "string"
+            ? item.equipment
+            : item.equipment?.name || item.name || `#${item.equipmentId ?? "—"}`,
+    );
+    const values = selected.map((item) => probabilityPercent(item.probability));
     const options = {
-        chart: { type: "area", toolbar: { show: false }, zoom: { enabled: false }, fontFamily: "inherit", animations: { enabled: true, speed: 450 } },
-        colors: ["#2563eb"], stroke: { curve: "smooth", width: 2.5 },
-        fill: { type: "gradient", gradient: { shadeIntensity: 0, opacityFrom: 0.27, opacityTo: 0.01, stops: [0, 95, 100] } },
-        markers: { size: 4, colors: ["#fff"], strokeColors: "#2563eb", strokeWidth: 2, hover: { size: 6 } },
+        chart: {
+            type: "line",
+            toolbar: { show: false },
+            zoom: { enabled: false },
+            fontFamily: "inherit",
+            animations: { enabled: true, speed: 450 },
+            dropShadow: { enabled: false },
+        },
+        colors: [INDIGO],
+        stroke: { curve: "smooth", width: 3 },
+        fill: { type: "solid", opacity: 1 },
+        markers: {
+            size: 6,
+            colors: [INDIGO],
+            strokeColors: "#fff",
+            strokeWidth: 2,
+            hover: { size: 8 },
+            discrete: values.map((risk, index) => ({
+                seriesIndex: 0,
+                dataPointIndex: index,
+                fillColor: riskColor(risk),
+                strokeColor: "#fff",
+                size: 7,
+            })),
+        },
         dataLabels: { enabled: false },
-        xaxis: { categories: names.map((_, i) => `№${i + 1}`), labels: { style: { colors: "#94a3b8", fontSize: "10px" } }, axisBorder: { show: false }, axisTicks: { show: false } },
-        yaxis: { min: 0, max: 100, tickAmount: 4, labels: { formatter: (v) => `${Math.round(v)}%`, style: { colors: "#94a3b8", fontSize: "10px" } } },
-        grid: { borderColor: "#f1f5f9", strokeDashArray: 4, padding: { top: 5, right: 12, left: 4, bottom: 0 } },
-        tooltip: { x: { formatter: (_, opts) => names[opts.dataPointIndex] || "Оборудование" }, y: { formatter: (v) => `${Math.round(v)}%` } },
-        legend: { show: false }
+        xaxis: {
+            categories: names.map((_, i) => `№${i + 1}`),
+            labels: { style: { colors: "#aaa6cf", fontSize: "11px" } },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+            tooltip: { enabled: false },
+        },
+        yaxis: {
+            min: 0,
+            max: 100,
+            tickAmount: 4,
+            labels: {
+                formatter: (v) => `${Math.round(v)}%`,
+                style: { colors: "#aaa6cf", fontSize: "11px" },
+            },
+        },
+        grid: {
+            borderColor: "#e4e0f7",
+            strokeDashArray: 5,
+            padding: { top: 5, right: 14, left: 6, bottom: 0 },
+        },
+        tooltip: {
+            x: { formatter: (_, opts) => names[opts.dataPointIndex] || "Оборудование" },
+            y: { formatter: (v) => displayPercent(v) },
+        },
+        legend: { show: false },
     };
-    return <Chart type="area" height={height} width="100%" options={options} series={[{ name: "Риск отказа", data: values }]} />;
+    return (
+        <Chart
+            type="line"
+            height={height}
+            width="100%"
+            options={options}
+            series={[{ name: "Риск отказа", data: values }]}
+        />
+    );
 }
 
 // MARK: Severity chart — кольцевая диаграмма распределения критичности
 function SeverityChart({ items }) {
     useI18n();
     if (!items.length) return null;
-    const counts = [1, 2, 3, 4, 5].map((level) => items.filter((item) => Math.round(Number(item.severity)) === level).length);
+    const counts = [1, 2, 3, 4, 5].map(
+        (level) => items.filter((item) => Math.round(Number(item.severity)) === level).length,
+    );
     const options = {
         chart: { type: "donut", fontFamily: "inherit", animations: { enabled: true, speed: 400 } },
         labels: ["1 · Низкая", "2 · Умеренная", "3 · Средняя", "4 · Высокая", "5 · Критическая"],
-        colors: ["#bfdbfe", "#60a5fa", "#fbbf24", "#fb923c", "#ef4444"],
-        stroke: { width: 3, colors: ["#fff"] },
-        plotOptions: { pie: { expandOnClick: false, donut: { size: "75%", labels: { show: true, name: { show: true, fontSize: "11px", color: "#94a3b8", offsetY: -7 }, value: { show: true, fontSize: "24px", fontWeight: 700, color: "#0f172a", offsetY: 5 }, total: { show: true, label: i18nT("analytics.status.total"), formatter: () => String(items.length) } } } } },
+        colors: ["#20b36b", "#a2ca57", "#e5b940", "#f48035", "#e94553"],
+        stroke: { width: 3, colors: ["#fbfaff"] },
+        plotOptions: {
+            pie: {
+                expandOnClick: false,
+                donut: {
+                    size: "76%",
+                    labels: {
+                        show: true,
+                        name: { show: true, fontSize: "11px", color: "#aaa6cf", offsetY: -7 },
+                        value: {
+                            show: true,
+                            fontSize: "26px",
+                            fontWeight: 800,
+                            color: "#1e1b4b",
+                            offsetY: 5,
+                        },
+                        total: {
+                            show: true,
+                            label: i18nT("analytics.status.total"),
+                            color: "#aaa6cf",
+                            formatter: () => String(items.length),
+                        },
+                    },
+                },
+            },
+        },
         dataLabels: { enabled: false },
-        legend: { show: true, position: "right", fontSize: "11px", labels: { colors: "#64748b" }, markers: { size: 7 }, itemMargin: { vertical: 5 } },
+        legend: {
+            show: true,
+            position: "right",
+            fontSize: "12px",
+            labels: { colors: "#6d6a96" },
+            markers: { size: 7 },
+            itemMargin: { vertical: 4 },
+        },
         tooltip: { y: { formatter: (v) => `${v} событий` } },
-        responsive: [{ breakpoint: 550, options: { legend: { position: "bottom" }, chart: { height: 240 } } }]
+        responsive: [
+            { breakpoint: 550, options: { legend: { position: "bottom" }, chart: { height: 240 } } },
+        ],
     };
-    return <Chart type="donut" height={210} width="100%" options={options} series={counts} />;
+    return (
+        <div style={{ flexShrink: 0, marginBottom: 14 }}>
+            <Chart type="donut" height={200} width="100%" options={options} series={counts} />
+        </div>
+    );
 }
