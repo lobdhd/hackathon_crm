@@ -28,7 +28,7 @@ export default function DashboardLayout() {
             <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <AppNavbar onMenuClick={() => setSidebarOpen(true)} />
             <main className="pt-16 lg:ml-64">
-                <div className="p-4 md:p-6 lg:p-8">
+                <div className="p-0">
                     <Outlet />
                 </div>
             </main>

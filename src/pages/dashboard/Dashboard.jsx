@@ -589,7 +589,7 @@ export default function Dashboard() {
         );
     }
     return (
-        <div className="mx-auto max-w-[1800px]">
+        <div className="mx-auto max-w-[1800px] p-7">
             {/* HEADER */}
             <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
                 <div>

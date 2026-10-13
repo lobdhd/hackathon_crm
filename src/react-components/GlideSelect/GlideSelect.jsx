@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDown01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import './GlideSelect.css';
-
 const VIEWPORT_GAP = 10;
 const MENU_GAP = 6;
 const SIZE_CONFIG = {
@@ -15,7 +14,6 @@ const SIZE_CONFIG = {
 const normalizeOption = (option) => typeof option === 'string'
   ? { value: option, label: option }
   : option;
-
 export default function GlideSelect({
   options = [],
   value,
@@ -50,6 +48,7 @@ export default function GlideSelect({
   const menuRef = useRef(null);
   const listRef = useRef(null);
   const searchRef = useRef(null);
+  const measuredMenuWidthRef = useRef(null);
   const [innerValue, setInnerValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -79,7 +78,6 @@ export default function GlideSelect({
     '--gs-pop': `${popDuration}ms`,
     '--gs-glide': `${glideDuration}ms`,
   };
-
   const reposition = () => {
     const root = rootRef.current;
     const menu = menuRef.current;
@@ -92,10 +90,14 @@ export default function GlideSelect({
     const vh = vv?.height ?? window.innerHeight;
     const availableWidth = Math.max(120, vw - VIEWPORT_GAP * 2);
     const maxWidth = Math.min(menuMaxWidth > 0 ? menuMaxWidth : availableWidth, availableWidth);
-    // Measure the longest option, but never extend beyond the viewport.
-    const rows = menu.querySelectorAll('.glide-select__option');
-    const longest = Math.max(0, ...Array.from(rows, (row) => row.scrollWidth));
-    const width = Math.min(maxWidth, Math.max(menuWidth, rect.width, longest + 8));
+    // Calculate width once on opening. Row scrollWidth changes after
+    // applying menu width, so recalculating it on scroll makes the menu jump.
+    if (measuredMenuWidthRef.current === null) {
+      const rows = menu.querySelectorAll('.glide-select__option');
+      const longest = Math.max(0, ...Array.from(rows, (row) => row.scrollWidth));
+      measuredMenuWidthRef.current = Math.max(menuWidth, rect.width, longest + 8);
+    }
+    const width = Math.min(maxWidth, measuredMenuWidthRef.current);
     const idealLeft = align === 'right' ? rect.right - width : rect.left;
     const left = Math.max(vx + VIEWPORT_GAP, Math.min(idealLeft, vx + vw - width - VIEWPORT_GAP));
     const searchHeight = searchable ? 54 : 0;
@@ -118,7 +120,6 @@ export default function GlideSelect({
       width, maxHeight: height, zIndex: 100,
     });
   };
-
   useLayoutEffect(() => {
     if (!open) return;
     reposition();
@@ -126,7 +127,6 @@ export default function GlideSelect({
     if (searchable) searchRef.current?.focus({ preventScroll: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-
   useEffect(() => {
     if (!open) return undefined;
     const onOutside = (event) => {
@@ -148,22 +148,18 @@ export default function GlideSelect({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, visible.length, portal, align, placement, menuWidth, menuMaxWidth, menuMaxHeight]);
-
   useEffect(() => {
     if (open && menuRef.current) reposition();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, open, visible.length]);
-
   useEffect(() => {
     if (disabled) setOpen(false);
   }, [disabled]);
-
   useEffect(() => {
     if (!open || active < 0 || !rememberPosition) return;
     const row = listRef.current?.querySelector(`[data-index="${active}"]`);
     row?.scrollIntoView({ block: 'nearest' });
   }, [active, open, rememberPosition]);
-
   const toggle = () => {
     if (disabled) return;
     if (open) {
@@ -172,10 +168,10 @@ export default function GlideSelect({
     }
     setQuery('');
     setActive(Math.max(0, selectedIndex));
+    measuredMenuWidthRef.current = null;
     setMenuPosition(null);
     setOpen(true);
   };
-
   const choose = (item) => {
     if (!item || item.disabled) return;
     if (String(item.value) !== String(current)) {
@@ -185,7 +181,6 @@ export default function GlideSelect({
     setOpen(false);
     triggerRef.current?.focus({ preventScroll: true });
   };
-
   const onKeyboard = (event) => {
     if (disabled) return;
     if (!open) {
@@ -216,7 +211,6 @@ export default function GlideSelect({
       if (match >= 0) setActive(match);
     }
   };
-
   const menu = open && (
     <div
       ref={menuRef}
@@ -282,7 +276,6 @@ export default function GlideSelect({
       </div>
     </div>
   );
-
   return (
     <div
       ref={rootRef}

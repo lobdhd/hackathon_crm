@@ -12,10 +12,9 @@
     max-width: 1800px;
     margin: 0 auto;
     padding: 28px;
-    border-radius: 36px;
     overflow: hidden;
     color: var(--ink);
-    background: linear-gradient(135deg, #e6e4fba2 0%, #f2effbaf 55%, #fcebf29e 100%);
+    background: linear-gradient(135deg, #e6e4fb65 0%, #f2effb78 55%, #fcebf267 100%);
 }
 .an *,
 .an *::before,
@@ -47,14 +46,11 @@
 /* ---------- glass ---------- */
 .an-glass {
     background: rgba(255, 255, 255, 0.62);
-    -webkit-backdrop-filter: blur(18px);
-    backdrop-filter: blur(18px);
     border: 1px solid var(--line);
     box-shadow: 0 18px 50px -26px rgba(79, 70, 229, 0.38);
 }
 .an-soft {
-    background: rgba(255, 255, 255, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0);
 }
 /* ---------- header ---------- */
 .an-head {
@@ -132,7 +128,7 @@
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.9);
     background-color: rgba(255, 255, 255, 0.7);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http\://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238480b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238480b0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
     background-repeat: no-repeat;
     background-position: right 14px center;
     font: inherit;
@@ -215,8 +211,9 @@
 .an-grid--mid {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
 }
+/* 37.5% аномалии / 62.5% простой; обе колонки могут сжиматься без переполнения сетки. */
 .an-grid--low {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-columns: minmax(0, 4.5fr) minmax(0, 7.5fr);
 }
 .an-grid--two {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -283,8 +280,8 @@
 }
 .an-hero__value { font-weight: 750; color: var(--ink); }
 .an-hero__sub { font-weight: 650; color: var(--muted); }
-/* Адаптивный полукруг. Ширина — от внутренних границ карточки.
-   Высота дуги = половина ширины, без изменения высоты родителя. */
+/* Адаптивный полукруг. Ширина — от внутренних границ карточки.*
+*   Высота дуги = половина ширины, без изменения высоты родителя. */
 .an-gauge {
     position: relative;
     display: flex;
@@ -447,10 +444,7 @@
     justify-content: center;
     width: 40px;
     height: 40px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.85);
     color: var(--brand);
-    box-shadow: 0 8px 18px -12px rgba(79, 70, 229, 0.6);
 }
 .an-card__body {
     flex: 1;
@@ -472,12 +466,16 @@
 .an-scroll {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding-right: 4px;
+    padding: 8px 10px 8px 12px;
+    border: 1px solid rgba(129, 140, 248, 0.22);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.24);
 }
 .an-scroll::-webkit-scrollbar {
     width: 6px;
@@ -532,14 +530,17 @@
     line-height: 1.75;
     color: var(--ink-2);
 }
+/* Рекомендации без фиолетовых плашек — только акцентная черта слева. */
 .an-rec {
     margin-top: 10px;
-    padding: 11px 14px;
-    border-radius: 14px;
+    padding: 3px 0 3px 12px;
+    border: 0;
+    border-left: 3px solid var(--brand);
+    border-radius: 0;
     font-size: 12px;
-    line-height: 1.5;
-    color: #3730a3;
-    background: rgba(99, 102, 241, 0.1);
+    line-height: 1.55;
+    color: #514c86;
+    background: transparent;
 }
 /* ---------- forecast list ---------- */
 .an-hint {
@@ -547,15 +548,30 @@
     font-size: 11px;
     color: var(--faint);
 }
+/* Список прогнозов: единая сетка с деликатными разделителями. */
 .an-flist {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 6px;
+    gap: 0;
+    margin-top: 12px;
 }
-.an-fitem {
-    padding: 12px 14px;
-    border-radius: 18px;
+.an-flist > .an-fitem {
+    min-width: 0;
+    padding: 17px 16px;
+    border: 0;
+    border-bottom: 1px solid rgba(91, 80, 230, 0.13);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+/* Вертикальный разделитель строго между двумя колонками. */
+.an-flist > .an-fitem:nth-child(odd) {
+    border-right: 1px solid rgba(91, 80, 230, 0.13);
+}
+/* Последний ряд не получает лишнюю горизонтальную черту. */
+.an-flist > .an-fitem:last-child,
+.an-flist > .an-fitem:nth-last-child(2):nth-child(odd) {
+    border-bottom: 0;
 }
 .an-fitem__row {
     display: flex;
@@ -577,12 +593,9 @@
     min-width: 30px;
     height: 30px;
     padding: 0 6px;
-    border-radius: 999px;
-    background: #fff;
     font-size: 11px;
     font-weight: 800;
     color: var(--brand);
-    box-shadow: 0 6px 14px -10px rgba(79, 70, 229, 0.7);
 }
 .an-fitem__name {
     font-size: 13px;
@@ -637,7 +650,7 @@
     margin-top: 10px;
     border-radius: 999px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0);
 }
 .an-track--lg {
     height: 8px;
@@ -657,7 +670,7 @@
     padding: 16px 8px 17px;
     transition: background-color 150ms ease;
 }
-.an-scroll .an-anom:first-child { padding-top: 4px; }
+.an-scroll .an-anom:first-child { padding-top: 10px; }
 .an-scroll .an-anom:last-child { border-bottom: 0; }
 .an-scroll .an-anom:hover { background: rgba(246, 245, 255, 0.5); }
 .an-anom__row {
@@ -704,11 +717,19 @@
     color: var(--muted);
 }
 /* ---------- table ---------- */
+/* Единственная рамка таблицы простоев — этот внешний контейнер.*
+*   Глобальный SmartTable рисует вторую рамку с радиусом 14px;*
+*   отключаем её ЛОКАЛЬНО, чтобы убрать белые просветы у серой шапки. */
 .an-tablewrap {
     border-radius: 20px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+}
+.an-tablewrap .smart-table {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 .an-tablewrap .smart-table__table {
     height: 100%;
@@ -729,15 +750,13 @@
 .an-cell-off {
     color: #c3c0e0;
 }
-/* Compact downtime table: fit six columns without lateral scrolling at desktop widths. */
-.an-tablewrap__desktop { display: block; min-width: 0; }
-.an-tablewrap__mobile { display: none; }
+/* Таблица имеет устойчивую минимальную ширину; лишнее прокручивается внутри SmartTable. */
 .an-tablewrap .smart-table,
 .an-tablewrap .smart-table__scroll { min-width: 0; width: 100%; }
 .an-tablewrap .smart-table__table {
-    width: 100% !important;
-    min-width: 0 !important;
-    table-layout: fixed;
+    width: 100%;
+    min-width: 1080px;
+    table-layout: auto;
     height: auto;
 }
 .an-tablewrap .smart-table__head-cell,
@@ -746,20 +765,44 @@
     font-size: 12px;
     vertical-align: middle;
 }
+/* Только ВНЕШНЯЯ рамка задаёт скругление.*
+*   Скругления отдельных th/td создавали белые просветы на фоне шапки. */
+.an-tablewrap .smart-table__table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.an-tablewrap .smart-table__head-cell,
+.an-tablewrap .smart-table__body > tr > .smart-table__cell {
+    border-radius: 0;
+}
 .an-tablewrap .smart-table__head-cell {
     font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
 }
+/* Стили только таблицы простоев. Не даём глобальному SmartTable*
+*   обрезать заголовки; при нехватке места работает горизонтальный скролл. */
 .an-tablewrap .smart-table__head-title {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: max-content;
+    min-width: max-content;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .an-tablewrap .smart-table__sort {
-    gap: 5px;
-    min-width: 0;
+    display: inline-flex;
+    align-items: center;
     justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 7px;
+    width: max-content;
+    min-width: max-content;
+    max-width: none;
+    overflow: visible;
+    white-space: nowrap;
 }
 .an-tablewrap .smart-table__sort-icon { flex-shrink: 0; font-size: 10px; }
 .an-tablewrap .an-equip-cell,
@@ -772,17 +815,6 @@
 .an-tablewrap .an-cell-sub { font-size: 10px; }
 .an-tablewrap .an-pill { padding: 4px 7px; font-size: 10px; }
 .an-cell-time { font-variant-numeric: tabular-nums; line-height: 1.3; }
-.an-downtime-mobile { max-height: 560px; overflow-y: auto; }
-.an-tablewrap .os-scrollbar-horizontal { display: none; }
-.an-downtime-mobile__item { padding: 15px 14px; border-bottom: 1px solid #e6e7ef; }
-.an-downtime-mobile__item:last-child { border-bottom: 0; }
-.an-downtime-mobile__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 11px; }
-.an-downtime-mobile__head strong { display: block; font-size: 13px; line-height: 1.4; }
-.an-downtime-mobile__head small { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); }
-.an-downtime-mobile__stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
-.an-downtime-mobile__stats > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.an-downtime-mobile__stats span { font-size: 11px; color: var(--muted); }
-.an-downtime-mobile__stats strong { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 /* ---------- states ---------- */
 .an-empty {
     display: flex;
@@ -862,8 +894,6 @@
     }
 }
 @media (max-width: 660px) {
-    .an-tablewrap__desktop { display: none; }
-    .an-tablewrap__mobile { display: block; }
     .an-hero { height: 285px; min-height: 0; padding-inline: 18px; }
 }
 @media (max-width: 950px) {
@@ -883,4 +913,16 @@
 }
 @media (max-width: 660px) {
     .an-hero { height: 285px; }
+}
+/* Когда .an-flist становится одноколоночным, оставляем только горизонтальные линии. */
+@media (max-width: 760px) {
+    .an-flist > .an-fitem:nth-child(odd) {
+        border-right: 0;
+    }
+    .an-flist > .an-fitem:nth-last-child(2):nth-child(odd) {
+        border-bottom: 1px solid rgba(91, 80, 230, 0.13);
+    }
+    .an-flist > .an-fitem:last-child {
+        border-bottom: 0;
+    }
 }

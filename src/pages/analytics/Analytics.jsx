@@ -1,5 +1,5 @@
 import Chart from "react-apexcharts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
     RiAlarmWarningLine,
     RiBarChartBoxLine,
@@ -14,6 +14,8 @@ import {
     RiToolsLine,
 } from "react-icons/ri";
 import SmartTable from "../../react-components/SmartTable/SmartTable.jsx";
+import GlideSelect from "../../react-components/GlideSelect/GlideSelect.jsx";
+import RubberSegment from "../../react-components/RubberSegment/RubberSegment.jsx";
 import {
     useAnalyticsAnomalies,
     useAnalyticsDashboard,
@@ -25,7 +27,7 @@ import { useAreas } from "../../hooks/useReferences.js";
 import { useI18n } from "../../i18n/index.js";
 import { t as i18nT } from "../../i18n/index.js";
 import "./Analytics.css";
-
+import "./AnalyticsLoading.css";
 // MARK: Tokens
 const INDIGO = "#5b50e6";
 // Сплошной цвет по проценту риска: зелёный → жёлтый → оранжевый → красный.
@@ -66,7 +68,6 @@ function riskColor(value) {
     });
     return `#${channels.join("")}`;
 }
-
 // MARK: Config
 const PERIODS = () => [
     { value: "shift", label: i18nT("reportModal.shift"), days: 1 },
@@ -95,7 +96,6 @@ const ANOMALY_TYPES = () => [
         label: i18nT("pages.analytics.analytics.15a05ac"),
     },
 ];
-
 // MARK: Helpers
 // Поддерживает старые локали, пока в ru.json/kk.json не обновлены переводы.
 function completionCardTitle() {
@@ -132,7 +132,6 @@ function createPeriodRange(period) {
     else from.setDate(from.getDate() - 30);
     return { from: from.toISOString(), to: now.toISOString() };
 }
-
 // MARK: Page
 export default function Analytics() {
     const __i18nLocaleToken = i18nT("sidebar.home");
@@ -140,12 +139,13 @@ export default function Analytics() {
     const [period, setPeriod] = useState("week");
     const [areaId, setAreaId] = useState("");
     const [anomalyType, setAnomalyType] = useState("");
+    const [analysisContext, setAnalysisContext] = useState(null);
     const areasQuery = useAreas();
     const dashboardQuery = useAnalyticsDashboard();
     const currentPeriod = PERIODS().find((item) => item.value === period) ?? PERIODS()[2];
     const reportParams = useMemo(
         () => ({ period, ...(areaId ? { areaId: Number(areaId) } : {}) }),
-        [period, areaId, __i18nLocaleToken],
+        [period, areaId],
     );
     const shiftQuery = useShiftReport(reportParams);
     const downtimeQuery = useDowntimeReport(reportParams);
@@ -170,7 +170,9 @@ export default function Analytics() {
         [anomalies, __i18nLocaleToken],
     );
     const downtimeEquipment = asArray(downtime.byEquipment);
-    const aiResult = runMutation.data?.ai;
+    const topForecast = useMemo(() => sortedForecast.slice(0, 8), [sortedForecast]);
+    // Результат ручного AI-пересчёта не должен попадать в другой период/участок.
+    const aiResult = analysisContext === `${period}:${areaId}` ? runMutation.data?.ai : null;
     const executors = Number(shift.workload?.executorsOnShift ?? 0);
     const busy = Number(shift.workload?.busy ?? 0);
     const loadPercent = executors ? (busy / executors) * 100 : 0;
@@ -193,7 +195,7 @@ export default function Analytics() {
                     </div>
                 ),
             },
-            { field: "count", header: "События", width: "10%", minWidth: 82, align: "center" },
+            { field: "count", header: "Событий", width: "10%", minWidth: 82, align: "center" },
             {
                 field: "minutes",
                 header: "Простой",
@@ -204,14 +206,14 @@ export default function Analytics() {
             },
             {
                 field: "plannedMinutes",
-                header: "План.",
+                header: "Плановый",
                 width: "13%",
                 minWidth: 96,
                 render: (row) => <span className="an-cell-time">{formatMinutes(row.plannedMinutes)}</span>,
             },
             {
                 field: "unplannedMinutes",
-                header: "Аварий.",
+                header: "Аварийный",
                 width: "17%",
                 minWidth: 112,
                 render: (row) => (
@@ -243,6 +245,7 @@ export default function Analytics() {
         ]);
     }
     async function recalculate() {
+        setAnalysisContext(`${period}:${areaId}`);
         const range = createPeriodRange(period);
         try {
             await runMutation.mutateAsync({
@@ -253,16 +256,13 @@ export default function Analytics() {
             // Ошибка отображается ниже.
         }
     }
-    const loading = shiftQuery.isLoading && !shiftQuery.data;
-    if (loading) {
-        return (
-            <div className="an">
-                <div className="an-loader an-loader--page">
-                    <RiLoader4Line size={34} className="an-spin" />
-                </div>
-            </div>
-        );
-    }
+    // Не размонтируем всю страницу при смене периода/фильтра.
+    // Скелетоны отображаем только при отсутствии данных для выбранного ключа.
+    // При фоновом refetch оставляем готовые данные на экране.
+    const shiftLoading = isFirstLoad(shiftQuery);
+    const downtimeLoading = isFirstLoad(downtimeQuery);
+    const forecastLoading = isFirstLoad(forecastQuery);
+    const anomaliesLoading = isFirstLoad(anomaliesQuery);
     return (
         <div className="an">
             {/* HEADER */}
@@ -272,14 +272,6 @@ export default function Analytics() {
                     <p className="an-subtitle">{i18nT("pages.analytics.analytics.5520929")}</p>
                 </div>
                 <div className="an-btn-row">
-                    <button
-                        type="button"
-                        className="an-iconbtn"
-                        onClick={refreshAll}
-                        aria-label="Обновить данные"
-                    >
-                        <RiRefreshLine size={18} />
-                    </button>
                     <button
                         type="button"
                         className="an-primary"
@@ -297,42 +289,38 @@ export default function Analytics() {
             </div>
             {/* TOOLBAR */}
             <div className="an-glass an-toolbar">
-                <div className="an-seg">
-                    {PERIODS().map((item) => (
-                        <button
-                            key={item.value}
-                            type="button"
-                            className={`an-seg__btn${period === item.value ? " is-active" : ""}`}
-                            onClick={() => setPeriod(item.value)}
-                        >
-                            {item.label}
-                        </button>
-                    ))}
-                </div>
+                <RubberSegment
+                    items={PERIODS()}
+                    value={period}
+                    onChange={setPeriod}
+                    trackColor="#ffffff"
+                    thumbColor="#5b50e6"
+                    textColor="#5b50e6"
+                    activeTextColor="#ffffff"
+                    size="md"
+                    radius={10}
+                    inset={3}
+                    equalSlots
+                    draggable
+                />
                 <div className="an-toolbar__group">
-                    <select
-                        className="an-select"
+                    <GlideSelect
+                        className="glide-select--filter"
+                        options={[
+                            { value: "", label: i18nT("reportModal.allAreas") },
+                            ...areas.map((area) => ({ value: String(area.id), label: area.name })),
+                        ]}
                         value={areaId}
-                        onChange={(event) => setAreaId(event.target.value)}
-                    >
-                        <option value="">{i18nT("reportModal.allAreas")}</option>
-                        {areas.map((area) => (
-                            <option key={area.id} value={area.id}>
-                                {area.name}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        className="an-select"
+                        onChange={setAreaId}
+                        portal
+                    />
+                    <GlideSelect
+                        className="glide-select--filter"
+                        options={ANOMALY_TYPES()}
                         value={anomalyType}
-                        onChange={(event) => setAnomalyType(event.target.value)}
-                    >
-                        {ANOMALY_TYPES().map((item) => (
-                            <option key={item.value} value={item.value}>
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={setAnomalyType}
+                        portal
+                    />
                 </div>
             </div>
             {(shiftQuery.isError || downtimeQuery.isError) && (
@@ -345,15 +333,34 @@ export default function Analytics() {
                         <span>{completionCardTitle()}</span>
                         <span className="an-hero__icon"><RiCheckboxCircleLine size={19} /></span>
                     </div>
-                    <div className="an-hero__summary">
-                        <strong className="an-hero__value">{closed}</strong>
-                        <span className="an-hero__sub">из {issued} выданных за период</span>
-                    </div>
-                    <ClosedGauge percent={closedPercent} />
+                    {shiftLoading ? (
+                        <>
+                            <div className="an-hero__summary" aria-hidden="true">
+                                <Skeleton width={60} height={20} />
+                                <Skeleton width={172} height={13} />
+                            </div>
+                            <div className="an-gauge an-gauge--skeleton" aria-hidden="true">
+                                <span className="an-skeleton-gauge" />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="an-hero__summary">
+                                <strong className="an-hero__value">{shiftQuery.isError && !shiftQuery.data ? "—" : closed}</strong>
+                                <span className="an-hero__sub">из {issued} выданных за период</span>
+                            </div>
+                            {shiftQuery.isError && !shiftQuery.data ? (
+                                <SectionError onRetry={() => shiftQuery.refetch()} />
+                            ) : (
+                                <StableClosedGauge percent={closedPercent} />
+                            )}
+                        </>
+                    )}
                 </div>
                 <div className="an-kpis">
                     <KpiCard
                         label={i18nT("status.inProgress")}
+                        loading={shiftLoading}
                         value={shift.inProgress ?? 0}
                         helper="Активные работы"
                         icon={RiToolsLine}
@@ -361,6 +368,7 @@ export default function Analytics() {
                     />
                     <KpiCard
                         label={i18nT("kanban.overdue")}
+                        loading={shiftLoading}
                         value={shift.overdue ?? 0}
                         helper={i18nT("pages.dashboard.dashboard.06745d6")}
                         icon={RiAlarmWarningLine}
@@ -368,6 +376,7 @@ export default function Analytics() {
                     />
                     <KpiCard
                         label="Общий простой"
+                        loading={downtimeLoading}
                         value={formatMinutes(downtime.totals?.minutes)}
                         helper={`${downtime.totals?.ongoing ?? 0} активных`}
                         icon={RiTimeLine}
@@ -389,14 +398,16 @@ export default function Analytics() {
                     subtitle={`Горизонт: ${currentPeriod.days} дн.`}
                     icon={RiFlashlightLine}
                 >
-                    {forecastQuery.isLoading ? (
-                        <InlineLoader />
+                    {forecastLoading ? (
+                        <ForecastSkeleton />
+                    ) : forecastQuery.isError && !forecastQuery.data ? (
+                        <SectionError onRetry={() => forecastQuery.refetch()} />
                     ) : sortedForecast.length > 0 ? (
                         <>
                             <p className="an-hint">{i18nT("pages.analytics.analytics.f8c7a7a")}</p>
-                            <ForecastChart items={sortedForecast.slice(0, 8)} height={260} />
+                            <StableForecastChart items={topForecast} height={260} />
                             <div className="an-flist">
-                                {sortedForecast.slice(0, 8).map((item, index) => (
+                                {topForecast.map((item, index) => (
                                     <ForecastItem key={item.equipmentId} item={item} index={index} />
                                 ))}
                             </div>
@@ -411,8 +422,13 @@ export default function Analytics() {
                         subtitle="Состояние исполнителей за выбранный период"
                         icon={RiBarChartBoxLine}
                     >
+                        {shiftLoading ? (
+                            <WorkloadSkeleton />
+                        ) : shiftQuery.isError && !shiftQuery.data ? (
+                            <SectionError onRetry={() => shiftQuery.refetch()} />
+                        ) : (
                         <div className="an-load">
-                            <LoadRing label="Загрузка исполнителей" value={loadPercent} />
+                            <StableLoadRing label="Загрузка исполнителей" value={loadPercent} />
                             <div className="an-stats">
                                 <MiniStat
                                     title={i18nT("pages.admin.admin.admin.958b816")}
@@ -432,20 +448,27 @@ export default function Analytics() {
                                 />
                             </div>
                         </div>
+                        )}
                     </Card>
                     <Card
                         title={i18nT("pages.analytics.analytics.e3c205a")}
                         subtitle="Вывод сервера по периоду"
                         icon={RiSparkling2Line}
                     >
-                        <p className="an-ai__text">
-                            {aiResult?.summary || shift.aiSummary || "AI-сводка пока отсутствует."}
-                        </p>
-                        {asArray(aiResult?.recommendations).map((item, index) => (
-                            <div key={`${item}-${index}`} className="an-rec">
-                                {item}
-                            </div>
-                        ))}
+                        {shiftLoading ? (
+                            <SummarySkeleton />
+                        ) : (
+                            <>
+                                <p className="an-ai__text">
+                                    {aiResult?.summary || shift.aiSummary || "AI-сводка пока отсутствует."}
+                                </p>
+                                {asArray(aiResult?.recommendations).map((item, index) => (
+                                    <div key={`${item}-${index}`} className="an-rec">
+                                        {item}
+                                    </div>
+                                ))}
+                            </>
+                        )}
                     </Card>
                 </div>
             </div>
@@ -456,12 +479,14 @@ export default function Analytics() {
                     subtitle={`${sortedAnomalies.length} найдено`}
                     icon={RiSparkling2Line}
                 >
-                    {anomaliesQuery.isLoading ? (
-                        <InlineLoader />
+                    {anomaliesLoading ? (
+                        <AnomaliesSkeleton />
+                    ) : anomaliesQuery.isError && !anomaliesQuery.data ? (
+                        <SectionError onRetry={() => anomaliesQuery.refetch()} />
                     ) : sortedAnomalies.length > 0 ? (
                         <div className="an-fill">
                             <div className="an-fill__in">
-                                <SeverityChart items={sortedAnomalies} />
+                                <StableSeverityChart items={sortedAnomalies} />
                                 <div className="an-scroll">
                                     {sortedAnomalies.map((item) => (
                                         <AnomalyItem key={item.id} item={item} />
@@ -479,25 +504,26 @@ export default function Analytics() {
                     icon={RiTimeLine}
                 >
                     <div className="an-tablewrap">
-                        <div className="an-tablewrap__desktop">
-                            <SmartTable
-                                data={downtimeEquipment}
-                                columns={downtimeColumns}
-                                dataKey="equipmentId"
-                                mode="sort"
-                                compact
-                                striped
-                                stickyHeader
-                                className="an-downtime-table"
-                                minWidth={0}
-                                scrollHeight="clamp(440px, 56vh, 560px)"
-                                emptyText="Простоев нет"
-                                emptyDescription="За выбранный период простоев оборудования не зарегистрировано"
-                            />
-                        </div>
-                        <div className="an-tablewrap__mobile">
-                            <DowntimeMobileList items={downtimeEquipment} />
-                        </div>
+                        {downtimeLoading ? (
+                            <TableSkeleton />
+                        ) : downtimeQuery.isError && !downtimeQuery.data ? (
+                            <SectionError onRetry={() => downtimeQuery.refetch()} />
+                        ) : (
+                        <SmartTable
+                            data={downtimeEquipment}
+                            columns={downtimeColumns}
+                            dataKey="equipmentId"
+                            mode="sort"
+                            compact
+                            striped
+                            stickyHeader
+                            className="an-downtime-table"
+                            minWidth={940}
+                            scrollHeight="clamp(440px, 56vh, 560px)"
+                            emptyText="Простоев нет"
+                            emptyDescription="За выбранный период простоев оборудования не зарегистрировано"
+                        />
+                        )}
                     </div>
                 </Card>
             </div>
@@ -531,6 +557,101 @@ export default function Analytics() {
         </div>
     );
 }
+// MARK: Local loading states
+function isFirstLoad(query) {
+    return !query.data && (query.isPending || query.isLoading);
+}
+
+function Skeleton({ width = "100%", height = 14, className = "" }) {
+    return <span aria-hidden="true" className={`an-skeleton ${className}`} style={{ width, height }} />;
+}
+
+function SectionError({ onRetry }) {
+    return (
+        <div className="an-inline-error" role="alert">
+            <span>Не удалось загрузить данные</span>
+            <button type="button" onClick={onRetry}>Повторить</button>
+        </div>
+    );
+}
+
+function ForecastSkeleton() {
+    const heights = [32, 63, 45, 84, 55, 70, 38, 58];
+    return (
+        <div className="an-skeleton-forecast" aria-hidden="true">
+            <Skeleton width="60%" height={12} />
+            <div className="an-skeleton-chart">
+                {heights.map((height, index) => (
+                    <Skeleton key={index} className="an-skeleton-bar" height={`${height}%`} />
+                ))}
+            </div>
+            {[0, 1, 2].map((index) => (
+                <div key={index} className="an-skeleton-forecast-row">
+                    <Skeleton width="65%" height={13} />
+                    <Skeleton width="100%" height={7} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function WorkloadSkeleton() {
+    return (
+        <div className="an-load" aria-hidden="true">
+            <div className="an-ring">
+                <span className="an-skeleton an-skeleton-ring" />
+                <Skeleton width={118} height={12} />
+            </div>
+            <div className="an-stats">
+                {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="an-soft an-stat">
+                        <Skeleton width="68%" height={12} />
+                        <Skeleton width="42%" height={25} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function SummarySkeleton() {
+    return (
+        <div className="an-skeleton-summary" aria-hidden="true">
+            <Skeleton width="95%" height={13} />
+            <Skeleton width="78%" height={13} />
+            <Skeleton width="58%" height={13} />
+        </div>
+    );
+}
+
+function AnomaliesSkeleton() {
+    return (
+        <div className="an-skeleton-anomalies" aria-hidden="true">
+            <div className="an-skeleton-donut" />
+            {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="an-skeleton-anomaly-row">
+                    <Skeleton width="70%" height={15} />
+                    <Skeleton width="92%" height={11} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function TableSkeleton() {
+    return (
+        <div className="an-skeleton-table" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, index) => (
+                <div className="an-skeleton-table-row" key={index}>
+                    <Skeleton width="90%" height={index === 0 ? 14 : 12} />
+                    <Skeleton width="65%" height={12} />
+                    <Skeleton width="76%" height={12} />
+                    <Skeleton width="70%" height={12} />
+                </div>
+            ))}
+        </div>
+    );
+}
 
 // MARK: Card
 function Card({ title, subtitle, icon: Icon, children }) {
@@ -549,15 +670,18 @@ function Card({ title, subtitle, icon: Icon, children }) {
         </section>
     );
 }
-
 // MARK: KPI
-function KpiCard({ label, value, helper, icon: Icon, tone }) {
+function KpiCard({ label, value, helper, icon: Icon, tone, loading = false }) {
     return (
         <div className="an-glass an-kpi">
             <div className="an-kpi__text">
                 <div className="an-kpi__label">{label}</div>
-                <div className="an-kpi__value">{value}</div>
-                <div className="an-kpi__help">{helper}</div>
+                <div className="an-kpi__value">
+                    {loading ? <Skeleton width={86} height={28} /> : value}
+                </div>
+                <div className="an-kpi__help">
+                    {loading ? <Skeleton width={116} height={12} /> : helper}
+                </div>
             </div>
             <span className={`an-kpi__icon an-tone--${tone}`}>
                 <Icon size={24} />
@@ -573,7 +697,6 @@ function MiniStat({ title, value }) {
         </div>
     );
 }
-
 // MARK: Rings
 // Semi-Circle Gauge на ApexCharts. Дуга занимает ширину карточки,
 // а высоту карточки определяет только .an-grid--top (не размер графика).
@@ -582,11 +705,9 @@ function ClosedGauge({ percent }) {
     const [space, setSpace] = useState({ width: 0, height: 0 });
     const hasData = percent !== null && percent !== undefined && Number.isFinite(Number(percent));
     const value = hasData ? clampPercent(percent) : 0;
-
     useEffect(() => {
         const element = gaugeRef.current;
         if (!element) return undefined;
-
         const measure = () => {
             const rect = element.getBoundingClientRect();
             const nextWidth = Math.max(0, Math.round(rect.width));
@@ -603,7 +724,6 @@ function ClosedGauge({ percent }) {
             if (!observer) window.removeEventListener("resize", measure);
         };
     }, []);
-
     // ApexCharts резервирует часть холста вокруг дуги. Чуть больший
     // квадратный canvas компенсирует ВНУТРЕННИЕ поля библиотеки.
     // Радиус вычисляется от доступной ширины, а не от высоты блока.
@@ -614,8 +734,7 @@ function ClosedGauge({ percent }) {
     // Центр полукруга совпадает с нижним краем, но концы дуги
     // остаются внутри viewport с запасом под скругления.
     const endCapInset = gaugeWidth * 0.034;
-    const chartOffsetY = Math.round((gaugeWidth - chartSize) / 2 - endCapInset);
-
+    const chartOffsetY = Math.round((gaugeWidth - chartSize) / 2 - endCapInset -5);
     const options = useMemo(() => ({
         chart: {
             type: "gauge",
@@ -651,7 +770,6 @@ function ClosedGauge({ percent }) {
             active: { filter: { type: "none" } },
         },
     }), [chartOffsetY]);
-
     return (
         <div
             ref={gaugeRef}
@@ -711,7 +829,6 @@ function LoadRing({ label, value }) {
         </div>
     );
 }
-
 // MARK: Forecast
 function ForecastItem({ item, index }) {
     useI18n();
@@ -720,7 +837,6 @@ function ForecastItem({ item, index }) {
         <div className="an-soft an-fitem">
             <div className="an-fitem__row">
                 <div className="an-fitem__who">
-                    <span className="an-badge">№{index + 1}</span>
                     <div style={{ minWidth: 0 }}>
                         <div className="an-fitem__name">
                             {item.equipment?.name || item.equipment || `Оборудование #${item.equipmentId}`}
@@ -742,7 +858,6 @@ function ForecastItem({ item, index }) {
         </div>
     );
 }
-
 // MARK: Anomaly
 function AnomalyItem({ item }) {
     const severity = Number(item.severity) || 1;
@@ -760,7 +875,6 @@ function AnomalyItem({ item }) {
         </div>
     );
 }
-
 // MARK: Ranking
 function Ranking({ items, titleKey, valueKey, suffix }) {
     if (!items.length) return <EmptyBlock text="Данных нет" />;
@@ -794,42 +908,9 @@ function Ranking({ items, titleKey, valueKey, suffix }) {
     );
 }
 
-// MARK: State
-function DowntimeMobileList({ items }) {
-    if (!items.length) return <EmptyBlock text="Простоев нет" />;
-    return (
-        <div className="an-downtime-mobile">
-            {items.map((row, index) => (
-                <article className="an-downtime-mobile__item" key={row.equipmentId ?? index}>
-                    <div className="an-downtime-mobile__head">
-                        <div>
-                            <strong>{row.equipment?.name || row.equipment || "—"}</strong>
-                            {row.area?.name && <small>{row.area.name}</small>}
-                        </div>
-                        {row.ongoing && <span className="an-pill an-pill--rose">Сейчас</span>}
-                    </div>
-                    <div className="an-downtime-mobile__stats">
-                        <div><span>Событий</span><strong>{row.count ?? 0}</strong></div>
-                        <div><span>Всего</span><strong>{formatMinutes(row.minutes)}</strong></div>
-                        <div><span>Плановый</span><strong>{formatMinutes(row.plannedMinutes)}</strong></div>
-                        <div><span>Аварийный</span><strong className="an-cell-danger">{formatMinutes(row.unplannedMinutes)}</strong></div>
-                    </div>
-                </article>
-            ))}
-        </div>
-    );
-}
-function InlineLoader() {
-    return (
-        <div className="an-loader">
-            <RiLoader4Line size={26} className="an-spin" />
-        </div>
-    );
-}
 function EmptyBlock({ text }) {
     return <div className="an-empty">{text}</div>;
 }
-
 // MARK: Forecast chart — риск по оборудованию, отсортированному по вероятности
 function ForecastChart({ items, height = 240 }) {
     const selected = items.slice(0, 8);
@@ -868,7 +949,7 @@ function ForecastChart({ items, height = 240 }) {
         },
         dataLabels: { enabled: false },
         xaxis: {
-            categories: names.map((_, i) => `№${i + 1}`),
+            categories: names.map((_, i) => `${i + 1}`),
             labels: { style: { colors: "#aaa6cf", fontSize: "11px" } },
             axisBorder: { show: false },
             axisTicks: { show: false },
@@ -904,7 +985,6 @@ function ForecastChart({ items, height = 240 }) {
         />
     );
 }
-
 // MARK: Severity chart — кольцевая диаграмма распределения критичности
 function SeverityChart({ items }) {
     useI18n();
@@ -962,3 +1042,9 @@ function SeverityChart({ items }) {
         </div>
     );
 }
+
+// ApexCharts не перерисовываются при загрузке несвязанных запросов.
+const StableClosedGauge = memo(ClosedGauge);
+const StableLoadRing = memo(LoadRing);
+const StableForecastChart = memo(ForecastChart);
+const StableSeverityChart = memo(SeverityChart);
