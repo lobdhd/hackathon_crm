@@ -348,8 +348,6 @@ function UserModal({
                 user?.fullName || "",
             phone:
                 user?.phone || "",
-            login:
-                user?.login || "",
             password: "",
             role:
                 user?.role ||
@@ -401,12 +399,6 @@ function UserModal({
             payload.password =
                 form.password;
 
-            if (
-                form.login.trim()
-            ) {
-                payload.login =
-                    form.login.trim();
-            }
         }
 
         if (
@@ -495,6 +487,7 @@ function UserModal({
             <form
                 className="admin-form"
                 onSubmit={submit}
+                autoComplete="off"
             >
                 {error && (
                     <div className="admin-form-error">
@@ -548,34 +541,10 @@ function UserModal({
                                 )
                             }
                             placeholder="+7 700 000 00 00"
+                            autoComplete="off"
                             required
                         />
                     </label>
-
-                    {!isEdit && (
-                        <label className="admin-field">
-                            <span>
-                                Login
-                            </span>
-
-                            <input
-                                value={
-                                    form.login
-                                }
-                                onChange={(
-                                    event,
-                                ) =>
-                                    change(
-                                        "login",
-                                        event
-                                            .target
-                                            .value,
-                                    )
-                                }
-                                placeholder={i18nT("pages.admin.admin.admin.0b68a0c")}
-                            />
-                        </label>
-                    )}
 
                     <div className="admin-field">
                         <span>
@@ -627,6 +596,8 @@ function UserModal({
 
                             <input
                                 type="password"
+                                autoComplete="new-password"
+                                name="new-user-password"
                                 value={
                                     form.password
                                 }
@@ -2966,6 +2937,7 @@ export default function Admin() {
                                 <h2>{activeTabData?.label}</h2>
                                 <p>{i18nT("pages.admin.admin.admin.8bd9fbd")}</p>
                             </div>
+                            <span className="admin-content__total">{tabCounts[activeTab]}</span>
                         </div>
 
                         <div className="admin-content__actions">
