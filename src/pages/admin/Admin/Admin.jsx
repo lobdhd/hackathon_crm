@@ -1,12 +1,15 @@
 import {
     useMemo,
     useState,
+    useEffect,
 } from "react";
+import { createPortal } from "react-dom";
 
 import {
     RiAddLine,
     RiAdminLine,
     RiCloseLine,
+    RiCheckboxCircleLine,
     RiDeleteBinLine,
     RiEditLine,
     RiErrorWarningLine,
@@ -52,6 +55,7 @@ import {
     useNormatives,
 } from "../../../hooks/useReferences.js";
 
+import GlideSelect from "../../../react-components/GlideSelect/GlideSelect.jsx";
 import "./Admin.css";
 import { t as i18nT } from "../../../i18n/index.js";
 import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
@@ -182,7 +186,15 @@ function Modal({
     children,
     width = "680px",
 }) {
-    return (
+    useEffect(() => {
+        const handleEscape = (event) => {
+            if (event.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEscape);
+        return () => window.removeEventListener("keydown", handleEscape);
+    }, [onClose]);
+
+    return createPortal(
         <div
             className="admin-modal-overlay"
             onMouseDown={onClose}
@@ -220,7 +232,8 @@ function Modal({
 
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }
 
@@ -564,73 +577,43 @@ function UserModal({
                         </label>
                     )}
 
-                    <label className="admin-field">
+                    <div className="admin-field">
                         <span>
                             {i18nT("pages.admin.admin.admin.5d621b7")}
                         </span>
 
-                        <select
-                            value={
-                                form.role
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                change(
-                                    "role",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                        >
-                            <option value="EXECUTOR">
-                                {i18nT("pages.admin.admin.admin.1d3ab78")}
-                            </option>
+                        <GlideSelect
+                            className="glide-select--field"
+                            options={[
+                                { value: "EXECUTOR", label: i18nT("pages.admin.admin.admin.1d3ab78") },
+                                { value: "MASTER", label: i18nT("pages.admin.admin.admin.2bb1fb2") },
+                                { value: "MANAGER", label: i18nT("pages.admin.admin.admin.f1c7b10") },
+                                { value: "ADMIN", label: i18nT("pages.admin.admin.admin.2b93bb9") },
+                            ]}
+                            value={String(form.role)}
+                            onChange={(value) => change("role", value)}
+                            ariaLabel="Роль пользователя"
+                            portal
+                        />
+                    </div>
 
-                            <option value="MASTER">
-                                {i18nT("pages.admin.admin.admin.2bb1fb2")}
-                            </option>
-
-                            <option value="MANAGER">
-                                {i18nT("pages.admin.admin.admin.f1c7b10")}
-                            </option>
-
-                            <option value="ADMIN">
-                                {i18nT("pages.admin.admin.admin.2b93bb9")}
-                            </option>
-                        </select>
-                    </label>
-
-                    <label className="admin-field">
+                    <div className="admin-field">
                         <span>
                             {i18nT("components.employees.createemployeemodal.0577df9")}
                         </span>
 
-                        <select
-                            value={
-                                form.language
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                change(
-                                    "language",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                        >
-                            <option value="ru">
-                                {i18nT("components.employees.createemployeemodal.a5c072f")}
-                            </option>
-
-                            <option value="kk">
-                                {i18nT("components.employees.createemployeemodal.8be1a8f")}
-                            </option>
-                        </select>
-                    </label>
+                        <GlideSelect
+                            className="glide-select--field"
+                            options={[
+                                { value: "ru", label: i18nT("components.employees.createemployeemodal.a5c072f") },
+                                { value: "kk", label: i18nT("components.employees.createemployeemodal.8be1a8f") },
+                            ]}
+                            value={String(form.language)}
+                            onChange={(value) => change("language", value)}
+                            ariaLabel="Язык пользователя"
+                            portal
+                        />
+                    </div>
 
                     <label className="admin-field admin-field--full">
                         <span>
@@ -724,50 +707,24 @@ function UserModal({
                                     />
                                 </label>
 
-                                <label className="admin-field admin-field--full">
+                                <div className="admin-field admin-field--full">
                                     <span>
                                         {i18nT("employeeModal.team")}
                                     </span>
 
-                                    <select
-                                        value={
-                                            form.brigadeId
-                                        }
-                                        onChange={(
-                                            event,
-                                        ) =>
-                                            change(
-                                                "brigadeId",
-                                                event
-                                                    .target
-                                                    .value,
-                                            )
-                                        }
-                                    >
-                                        <option value="">
-                                            {i18nT("pages.admin.admin.admin.b99dc45")}
-                                        </option>
-
-                                        {brigades.map(
-                                            (
-                                                brigade,
-                                            ) => (
-                                                <option
-                                                    key={
-                                                        brigade.id
-                                                    }
-                                                    value={
-                                                        brigade.id
-                                                    }
-                                                >
-                                                    {
-                                                        brigade.name
-                                                    }
-                                                </option>
-                                            ),
-                                        )}
-                                    </select>
-                                </label>
+                                    <GlideSelect
+                                        className="glide-select--field"
+                                        options={[
+                                            { value: "", label: i18nT("pages.admin.admin.admin.b99dc45") },
+                                            ...brigades.map((brigade) => ({ value: String(brigade.id), label: brigade.name })),
+                                        ]}
+                                        value={String(form.brigadeId)}
+                                        onChange={(value) => change("brigadeId", value)}
+                                        ariaLabel="Бригада"
+                                        searchable
+                                        portal
+                                    />
+                                </div>
                             </>
                         )}
                 </div>
@@ -1090,92 +1047,39 @@ function EquipmentModal({
                         />
                     </label>
 
-                    <label className="admin-field">
+                    <div className="admin-field">
                         <span>
                             {i18nT("pages.admin.admin.admin.a3d5884")}
                         </span>
 
-                        <select
-                            value={
-                                form.criticality
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                change(
-                                    "criticality",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                        >
-                            {[1, 2, 3, 4, 5].map(
-                                (
-                                    value,
-                                ) => (
-                                    <option
-                                        key={
-                                            value
-                                        }
-                                        value={
-                                            value
-                                        }
-                                    >
-                                        {
-                                            value
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    </label>
+                        <GlideSelect
+                            className="glide-select--field"
+                            options={[1, 2, 3, 4, 5].map((value) => ({ value: String(value), label: String(value) }))}
+                            value={String(form.criticality)}
+                            onChange={(value) => change("criticality", value)}
+                            ariaLabel="Критичность оборудования"
+                            portal
+                        />
+                    </div>
 
-                    <label className="admin-field">
+                    <div className="admin-field">
                         <span>
                             {i18nT("pages.admin.admin.admin.59d3fa6")}
                         </span>
 
-                        <select
-                            value={
-                                form.areaId
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                change(
-                                    "areaId",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            required
-                        >
-                            <option value="">
-                                {i18nT("pages.admin.admin.admin.b79ea47")}
-                            </option>
-
-                            {areas.map(
-                                (
-                                    area,
-                                ) => (
-                                    <option
-                                        key={
-                                            area.id
-                                        }
-                                        value={
-                                            area.id
-                                        }
-                                    >
-                                        {
-                                            area.name
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    </label>
+                        <GlideSelect
+                            className="glide-select--field"
+                            options={[
+                                { value: "", label: i18nT("pages.admin.admin.admin.b79ea47") },
+                                ...areas.map((area) => ({ value: String(area.id), label: area.name })),
+                            ]}
+                            value={String(form.areaId)}
+                            onChange={(value) => change("areaId", value)}
+                            ariaLabel="Участок оборудования"
+                            searchable
+                            portal
+                        />
+                    </div>
                 </div>
 
                 <div className="admin-modal__footer">
@@ -1621,99 +1525,43 @@ function NormativeModal({
                         />
                     </label>
 
-                    <label className="admin-field">
+                    <div className="admin-field">
                         <span>
                             {i18nT("pages.admin.admin.admin.a135d09")}
                         </span>
 
-                        <select
-                            value={
-                                form.equipmentId
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                change(
-                                    "equipmentId",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                        >
-                            <option value="">
-                                {i18nT("pages.admin.admin.admin.d0564fd")}
-                            </option>
+                        <GlideSelect
+                            className="glide-select--field"
+                            options={[
+                                { value: "", label: i18nT("pages.admin.admin.admin.d0564fd") },
+                                ...equipment.map((item) => ({ value: String(item.id), label: item.name })),
+                            ]}
+                            value={String(form.equipmentId)}
+                            onChange={(value) => change("equipmentId", value)}
+                            ariaLabel="Оборудование норматива"
+                            searchable
+                            portal
+                        />
+                    </div>
 
-                            {equipment.map(
-                                (
-                                    item,
-                                ) => (
-                                    <option
-                                        key={
-                                            item.id
-                                        }
-                                        value={
-                                            item.id
-                                        }
-                                    >
-                                        {
-                                            item.name
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    </label>
-
-                    <label className="admin-field">
+                    <div className="admin-field">
                         <span>
                             {i18nT("pages.admin.admin.admin.b88c90e")}
                         </span>
 
-                        <select
-                            value={
-                                form.faultCodeId
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                change(
-                                    "faultCodeId",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                        >
-                            <option value="">
-                                {i18nT("components.employees.createemployeemodal.cdded47")}
-                            </option>
-
-                            {faultCodes.map(
-                                (
-                                    item,
-                                ) => (
-                                    <option
-                                        key={
-                                            item.id
-                                        }
-                                        value={
-                                            item.id
-                                        }
-                                    >
-                                        {
-                                            item.code
-                                        }{" "}
-                                        —{" "}
-                                        {
-                                            item.name
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    </label>
+                        <GlideSelect
+                            className="glide-select--field"
+                            options={[
+                                { value: "", label: i18nT("components.employees.createemployeemodal.cdded47") },
+                                ...faultCodes.map((item) => ({ value: String(item.id), label: `${item.code} — ${item.name}` })),
+                            ]}
+                            value={String(form.faultCodeId)}
+                            onChange={(value) => change("faultCodeId", value)}
+                            ariaLabel="Шифр неисправности"
+                            searchable
+                            portal
+                        />
+                    </div>
                 </div>
 
                 <div className="admin-material-editor">
@@ -1756,50 +1604,21 @@ function NormativeModal({
                                             row.id
                                         }
                                     >
-                                        <select
-                                            value={
-                                                row.materialId
-                                            }
-                                            onChange={(
-                                                event,
-                                            ) =>
-                                                updateMaterial(
-                                                    row.id,
-                                                    "materialId",
-                                                    event
-                                                        .target
-                                                        .value,
-                                                )
-                                            }
-                                        >
-                                            <option value="">
-                                                {i18nT("pages.admin.admin.admin.82f235b")}
-                                            </option>
-
-                                            {materials.map(
-                                                (
-                                                    material,
-                                                ) => (
-                                                    <option
-                                                        key={
-                                                            material.id
-                                                        }
-                                                        value={
-                                                            material.id
-                                                        }
-                                                    >
-                                                        {
-                                                            material.name
-                                                        }{" "}
-                                                        (
-                                                        {
-                                                            material.unit
-                                                        }
-                                                        )
-                                                    </option>
-                                                ),
-                                            )}
-                                        </select>
+                                        <GlideSelect
+                                            className="glide-select--field"
+                                            options={[
+                                                { value: "", label: i18nT("pages.admin.admin.admin.82f235b") },
+                                                ...materials.map((material) => ({
+                                                    value: String(material.id),
+                                                    label: `${material.name} (${material.unit})`,
+                                                })),
+                                            ]}
+                                            value={String(row.materialId)}
+                                            onChange={(value) => updateMaterial(row.id, "materialId", value)}
+                                            ariaLabel="Материал норматива"
+                                            searchable
+                                            portal
+                                        />
 
                                         <input
                                             type="number"
@@ -2166,6 +1985,18 @@ export default function Admin() {
                 "EXECUTOR",
         );
 
+    const onShiftCount = executors.filter((user) => user.isOnShift).length;
+    const tabCounts = {
+        users: users.length,
+        shifts: executors.length,
+        areas: areas.length,
+        equipment: equipment.length,
+        faultCodes: faultCodes.length,
+        materials: materials.length,
+        brigades: brigades.length,
+        normatives: normatives.length,
+    };
+
     function refreshActive() {
         const map = {
             users:
@@ -2281,7 +2112,7 @@ export default function Admin() {
                         RiUser3Line
                     }
                     title={i18nT("pages.admin.admin.admin.eb25bc7")}
-                    text="Создайте первую учётную запись"
+                    text={search ? "По запросу ничего не найдено" : "Создайте первую учётную запись"}
                 />
             );
         }
@@ -2762,14 +2593,24 @@ export default function Admin() {
         type,
         deleteMutation,
     ) {
-        if (!data.length) {
+        const term = search.trim().toLocaleLowerCase();
+        const filteredData = !term ? data : data.filter((item) =>
+            columns.some((column) => {
+                const value = column.key === "members"
+                    ? Array.isArray(item.members) ? item.members.length : (item.members ?? "")
+                    : column.key === "faultCode" ? (item.faultCode?.code ?? "")
+                    : item[column.key];
+                return String(value ?? "").toLocaleLowerCase().includes(term);
+            }),
+        );
+        if (!filteredData.length) {
             return (
                 <EmptyState
                     icon={
                         RiFileList3Line
                     }
                     title={i18nT("pages.admin.admin.admin.64916b7")}
-                    text="Добавьте первую запись"
+                    text={search ? "Попробуйте изменить поисковый запрос" : "Добавьте первую запись"}
                 />
             );
         }
@@ -2800,7 +2641,7 @@ export default function Admin() {
                     </thead>
 
                     <tbody>
-                        {data.map(
+                        {filteredData.map(
                             (item) => (
                                 <tr
                                     key={
@@ -3037,99 +2878,49 @@ export default function Admin() {
         ].includes(activeTab);
 
     const activeTabData =
-        TABS().find(
-            (tab) =>
-                tab.id ===
-                activeTab,
-        );
+        TABS().find((tab) => tab.id === activeTab);
+    const ActiveTabIcon = activeTabData?.icon || RiAdminLine;
 
     return (
-        <div className="admin-page">
+        <div className="admin-page mx-auto max-w-[1800px] p-7">
             <div className="admin-page__header">
-                <div>
-                    <h1>
-                        {i18nT("pages.admin.admin.admin.0dce296")}
-                    </h1>
-
-                    <p>
-                        {i18nT("pages.admin.admin.admin.553b7db")}
-                    </p>
+                <div className="admin-page__heading">
+                    <div>
+                        <h1>{i18nT("pages.admin.admin.admin.0dce296")}</h1>
+                        <p>{i18nT("pages.admin.admin.admin.553b7db")}</p>
+                    </div>
                 </div>
-
-
             </div>
 
             <div className="admin-summary">
-                <div className="admin-summary-card">
-                    <span>
-                        {i18nT("pages.admin.admin.admin.b8c4e70")}
-                    </span>
-
-                    <strong>
-                        {users.length}
-                    </strong>
-
-                    <small>
-                        {i18nT("pages.admin.admin.admin.9b96436")}
-                    </small>
+                <div className="admin-summary-card admin-summary-card--users">
+                    <div className="admin-summary-card__top"><span>{i18nT("pages.admin.admin.admin.b8c4e70")}</span><span className="admin-summary-card__icon"><RiUser3Line /></span></div>
+                    <strong>{usersQuery.isLoading ? "—" : users.length}</strong>
+                    <small>{i18nT("pages.admin.admin.admin.9b96436")}</small>
                 </div>
-
-                <div className="admin-summary-card">
-                    <span>
-                        {i18nT("pages.admin.admin.admin.db000ea")}
-                    </span>
-
-                    <strong>
-                        {
-                            executors.length
-                        }
-                    </strong>
-
-                    <small>
-                        {i18nT("pages.admin.admin.admin.f2cb7ea")}
-                    </small>
+                <div className="admin-summary-card admin-summary-card--executors">
+                    <div className="admin-summary-card__top"><span>{i18nT("pages.admin.admin.admin.db000ea")}</span><span className="admin-summary-card__icon"><RiTeamLine /></span></div>
+                    <strong>{usersQuery.isLoading ? "—" : executors.length}</strong>
+                    <small>{i18nT("pages.admin.admin.admin.f2cb7ea")}</small>
                 </div>
-
-                <div className="admin-summary-card">
-                    <span>
-                        {i18nT("pages.admin.admin.admin.958b816")}
-                    </span>
-
-                    <strong>
-                        {
-                            executors.filter(
-                                (
-                                    user,
-                                ) =>
-                                    user.isOnShift,
-                            ).length
-                        }
-                    </strong>
-
-                    <small>
-                        {i18nT("pages.admin.admin.admin.53b4b26")}
-                    </small>
+                <div className="admin-summary-card admin-summary-card--shifts">
+                    <div className="admin-summary-card__top"><span>{i18nT("pages.admin.admin.admin.958b816")}</span><span className="admin-summary-card__icon"><RiTimeLine /></span></div>
+                    <strong>{usersQuery.isLoading ? "—" : onShiftCount}</strong>
+                    <small>{i18nT("pages.admin.admin.admin.53b4b26")}</small>
+                    <div className="admin-summary-card__bar" role="progressbar" aria-valuenow={onShiftCount} aria-valuemin={0} aria-valuemax={Math.max(executors.length, 1)} aria-label="Исполнители на смене">
+                        <span style={{ width: `${executors.length ? (onShiftCount / executors.length) * 100 : 0}%` }} />
+                    </div>
                 </div>
-
-                <div className="admin-summary-card">
-                    <span>
-                        {i18nT("pages.admin.admin.admin.a135d09")}
-                    </span>
-
-                    <strong>
-                        {
-                            equipment.length
-                        }
-                    </strong>
-
-                    <small>
-                        {i18nT("pages.admin.admin.admin.d8929de")}
-                    </small>
+                <div className="admin-summary-card admin-summary-card--equipment">
+                    <div className="admin-summary-card__top"><span>{i18nT("pages.admin.admin.admin.a135d09")}</span><span className="admin-summary-card__icon"><RiToolsLine /></span></div>
+                    <strong>{equipmentQuery.isLoading ? "—" : equipment.length}</strong>
+                    <small>{i18nT("pages.admin.admin.admin.d8929de")}</small>
                 </div>
             </div>
 
             <div className="admin-workspace">
-                <aside className="admin-tabs">
+                <aside className="admin-tabs" aria-label="Разделы администрирования">
+                    <div className="admin-tabs__heading">Разделы <span>{TABS().length}</span></div>
                     {TABS().map(
                         (tab) => {
                             const Icon =
@@ -3159,11 +2950,8 @@ export default function Admin() {
                                 >
                                     <Icon />
 
-                                    <span>
-                                        {
-                                            tab.label
-                                        }
-                                    </span>
+                                    <span className="admin-tabs__label">{tab.label}</span>
+                                    <span className="admin-tabs__count">{tabCounts[tab.id]}</span>
                                 </button>
                             );
                         },
@@ -3172,19 +2960,16 @@ export default function Admin() {
 
                 <section className="admin-content">
                     <div className="admin-content__header">
-                        <div>
-                            <h2>
-                                {
-                                    activeTabData?.label
-                                }
-                            </h2>
-
-                            <p>
-                                {i18nT("pages.admin.admin.admin.8bd9fbd")}
-                            </p>
+                        <div className="admin-content__heading">
+                            <span className="admin-content__icon"><ActiveTabIcon /></span>
+                            <div>
+                                <h2>{activeTabData?.label}</h2>
+                                <p>{i18nT("pages.admin.admin.admin.8bd9fbd")}</p>
+                            </div>
                         </div>
 
                         <div className="admin-content__actions">
+                            <button type="button" className="admin-button admin-button--refresh" title="Обновить данные" onClick={refreshActive} aria-label="Обновить данные"><RiRefreshLine /></button>
                             {![
                                 "shifts",
                             ].includes(
