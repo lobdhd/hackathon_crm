@@ -1,965 +1,266 @@
+import { useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-    useMemo,
-    useState,
-} from "react";
-import {
-    Link,
-    useNavigate,
-    useParams,
-} from "react-router-dom";
-import {
-    RiAddLine,
-    RiAlarmWarningLine,
-    RiArrowLeftLine,
-    RiDownload2Line,
-    RiFileList3Line,
-    RiHistoryLine,
-    RiInformationLine,
-    RiMapPinLine,
-    RiQrCodeLine,
-    RiRefreshLine,
-    RiSparkling2Line,
-    RiTimeLine,
-    RiToolsLine,
+  RiAddLine, RiAlarmWarningLine, RiArrowLeftLine, RiArrowRightUpLine,
+  RiCheckboxCircleLine, RiFileList3Line, RiHistoryLine,
+  RiInformationLine, RiMapPinLine, RiQrCodeLine, RiRefreshLine,
+  RiShieldCheckLine, RiStarLine, RiTimeLine, RiToolsLine, RiLoader4Line,
 } from "react-icons/ri";
-import {
-    downloadEquipmentQr,
-} from "../../../api/equipment.api.js";
-import {
-    useEquipmentHistory,
-} from "../../../hooks/useEquipment.js";
+import { downloadEquipmentQr } from "../../../api/equipment.api.js";
+import { useEquipmentHistory } from "../../../hooks/useEquipment.js";
 import SmartTable from "../../../react-components/SmartTable/SmartTable.jsx";
 import { useAuth } from "../../../auth/AuthProvider.jsx";
 import { isOrderStaff } from "../../../auth/roles.js";
-import { t as i18nT } from "../../../i18n/index.js";
-import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
-// MARK: Config
-const ACTIVE_STATUSES = [
-    "ISSUED",
-    "ACCEPTED",
-    "QUEUED",
-    "IN_PROGRESS",
-    "PAUSED",
-    "REWORK",
-];
+import { useI18n } from "../../../i18n/index.js";
+import "./EquipmentDetails.css";
+
+const ACTIVE_STATUSES = new Set(["ISSUED", "ACCEPTED", "QUEUED", "IN_PROGRESS", "PAUSED", "REWORK"]);
 const STATUS_LABELS = {
-    ISSUED: "Выдан",
-    QUEUED: "В очереди",
-    ACCEPTED: "Принят",
-    IN_PROGRESS: "В работе",
-    PAUSED: "Приостановлен",
-    COMPLETED: "Выполнен",
-    AI_REVIEW: "На проверке",
-    REWORK: "На доработке",
-    CLOSED: "Закрыт",
-    REJECTED: "Отклонён",
-    CANCELLED: "Отменён",
+  ISSUED: "Выдан", QUEUED: "В очереди", ACCEPTED: "Принят", IN_PROGRESS: "В работе",
+  PAUSED: "Приостановлен", COMPLETED: "Выполнен", AI_REVIEW: "На проверке",
+  REWORK: "На доработке", CLOSED: "Закрыт", REJECTED: "Отклонён", CANCELLED: "Отменён",
 };
-const PRIORITY_LABELS = {
-    EMERGENCY: "Аварийный",
-    HIGH: "Высокий",
-    NORMAL: "Обычный",
-    PLANNED: "Плановый",
+const PRIORITY_LABELS = { EMERGENCY: "Аварийный", HIGH: "Высокий", NORMAL: "Обычный", PLANNED: "Плановый" };
+const CRITICALITY = { 1: "Низкая", 2: "Ниже средней", 3: "Средняя", 4: "Высокая", 5: "Критическая" };
+const asArray = (value) => Array.isArray(value) ? value : [];
+const extractError = (error) => error?.response?.data?.error || error?.message || "Не удалось выполнить запрос";
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 };
-// MARK: Helpers
+const formatMinutes = (minutes) => {
+  const value = Math.max(0, Math.floor(Number(minutes) || 0));
+  if (value < 60) return `${value} мин`;
+  const hours = Math.floor(value / 60);
+  return value % 60 ? `${hours} ч ${value % 60} мин` : `${hours} ч`;
+};
+const getDowntimeMinutes = (order) => {
+  if (Array.isArray(order?.downtime)) return order.downtime.reduce((sum, part) => sum + (Number(part?.minutes) || 0), 0);
+  if (order?.downtime && typeof order.downtime === "object") return Number(order.downtime.minutes) || 0;
+  return Number(order?.actualDowntimeMinutes) || 0;
+};
+const getOrderScore = (order) => order?.aiAssessment?.masterScore ?? order?.aiAssessment?.score ?? null;
 
-function asArray(value) {
-    return Array.isArray(
-        value,
-    )
-        ? value
-        : [];
+function SeverityBadge({ value }) {
+  const level = Number(value) || 0;
+  return <span className={`eqd-badge eqd-badge--severity-${level || 1}`}><span className="eqd-badge__dot" />{CRITICALITY[level] || "Не указана"} · {level || "—"}/5</span>;
 }
-
-function extractError(error) {
-    return (
-        error?.response?.data
-            ?.error ||
-        error?.message ||
-        "Не удалось выполнить запрос"
-    );
+function StatusBadge({ value }) {
+  const tone = value === "CLOSED" || value === "COMPLETED" ? "success" : value === "REJECTED" || value === "CANCELLED" ? "danger" : value === "PAUSED" || value === "REWORK" ? "warning" : "blue";
+  return <span className={`eqd-badge eqd-badge--${tone}`}>{STATUS_LABELS[value] || value || "—"}</span>;
 }
-
-function formatDate(value) {
-    if (!value) {
-        return "—";
-    }
-    return new Date(
-        value,
-    ).toLocaleString(
-        "ru-RU",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        },
-    );
+function PriorityBadge({ value }) {
+  return <span className={`eqd-badge eqd-badge--${value === "EMERGENCY" ? "danger" : value === "HIGH" ? "warning" : "neutral"}`}>{PRIORITY_LABELS[value] || value || "—"}</span>;
 }
-
-function getCriticalityLabel(
-    value,
-) {
-    const labels = {
-        1: "Низкая",
-        2: "Ниже средней",
-        3: "Средняя",
-        4: "Высокая",
-        5: "Критическая",
-    };
-    return (
-        labels[
-            Number(value)
-        ] ||
-        value ||
-        "—"
-    );
+function Section({ title, description, icon: Icon, children, actions, className = "" }) {
+  return (
+    <section className={`eqd-panel ${className}`}>
+      <div className="eqd-panel__head">
+        <span className="eqd-panel__icon"><Icon size={19} /></span>
+        <div><h2>{title}</h2>{description && <p>{description}</p>}</div>
+        {actions && <div className="eqd-panel__actions">{actions}</div>}
+      </div>
+      <div className="eqd-panel__body">{children}</div>
+    </section>
+  );
 }
-
-function getDowntimeMinutes(
-    order,
-) {
-    const downtime =
-        order?.downtime;
-    if (
-        Array.isArray(
-            downtime,
-        )
-    ) {
-        return downtime.reduce(
-            (
-                total,
-                item,
-            ) =>
-                total +
-                Number(
-                    item?.minutes ||
-                        0,
-                ),
-            0,
-        );
-    }
-    if (
-        downtime &&
-        typeof downtime ===
-            "object"
-    ) {
-        return Number(
-            downtime.minutes ||
-                0,
-        );
-    }
-    return Number(
-        order?.actualDowntimeMinutes ||
-            0,
-    );
+function KpiCard({ title, value, description, icon: Icon, tone = "blue" }) {
+  return (
+    <div className={`eqd-kpi eqd-kpi--${tone}`}>
+      <div className="eqd-kpi__top"><span>{title}</span><span className="eqd-kpi__icon"><Icon size={19} /></span></div>
+      <strong>{value}</strong>
+      <small>{description}</small>
+    </div>
+  );
 }
-
-function formatMinutes(
-    minutes,
-) {
-    const value =
-        Number(minutes) ||
-        0;
-    if (value < 60) {
-        return `${value} мин`;
-    }
-    const hours =
-        Math.floor(
-            value / 60,
-        );
-    const rest =
-        value % 60;
-    return rest
-        ? `${hours} ч ${rest} мин`
-        : `${hours} ч`;
+function InfoRow({ label, value, mono = false }) {
+  return <div className="eqd-info-row"><span>{label}</span><strong className={mono ? "eqd-mono" : ""} title={String(value ?? "")}>{value === null || value === undefined || value === "" ? "—" : value}</strong></div>;
 }
-
-function getOrderScore(
-    order,
-) {
-    const assessment =
-        order?.aiAssessment;
-    if (!assessment) {
-        return null;
-    }
-    return (
-        assessment.masterScore ??
-        assessment.score ??
-        null
-    );
+function OrderCard({ order }) {
+  return (
+    <Link className="eqd-order" to={`/orders/${order.id}`}>
+      <div className="eqd-order__main">
+        <div className="eqd-order__heading">
+          <strong>{order.number || `#${order.id}`}</strong>
+          <PriorityBadge value={order.priority} />
+          <StatusBadge value={order.status} />
+        </div>
+        <p>{order.description || "Описание наряда отсутствует"}</p>
+      </div>
+      <div className="eqd-order__end"><span>{formatDate(order.deadline)}</span><RiArrowRightUpLine size={19} /></div>
+    </Link>
+  );
 }
-// MARK: Page
+function HistoryTable({ orders }) {
+  useI18n();
+  const navigate = useNavigate();
+  const columns = useMemo(() => [
+    {
+      field: "number", header: "Наряд", minWidth: 215,
+      render: (order) => <div className="eqd-order-cell"><Link to={`/orders/${order.id}`}>{order.number || `#${order.id}`}</Link><small title={order.description || ""}>{order.description || "Без описания"}</small></div>,
+    },
+    {
+      key: "faultCode", header: "Шифр неисправности", minWidth: 150, sortField: "faultCode",
+      sortValue: (order) => order.faultCode?.code || "",
+      render: (order) => <span>{order.faultCode?.code || "—"}</span>,
+    },
+    {
+      field: "priority", header: "Приоритет", minWidth: 135,
+      sortValue: (order) => ({ EMERGENCY: 4, HIGH: 3, NORMAL: 2, PLANNED: 1 })[order.priority] ?? 0,
+      render: (order) => <PriorityBadge value={order.priority} />,
+    },
+    { field: "status", header: "Статус", minWidth: 155, render: (order) => <StatusBadge value={order.status} /> },
+    {
+      key: "aiScore", header: "AI-оценка", minWidth: 95, sortField: "aiScore",
+      sortValue: (order) => getOrderScore(order) == null ? null : Number(getOrderScore(order)),
+      render: (order) => <strong>{getOrderScore(order) ?? "—"}</strong>,
+    },
+    {
+      key: "downtime", header: "Простой", minWidth: 135, sortField: "downtime",
+      sortValue: getDowntimeMinutes, render: (order) => <span>{formatMinutes(getDowntimeMinutes(order))}</span>,
+    },
+    {
+      key: "materials", header: "Материалов", minWidth: 110, sortField: "materials",
+      sortValue: (order) => asArray(order.materialUsages).length,
+      render: (order) => <span>{asArray(order.materialUsages).length}</span>,
+    },
+  ], []);
+  return (
+    <div className="eqd-history-table">
+      <SmartTable
+        className="eqd-smart-table"
+        data={orders}
+        columns={columns}
+        dataKey="id"
+        mode="sort"
+        removableSort
+        compact
+        stickyHeader
+        scrollHeight="min(480px, 55dvh)"
+        minWidth={1050}
+        rowClassName={() => "cursor-pointer"}
+        onRowClick={(order, _index, event) => {
+          if (event?.target?.closest?.("a, button, input, select, textarea")) return;
+          navigate(`/orders/${order.id}`);
+        }}
+        emptyText="История нарядов пуста"
+      />
+    </div>
+  );
+}
 
 export default function EquipmentDetails() {
-    __useI18nReactive();
-    const __i18nLocaleToken = i18nT("sidebar.home");
-    const {
-        id,
-    } = useParams();
-    const navigate =
-        useNavigate();
-    const { user } = useAuth();
-    const canCreateOrder = isOrderStaff(user?.role);
-    const query =
-        useEquipmentHistory(
-            id,
-        );
-    const [
-        qrLoading,
-        setQrLoading,
-    ] = useState(false);
-    const [
-        qrError,
-        setQrError,
-    ] = useState("");
-    const equipment =
-        query.data;
-    const orders =
-        asArray(
-            equipment?.orders,
-        );
-    const activeOrders =
-        useMemo(
-            () =>
-                orders.filter(
-                    (order) =>
-                        ACTIVE_STATUSES.includes(
-                            order.status,
-                        ),
-                ),
-            [
-                orders,
-             __i18nLocaleToken],
-        );
-    const emergencyOrders =
-        useMemo(
-            () =>
-                orders.filter(
-                    (order) =>
-                        order.type ===
-                            "EMERGENCY" ||
-                        order.priority ===
-                            "EMERGENCY",
-                ),
-            [
-                orders,
-             __i18nLocaleToken],
-        );
-    const downtimeMinutes =
-        useMemo(
-            () =>
-                orders.reduce(
-                    (
-                        total,
-                        order,
-                    ) =>
-                        total +
-                        getDowntimeMinutes(
-                            order,
-                        ),
-                    0,
-                ),
-            [
-                orders,
-             __i18nLocaleToken],
-        );
-    const scores =
-        useMemo(
-            () =>
-                orders
-                    .map(
-                        getOrderScore,
-                    )
-                    .filter(
-                        (value) =>
-                            value !==
-                                null &&
-                            Number.isFinite(
-                                Number(
-                                    value,
-                                ),
-                            ),
-                    )
-                    .map(Number),
-            [
-                orders,
-             __i18nLocaleToken],
-        );
-    const averageScore =
-        scores.length
-            ? (
-                scores.reduce(
-                    (
-                        total,
-                        value,
-                    ) =>
-                        total +
-                        value,
-                    0,
-                ) /
-                scores.length
-            ).toFixed(1)
-            : "—";
-    async function downloadQr() {
-        setQrError("");
-        setQrLoading(true);
-        try {
-            const blob =
-                await downloadEquipmentQr(
-                    equipment.id,
-                );
-            const url =
-                URL.createObjectURL(
-                    blob,
-                );
-            const anchor =
-                document.createElement(
-                    "a",
-                );
-            anchor.href =
-                url;
-            anchor.download =
-                `equipment-${equipment.inventoryNumber || equipment.id}-qr.png`;
-            document.body.appendChild(
-                anchor,
-            );
-            anchor.click();
-            anchor.remove();
-            URL.revokeObjectURL(
-                url,
-            );
-        } catch (error) {
-            setQrError(
-                extractError(
-                    error,
-                ),
-            );
-        } finally {
-            setQrLoading(
-                false,
-            );
-        }
+  useI18n();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const canCreateOrder = isOrderStaff(user?.role);
+  const query = useEquipmentHistory(id);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState("");
+  const equipment = query.data;
+  const orders = useMemo(() => asArray(equipment?.orders), [equipment?.orders]);
+  const activeOrders = useMemo(() => orders.filter((order) => ACTIVE_STATUSES.has(order.status)), [orders]);
+  const emergencyOrders = useMemo(() => orders.filter((order) => order.type === "EMERGENCY" || order.priority === "EMERGENCY"), [orders]);
+  const downtimeMinutes = useMemo(() => orders.reduce((sum, order) => sum + getDowntimeMinutes(order), 0), [orders]);
+  const scores = useMemo(() => orders.map(getOrderScore).filter((value) => value != null && Number.isFinite(Number(value))).map(Number), [orders]);
+  const averageScore = scores.length ? (scores.reduce((sum, value) => sum + value, 0) / scores.length).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) : "—";
+  async function downloadQr() {
+    if (!equipment?.id) return;
+    setQrError("");
+    setQrLoading(true);
+    let objectUrl;
+    try {
+      const blob = await downloadEquipmentQr(equipment.id);
+      objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = `equipment-${equipment.inventoryNumber || equipment.id}-qr.png`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    } catch (error) {
+      setQrError(extractError(error));
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setQrLoading(false);
     }
-    if (query.isLoading) {
-        return (
-            <div className="flex min-h-[500px] items-center justify-center">
-                <div className="text-sm text-gray-500">
-                    {i18nT("pages.equipment.equipment.equipment.f12ef70")}
-                </div>
-            </div>
-        );
-    }
-    if (query.isError) {
-        return (
-            <div className="py-24 text-center">
-                <RiAlarmWarningLine
-                    size={36}
-                    className="mx-auto text-red-500"
-                />
-                <h1 className="mt-4 text-2xl font-bold text-gray-900">
-                    {i18nT("pages.equipment.equipment.equipment.ed7658e")}
-                </h1>
-                <p className="mt-2 text-sm text-gray-500">
-                    {extractError(
-                        query.error,
-                    )}
-                </p>
-                <button
-                    type="button"
-                    onClick={() =>
-                        query.refetch()
-                    }
-                    className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
-                >
-                    <RiRefreshLine />
-                    {i18nT("components.layout.appnavbar.b914bbb")}
-                </button>
-            </div>
-        );
-    }
-    if (!equipment) {
-        return (
-            <div className="py-24 text-center">
-                <h1 className="text-2xl font-bold text-gray-900">
-                    {i18nT("equipmentPage.empty")}
-                </h1>
-                <button
-                    type="button"
-                    onClick={() =>
-                        navigate(
-                            "/equipment",
-                        )
-                    }
-                    className="mt-5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
-                >
-                    {i18nT("pages.equipment.equipmentdetails.equipmentdetails.2b0b022")}
-                </button>
-            </div>
-        );
-    }
+  }
+  if (query.isLoading && !query.data) {
+    return <div className="eqd mx-auto max-w-[1800px] p-7"><div className="eqd-loading"><RiLoader4Line className="eqd-spin" size={30} /><span>Загружаем оборудование...</span></div></div>;
+  }
+  if (query.isError && !query.data) {
     return (
-        <div className="mx-auto max-w-[1600px]">
-            <Link
-                to="/equipment"
-                className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-900"
-            >
-                <RiArrowLeftLine
-                    size={18}
-                />
-                {i18nT("pages.equipment.equipmentdetails.equipmentdetails.6e8d469")}
-            </Link>
-            {qrError && (
-                <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                    {qrError}
-                </div>
+      <div className="eqd mx-auto max-w-[1800px] p-7">
+        <div className="eqd-error"><RiAlarmWarningLine size={31} /><h2>Не удалось загрузить оборудование</h2><p>{extractError(query.error)}</p><button type="button" className="eqd-button eqd-button--primary" onClick={() => query.refetch()}><RiRefreshLine /> Повторить</button></div>
+      </div>
+    );
+  }
+  if (!equipment) {
+    return <div className="eqd mx-auto max-w-[1800px] p-7"><div className="eqd-error"><RiToolsLine size={32} /><h2>Оборудование не найдено</h2><button type="button" className="eqd-button eqd-button--primary" onClick={() => navigate("/equipment")}>К списку оборудования</button></div></div>;
+  }
+  return (
+    <div className="eqd mx-auto max-w-[1800px] p-7">
+      <Link to="/equipment" className="eqd-back"><RiArrowLeftLine size={18} /> К списку оборудования</Link>
+      {qrError && <div className="eqd-alert"><RiAlarmWarningLine size={18} />{qrError}</div>}
+      {query.isError && <div className="eqd-alert"><RiAlarmWarningLine size={18} />{extractError(query.error)} <button type="button" onClick={() => query.refetch()}>Обновить</button></div>}
+      <section className="eqd-hero">
+        <div className="eqd-hero__info">
+          <span className="eqd-hero__icon"><RiToolsLine size={28} /></span>
+          <div className="eqd-hero__content">
+            <div className="eqd-eyebrow">КАРТОЧКА ОБОРУДОВАНИЯ</div>
+            <div className="eqd-hero__title"><h1>{equipment.name}</h1><SeverityBadge value={equipment.criticality} /></div>
+            <p>{equipment.inventoryNumber || "Нет инвентарного номера"} <span>·</span> {equipment.type || "Тип не указан"}</p>
+            <div className="eqd-hero__location"><RiMapPinLine size={16} />{equipment.area?.name || "Участок не указан"}</div>
+          </div>
+        </div>
+        <div className="eqd-hero__actions">
+          {canCreateOrder && (
+            <button type="button" className="eqd-button eqd-button--primary" onClick={() => navigate(`/orders?create=1&equipmentId=${equipment.id}`)}><RiAddLine size={18} /> Создать наряд</button>
+          )}
+          <button type="button" className="eqd-button eqd-button--outline" onClick={downloadQr} disabled={qrLoading}>
+            {qrLoading ? <RiLoader4Line className="eqd-spin" size={18} /> : <RiQrCodeLine size={18} />}
+            {qrLoading ? "Скачивание..." : "Скачать QR"}
+          </button>
+        </div>
+      </section>
+      <div className="eqd-kpis">
+        <KpiCard title="Активных нарядов" value={activeOrders.length} description="Ещё не закрыты" icon={RiFileList3Line} />
+        <KpiCard title="Аварийных работ" value={emergencyOrders.length} description="За всю историю" icon={RiAlarmWarningLine} tone="red" />
+        <KpiCard title="Суммарный простой" value={formatMinutes(downtimeMinutes)} description="По истории нарядов" icon={RiTimeLine} tone="amber" />
+        <KpiCard title="Средняя AI-оценка" value={averageScore} description={`${scores.length} работ с оценкой`} icon={RiStarLine} tone="sky" />
+      </div>
+      <div className="eqd-layout">
+        <main className="eqd-main">
+          <Section title="Активные наряды" description="Текущие работы по этому оборудованию" icon={RiFileList3Line}>
+            {activeOrders.length ? <div className="eqd-orders">{activeOrders.map((order) => <OrderCard key={order.id} order={order} />)}</div> : (
+              <div className="eqd-empty"><RiCheckboxCircleLine size={27} /><strong>Активных нарядов нет</strong><span>Для этого оборудования сейчас нет незакрытых работ</span></div>
             )}
-            <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <h1 className="text-2xl font-bold text-gray-900">
-                                {
-                                    equipment.name
-                                }
-                            </h1>
-                            <CriticalityBadge
-                                value={
-                                    equipment.criticality
-                                }
-                            />
-                        </div>
-                        <p className="mt-2 text-sm text-gray-500">
-                            {
-                                equipment.inventoryNumber
-                            }
-                            {" • "}
-                            {
-                                equipment.type
-                            }
-                        </p>
-                        <div className="mt-4 inline-flex items-center gap-2 text-sm text-gray-500">
-                            <RiMapPinLine
-                                size={16}
-                            />
-                            {equipment.area
-                                ?.name ||
-                                "Участок не указан"}
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                    {canCreateOrder && (
-                        <button
-                            type="button"
-                            onClick={() =>
-                                navigate(
-                                    `/orders?create=1&equipmentId=${equipment.id}`,
-                                )
-                            }
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-                        >
-                            <RiAddLine
-                                size={18}
-                            />
-                            {i18nT("quickOrder.create")}
-                        </button>
-                    )}
-                    <button
-                        type="button"
-                        onClick={
-                            downloadQr
-                        }
-                        disabled={
-                            qrLoading
-                        }
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                        <RiQrCodeLine
-                            size={18}
-                        />
-                        {qrLoading
-                            ? i18nT("pages.employees.employeedetails.employeedetails.43e40d4")
-                            : "Скачать QR"}
-                    </button>
-                    </div>
-                </div>
+          </Section>
+          <Section title="История работ" description={`Всего нарядов: ${orders.length}`} icon={RiHistoryLine} className="eqd-panel--history">
+            {orders.length ? <HistoryTable orders={orders} /> : <div className="eqd-empty"><RiHistoryLine size={27} /><strong>История пока пуста</strong><span>Здесь появятся наряды, связанные с оборудованием</span></div>}
+          </Section>
+        </main>
+        <aside className="eqd-aside">
+          <Section title="Характеристики" description="Основные данные оборудования" icon={RiInformationLine}>
+            <div className="eqd-info-list">
+              <InfoRow label="ID" value={equipment.id} />
+              <InfoRow label="Инвентарный номер" value={equipment.inventoryNumber} />
+              <InfoRow label="Тип" value={equipment.type} />
+              <InfoRow label="Критичность" value={`${equipment.criticality ?? "—"}/5 · ${CRITICALITY[Number(equipment.criticality)] || "Не указана"}`} />
+              <InfoRow label="QR token" value={equipment.qrToken} mono />
             </div>
-            <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                <Kpi
-                    label="Активных нарядов"
-                    value={
-                        activeOrders.length
-                    }
-                    tone="blue"
-                />
-                <Kpi
-                    label="Аварийных работ"
-                    value={
-                        emergencyOrders.length
-                    }
-                    tone="red"
-                />
-                <Kpi
-                    label={i18nT("pages.equipment.equipmentdetails.equipmentdetails.8864ec8")}
-                    value={formatMinutes(
-                        downtimeMinutes,
-                    )}
-                    tone="orange"
-                />
-                <Kpi
-                    label="Средняя оценка"
-                    value={
-                        averageScore
-                    }
-                    tone="violet"
-                />
-            </div>
-            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-                <div className="min-w-0 space-y-6">
-                    <Section
-                        title={i18nT("dashboard.activeOrders")}
-                        description="Работы, которые ещё не закрыты"
-                        icon={
-                            RiFileList3Line
-                        }
-                    >
-                        {activeOrders.length >
-                        0 ? (
-                            <div className="space-y-3">
-                                {activeOrders.map(
-                                    (
-                                        order,
-                                    ) => (
-                                        <OrderCard
-                                            key={
-                                                order.id
-                                            }
-                                            order={
-                                                order
-                                            }
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        ) : (
-                            <EmptyText>
-                                {i18nT("pages.equipment.equipmentdetails.equipmentdetails.213e095")}
-                            </EmptyText>
-                        )}
-                    </Section>
-                    <Section
-                        title={i18nT("pages.equipment.equipmentdetails.equipmentdetails.ced007e")}
-                        description="Все зарегистрированные наряды по оборудованию"
-                        icon={
-                            RiHistoryLine
-                        }
-                    >
-                        {orders.length >
-                        0 ? (
-                            <HistoryTable
-                                orders={
-                                    orders
-                                }
-                            />
-                        ) : (
-                            <EmptyText>
-                                {i18nT("pages.equipment.equipmentdetails.equipmentdetails.32d2955")}
-                            </EmptyText>
-                        )}
-                    </Section>
-                </div>
-                <aside className="space-y-5">
-                    <Section
-                        title={i18nT("pages.equipment.equipmentdetails.equipmentdetails.145f378")}
-                        icon={
-                            RiInformationLine
-                        }
-                    >
-                        <InfoRow
-                            label="ID"
-                            value={
-                                equipment.id
-                            }
-                        />
-                        <InfoRow
-                            label="Инвентарный №"
-                            value={
-                                equipment.inventoryNumber
-                            }
-                        />
-                        <InfoRow
-                            label={i18nT("pages.admin.admin.admin.345805b")}
-                            value={
-                                equipment.type
-                            }
-                        />
-                        <InfoRow
-                            label={i18nT("equipmentModal.criticality")}
-                            value={`${equipment.criticality}/5 — ${getCriticalityLabel(
-                                equipment.criticality,
-                            )}`}
-                        />
-                        <InfoRow
-                            label="QR token"
-                            value={
-                                equipment.qrToken
-                            }
-                            last
-                        />
-                    </Section>
-                    <Section
-                        title={i18nT("ordersTable.area")}
-                        icon={
-                            RiMapPinLine
-                        }
-                    >
-                        <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                <RiMapPinLine
-                                    size={17}
-                                />
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold text-gray-900">
-                                    {equipment
-                                        .area
-                                        ?.name ||
-                                        i18nT("components.employees.createemployeemodal.cdded47")}
-                                </p>
-                                <p className="mt-1 text-xs text-gray-400">
-                                    {i18nT("pages.equipment.equipmentdetails.equipmentdetails.962a030")}
-                                </p>
-                            </div>
-                        </div>
-                    </Section>
-                    <Section
-                        title={i18nT("pages.equipment.equipmentdetails.equipmentdetails.8de4070")}
-                        icon={
-                            RiSparkling2Line
-                        }
-                    >
-                        <div className="space-y-3">
-                            <InfoRow
-                                label="Работ с AI-оценкой"
-                                value={
-                                    scores.length
-                                }
-                            />
-                            <InfoRow
-                                label="Средняя оценка"
-                                value={
-                                    averageScore
-                                }
-                                last
-                            />
-                        </div>
-                    </Section>
-                </aside>
-            </div>
-        </div>
-    );
-}
-// MARK: Order card
-
-function OrderCard({
-    order,
-}) {
-    const navigate =
-        useNavigate();
-    return (
-        <button
-            type="button"
-            onClick={() =>
-                navigate(
-                    `/orders/${order.id}`,
-                )
-            }
-            className="flex w-full flex-col justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition hover:border-blue-200 hover:bg-blue-50/20 sm:flex-row sm:items-center"
-        >
-            <div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">
-                        {
-                            order.number
-                        }
-                    </span>
-                    <PriorityBadge
-                        value={
-                            order.priority
-                        }
-                    />
-                    <StatusBadge
-                        value={
-                            order.status
-                        }
-                    />
-                </div>
-                <p className="mt-2 text-sm font-medium text-gray-800">
-                    {
-                        order.description
-                    }
-                </p>
-            </div>
-            <span className="shrink-0 text-xs text-gray-500">
-                {formatDate(
-                    order.deadline,
-                )}
-            </span>
-        </button>
-    );
-}
-// MARK: History
-// MARK: Work history — independent scrolling with the global SmartTable.
-
-function HistoryTable({ orders }) {
-    __useI18nReactive();
-    const navigate = useNavigate();
-    const localeToken = i18nT("sidebar.home");
-    const columns = useMemo(() => [
-        {
-            field: "number",
-            header: i18nT("ordersTable.order"),
-            minWidth: 205,
-            render: (order) => (
-                <div className="min-w-0">
-                    <Link to={`/orders/${order.id}`} className="text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline">
-                        {order.number}
-                    </Link>
-                    <p className="mt-1 max-w-[260px] truncate text-xs text-gray-400" title={order.description || ""}>
-                        {order.description || "Без описания"}
-                    </p>
-                </div>
-            ),
-        },
-        {
-            key: "faultCode",
-            header: i18nT("pages.admin.admin.admin.74308c4"),
-            minWidth: 125,
-            sortField: "faultCode",
-            sortValue: (order) => order.faultCode?.code || "",
-            render: (order) => <span className="text-sm text-gray-600">{order.faultCode?.code || "—"}</span>,
-        },
-        {
-            field: "priority",
-            header: i18nT("orderModal.priority"),
-            minWidth: 125,
-            sortValue: (order) => ({ EMERGENCY: 4, HIGH: 3, NORMAL: 2, PLANNED: 1 })[order.priority] ?? 0,
-            render: (order) => <PriorityBadge value={order.priority} />,
-        },
-        {
-            field: "status",
-            header: i18nT("employeeModal.status"),
-            minWidth: 155,
-            render: (order) => <StatusBadge value={order.status} />,
-        },
-        {
-            key: "aiScore",
-            header: "AI",
-            minWidth: 70,
-            sortField: "aiScore",
-            sortValue: (order) => getOrderScore(order) == null ? null : Number(getOrderScore(order)),
-            render: (order) => (
-                <span className="text-sm font-semibold text-gray-700">{getOrderScore(order) ?? "—"}</span>
-            ),
-        },
-        {
-            key: "downtime",
-            header: i18nT("pages.equipment.equipmentdetails.equipmentdetails.8864ec8"),
-            minWidth: 130,
-            sortField: "downtime",
-            sortValue: (order) => getDowntimeMinutes(order),
-            render: (order) => (
-                <span className="text-sm text-gray-600">{formatMinutes(getDowntimeMinutes(order))}</span>
-            ),
-        },
-        {
-            key: "materials",
-            header: i18nT("pages.admin.admin.admin.79bfff8"),
-            minWidth: 135,
-            sortField: "materials",
-            sortValue: (order) => asArray(order.materialUsages).length,
-            render: (order) => (
-                <span className="text-sm text-gray-600">{asArray(order.materialUsages).length}</span>
-            ),
-        },
-    ], [localeToken]);
-    return (
-        <SmartTable
-            data={orders}
-            columns={columns}
-            dataKey="id"
-            mode="sort"
-            removableSort
-            compact
-            stickyHeader
-            scrollHeight="min(480px, 55dvh)"
-            minWidth={950}
-            rowClassName={() => "cursor-pointer"}
-            onRowClick={(order, _index, event) => {
-                if (event?.target?.closest?.("a, button, input")) return;
-                navigate(`/orders/${order.id}`);
-            }}
-            emptyText="История нарядов пуста"
-        />
-    );
-}
-
-// MARK: UI
-
-function CriticalityBadge({
-    value,
-}) {
-    const numeric =
-        Number(value);
-    let style =
-        "bg-green-50 text-green-700";
-    if (numeric >= 5) {
-        style =
-            "bg-red-50 text-red-700";
-    } else if (
-        numeric >= 4
-    ) {
-        style =
-            "bg-orange-50 text-orange-700";
-    } else if (
-        numeric >= 3
-    ) {
-        style =
-            "bg-amber-50 text-amber-700";
-    }
-    return (
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${style}`}>
-            {numeric}/5
-        </span>
-    );
-}
-
-function StatusBadge({
-    value,
-}) {
-    return (
-        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
-            {STATUS_LABELS[
-                value
-            ] || value}
-        </span>
-    );
-}
-
-function PriorityBadge({
-    value,
-}) {
-    const emergency =
-        value ===
-        "EMERGENCY";
-    return (
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-            emergency
-                ? "bg-red-50 text-red-700"
-                : "bg-blue-50 text-blue-700"
-        }`}>
-            {PRIORITY_LABELS[
-                value
-            ] || value}
-        </span>
-    );
-}
-
-function Section({
-    title,
-    description,
-    icon: Icon,
-    children,
-}) {
-    return (
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
-                <div>
-                    <h2 className="text-[15px] font-semibold text-gray-900">
-                        {title}
-                    </h2>
-                    {description && (
-                        <p className="mt-1 text-xs text-gray-500">
-                            {
-                                description
-                            }
-                        </p>
-                    )}
-                </div>
-                {Icon && (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                        <Icon
-                            size={18}
-                        />
-                    </div>
-                )}
-            </div>
-            <div className="p-5">
-                {children}
-            </div>
-        </section>
-    );
-}
-
-function Kpi({
-    label,
-    value,
-    tone,
-}) {
-    const tones = {
-        blue:
-            "text-blue-700",
-        red:
-            "text-red-700",
-        orange:
-            "text-orange-700",
-        violet:
-            "text-violet-700",
-    };
-    return (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-xs text-gray-500">
-                {label}
-            </p>
-            <p className={`mt-2 text-2xl font-bold ${
-                tones[tone] ||
-                tones.blue
-            }`}>
-                {value}
-            </p>
-        </div>
-    );
-}
-
-function InfoRow({
-    label,
-    value,
-    last = false,
-}) {
-    return (
-        <div className={`flex items-start justify-between gap-4 py-3 ${
-            last
-                ? ""
-                : "border-b border-gray-100"
-        }`}>
-            <span className="text-xs text-gray-500">
-                {label}
-            </span>
-            <span className="max-w-[190px] break-all text-right text-sm font-semibold text-gray-900">
-                {value ||
-                    "—"}
-            </span>
-        </div>
-    );
-}
-
-function EmptyText({
-    children,
-}) {
-    return (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-5 py-10 text-center text-sm text-gray-400">
-            {children}
-        </div>
-    );
+          </Section>
+          <Section title="Расположение" description="Привязка к участку" icon={RiMapPinLine}>
+            <div className="eqd-area"><span><RiMapPinLine size={20} /></span><div><strong>{equipment.area?.name || "Участок не указан"}</strong><small>Производственный участок</small></div></div>
+          </Section>
+          <Section title="Качество работ" description="По оценённым нарядам" icon={RiShieldCheckLine}>
+            <div className="eqd-quality"><div><small>Работ с AI-оценкой</small><strong>{scores.length}</strong></div><div><small>Средняя оценка</small><strong>{averageScore}</strong></div></div>
+          </Section>
+        </aside>
+      </div>
+    </div>
+  );
 }
