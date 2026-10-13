@@ -2,6 +2,7 @@ import {
     useMemo,
     useState,
 } from "react";
+import { createPortal } from "react-dom";
 
 import {
     RiCheckboxCircleLine,
@@ -20,8 +21,9 @@ import {
 } from "react-icons/ri";
 
 import GlideSelect from "../../../react-components/GlideSelect/GlideSelect.jsx";
+import RubberSegment from "../../../react-components/RubberSegment/RubberSegment.jsx";
+import "./OneC.css";
 
-import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
 
 import {
     useIntegrationOrders,
@@ -167,6 +169,90 @@ const STATUS_LABELS = {
         "Исчерпаны попытки",
 };
 
+
+// Отображаем русские названия, не меняя технические коды API.
+const ENTITY_LABELS = {
+    WORK_ORDER: "Наряд",
+    EQUIPMENT: "Оборудование",
+    AREA: "Участок",
+    EXECUTOR: "Исполнитель",
+    BRIGADE: "Бригада",
+    MATERIAL: "Материал",
+};
+
+const EVENT_LABELS = {
+    REJECT: "Отклонён",
+    REJECTED: "Отклонён",
+    CREATE: "Создан",
+    CREATED: "Создан",
+    QUEUE: "Поставлен в очередь",
+    QUEUED: "Поставлен в очередь",
+    EDIT: "Изменён",
+    EDITED: "Изменён",
+    UPDATE: "Обновлён",
+    UPDATED: "Обновлён",
+    PAUSE: "Приостановлен",
+    PAUSED: "Приостановлен",
+    START: "Начат",
+    STARTED: "Начат",
+    RESUME: "Возобновлён",
+    RESUMED: "Возобновлён",
+    COMPLETE: "Выполнен",
+    COMPLETED: "Выполнен",
+    CLOSE: "Закрыт",
+    CLOSED: "Закрыт",
+    CANCEL: "Отменён",
+    CANCELLED: "Отменён",
+    CANCELED: "Отменён",
+    DELETE: "Удалён",
+    DELETED: "Удалён",
+    ISSUE: "Выдан",
+    ISSUED: "Выдан",
+    ASSIGN: "Назначен",
+    ASSIGNED: "Назначен",
+};
+
+const ORDER_STATUS_LABELS = {
+    ...STATUS_LABELS,
+    NEW: "Новый",
+    DRAFT: "Черновик",
+    OPEN: "Открыт",
+    ISSUED: "Выдан",
+    ASSIGNED: "Назначен",
+    IN_PROGRESS: "В работе",
+    ON_HOLD: "Приостановлен",
+    PAUSED: "Приостановлен",
+    COMPLETED: "Выполнен",
+    CLOSED: "Закрыт",
+    CANCELLED: "Отменён",
+    CANCELED: "Отменён",
+    REJECTED: "Отклонён",
+    OVERDUE: "Просрочен",
+};
+
+function entityLabel(value) {
+    return ENTITY_LABELS[value] || value || "—";
+}
+
+function eventLabel(value) {
+    return EVENT_LABELS[value] || value || "—";
+}
+
+function orderStatusLabel(value) {
+    return ORDER_STATUS_LABELS[value] || value || "—";
+}
+
+function directionLabel(value) {
+    if (value === "OUTBOUND") return "Из системы в 1С";
+    if (value === "INBOUND") return "Из 1С в систему";
+    return value || "—";
+}
+
+const ONE_C_TABS = () => [
+    { value: "jobs", label: i18nT("pages.integrations.onec.onec.9ba82a4") },
+    { value: "mappings", label: i18nT("pages.integrations.onec.onec.4e7ee7c") },
+    { value: "reconciliation", label: i18nT("pages.integrations.onec.onec.45b6f8e") },
+];
 
 // MARK: Helpers
 
@@ -376,7 +462,11 @@ function matchesJobSearch(
     return [
         job.id,
         job.entity,
+        entityLabel(job.entity),
         job.eventType,
+        eventLabel(job.eventType),
+        STATUS_LABELS[job.status],
+        directionLabel(job.direction),
         job.localId,
         job.externalId,
         job.idempotencyKey,
@@ -535,7 +625,7 @@ export default function OneC() {
                 jobs,
                 direction,
                 search,
-             __i18nLocaleToken],
+                __i18nLocaleToken],
         );
 
     const stats =
@@ -600,7 +690,7 @@ export default function OneC() {
             },
             [
                 statsQuery.data,
-             __i18nLocaleToken],
+                __i18nLocaleToken],
         );
 
 
@@ -663,6 +753,7 @@ export default function OneC() {
                         [
                             item.id,
                             item.entity,
+                            entityLabel(item.entity),
                             item.localId,
                             item.externalId,
                         ]
@@ -690,7 +781,7 @@ export default function OneC() {
             [
                 mappings,
                 mappingSearch,
-             __i18nLocaleToken],
+                __i18nLocaleToken],
         );
 
 
@@ -708,7 +799,7 @@ export default function OneC() {
                         1000,
                     ),
                 ),
-            [ __i18nLocaleToken],
+            [__i18nLocaleToken],
         );
 
     const [
@@ -773,6 +864,7 @@ export default function OneC() {
                             order.id,
                             order.number,
                             order.status,
+                            orderStatusLabel(order.status),
                             order.description,
                             order.equipment
                                 ?.name,
@@ -798,7 +890,7 @@ export default function OneC() {
             [
                 reconciliationOrders,
                 reconcileSearch,
-             __i18nLocaleToken],
+                __i18nLocaleToken],
         );
 
 
@@ -946,1214 +1038,277 @@ export default function OneC() {
 
 
     // MARK: Render
-
     return (
-        <div className="space-y-5">
-
-            {/* MARK: Header */}
-
-            <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400 text-xl font-black text-black">
-                            1C
-                        </div>
-
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                                {i18nT("pages.integrations.onec.onec.e82f03b")}
-                            </h1>
-
-                            <p className="mt-1 text-sm text-gray-500">
-                                {i18nT("pages.integrations.onec.onec.e1ee112")}
-                            </p>
-                        </div>
+        <div className="oc mx-auto max-w-[1800px] p-7">
+            <header className="oc-header">
+                <div className="oc-heading">
+                    <div className="oc-heading__copy">
+                        <h1>{i18nT("pages.integrations.onec.onec.e82f03b")}</h1>
+                        <p>{i18nT("pages.integrations.onec.onec.e1ee112")}</p>
                     </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        type="button"
-                        onClick={() =>
-                            setPushOpen(
-                                true,
-                            )
-                        }
-                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                    >
-                        <RiUploadCloud2Line />
-
+                <div className="oc-header__actions">
+                    <button type="button" className="oc-btn oc-btn--secondary" onClick={() => setPushOpen(true)}>
+                        <RiUploadCloud2Line size={18} />
                         {i18nT("pages.integrations.onec.onec.43f4374")}
                     </button>
-
-                    <button
-                        type="button"
-                        onClick={
-                            handleRun
-                        }
-                        disabled={
-                            runMutation.isPending
-                        }
-                        className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {runMutation.isPending ? (
-                            <RiLoader4Line className="animate-spin" />
-                        ) : (
-                            <RiPlayCircleLine />
-                        )}
-
+                    <button type="button" className="oc-btn oc-btn--primary" onClick={handleRun} disabled={runMutation.isPending}>
+                        {runMutation.isPending ? <RiLoader4Line className="oc-spin" size={18} /> : <RiPlayCircleLine size={18} />}
                         {i18nT("pages.integrations.onec.onec.cb4e4a2")}
                     </button>
                 </div>
-            </div>
+            </header>
 
+            {notice && <Notice notice={notice} onClose={() => setNotice(null)} />}
 
-            {/* MARK: Notice */}
+            <section className="oc-stats" aria-label="Состояние заданий обмена">
+                <MetricCard title={i18nT("pages.integrations.onec.onec.b69f8c6")} value={stats.pending} icon={RiTimeLine} description="Ожидают отправки" tone="pending" loading={statsQuery.isLoading} />
+                <MetricCard title={i18nT("pages.integrations.onec.onec.239ce90")} value={stats.processing} icon={RiRefreshLine} description="Обрабатываются" tone="processing" loading={statsQuery.isLoading} />
+                <MetricCard title={i18nT("pages.integrations.onec.onec.f5cce37")} value={stats.success} icon={RiCheckboxCircleLine} description="Успешно доставлены" tone="success" loading={statsQuery.isLoading} />
+                <MetricCard title={i18nT("pages.integrations.onec.onec.058d8bc")} value={stats.failed} icon={RiErrorWarningLine} description={`${stats.dead} требуют внимания`} tone="failed" loading={statsQuery.isLoading} />
+            </section>
+            <p className="oc-stats-note">Показатели рассчитаны по последним {statsQuery.isLoading ? "до 500" : stats.total} заданиям (максимум 500), а не по всей истории обмена.</p>
 
-            {notice && (
-                <Notice
-                    notice={
-                        notice
-                    }
-                    onClose={() =>
-                        setNotice(
-                            null,
-                        )
-                    }
-                />
-            )}
-
-
-            {/* MARK: Stats */}
-
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <MetricCard
-                    title={i18nT("pages.integrations.onec.onec.b69f8c6")}
-                    value={
-                        stats.pending
-                    }
-                    icon={
-                        RiTimeLine
-                    }
-                    description="PENDING"
-                />
-
-                <MetricCard
-                    title={i18nT("pages.integrations.onec.onec.239ce90")}
-                    value={
-                        stats.processing
-                    }
-                    icon={
-                        RiRefreshLine
-                    }
-                    description="PROCESSING"
-                />
-
-                <MetricCard
-                    title={i18nT("pages.integrations.onec.onec.f5cce37")}
-                    value={
-                        stats.success
-                    }
-                    icon={
-                        RiCheckboxCircleLine
-                    }
-                    description="SUCCESS"
-                />
-
-                <MetricCard
-                    title={i18nT("pages.integrations.onec.onec.058d8bc")}
-                    value={
-                        stats.failed
-                    }
-                    icon={
-                        RiErrorWarningLine
-                    }
-                    description={`${stats.dead} требуют внимания`}
-                    danger={
-                        stats.failed >
-                        0
-                    }
-                />
-            </div>
-
-
-            {/* MARK: Tabs */}
-
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-                <div className="flex overflow-x-auto border-b border-gray-200 px-2">
-                    <TabButton
-                        active={
-                            activeTab ===
-                            "jobs"
-                        }
-                        onClick={() =>
-                            setActiveTab(
-                                "jobs",
-                            )
-                        }
-                    >
-                        {i18nT("pages.integrations.onec.onec.9ba82a4")}
-                    </TabButton>
-
-                    <TabButton
-                        active={
-                            activeTab ===
-                            "mappings"
-                        }
-                        onClick={() =>
-                            setActiveTab(
-                                "mappings",
-                            )
-                        }
-                    >
-                        {i18nT("pages.integrations.onec.onec.4e7ee7c")}
-                    </TabButton>
-
-                    <TabButton
-                        active={
-                            activeTab ===
-                            "reconciliation"
-                        }
-                        onClick={() =>
-                            setActiveTab(
-                                "reconciliation",
-                            )
-                        }
-                    >
-                        {i18nT("pages.integrations.onec.onec.45b6f8e")}
-                    </TabButton>
+            <section className="oc-panel oc-workspace">
+                <div className="oc-workspace__top">
+                    <div className="oc-workspace__title">
+                        <span className="oc-title-icon"><RiDatabase2Line size={20} /></span>
+                        <div>
+                            <h2>Управление обменом</h2>
+                            <p>Задания, соответствия идентификаторов и сверка нарядов</p>
+                        </div>
+                    </div>
+                    <div className="oc-tabs">
+                        <RubberSegment
+                            className="oc-rubber"
+                            items={ONE_C_TABS()}
+                            value={activeTab}
+                            onChange={setActiveTab}
+                            trackColor="#ffffff"
+                            thumbColor="#2563eb"
+                            textColor="#2563eb"
+                            activeTextColor="#ffffff"
+                            size="md"
+                            radius={10}
+                            inset={3}
+                            equalSlots
+                            draggable
+                            aria-label="Разделы интеграции 1С"
+                        />
+                    </div>
                 </div>
-
-                {activeTab ===
-                    "jobs" && (
-                        <JobsTab
-                            jobs={
-                                visibleJobs
-                            }
-                            query={
-                                jobsQuery
-                            }
-                            status={
-                                status
-                            }
-                            setStatus={
-                                setStatus
-                            }
-                            direction={
-                                direction
-                            }
-                            setDirection={
-                                setDirection
-                            }
-                            search={
-                                search
-                            }
-                            setSearch={
-                                setSearch
-                            }
-                            limit={
-                                limit
-                            }
-                            setLimit={
-                                setLimit
-                            }
-                            onJob={
-                                setSelectedJob
-                            }
-                            onRetry={
-                                handleRetry
-                            }
-                            retryingId={
-                                retryMutation
-                                    .variables
-                            }
-                        />
+                <div className="oc-workspace__body">
+                    {activeTab === "jobs" && (
+                        <div role="region" id="oc-jobs-panel" aria-label="Задания обмена">
+                            <JobsTab jobs={visibleJobs} query={jobsQuery} status={status} setStatus={setStatus}
+                                direction={direction} setDirection={setDirection} search={search} setSearch={setSearch}
+                                limit={limit} setLimit={setLimit} onJob={setSelectedJob} onRetry={handleRetry}
+                                retryingId={retryMutation.variables} />
+                        </div>
                     )}
-
-                {activeTab ===
-                    "mappings" && (
-                        <MappingsTab
-                            input={
-                                mappingInput
-                            }
-                            setInput={
-                                setMappingInput
-                            }
-                            entity={
-                                mappingEntity
-                            }
-                            setEntity={
-                                setMappingEntity
-                            }
-                            search={
-                                mappingSearch
-                            }
-                            setSearch={
-                                setMappingSearch
-                            }
-                            items={
-                                visibleMappings
-                            }
-                            query={
-                                mappingsQuery
-                            }
-                        />
+                    {activeTab === "mappings" && (
+                        <div role="region" id="oc-mappings-panel" aria-label="Соответствия 1С">
+                            <MappingsTab input={mappingInput} setInput={setMappingInput} entity={mappingEntity}
+                                setEntity={setMappingEntity} search={mappingSearch} setSearch={setMappingSearch}
+                                items={visibleMappings} query={mappingsQuery} />
+                        </div>
                     )}
-
-                {activeTab ===
-                    "reconciliation" && (
-                        <ReconciliationTab
-                            since={
-                                reconcileInput
-                            }
-                            setSince={
-                                setReconcileInput
-                            }
-                            onApply={
-                                applyReconciliation
-                            }
-                            search={
-                                reconcileSearch
-                            }
-                            setSearch={
-                                setReconcileSearch
-                            }
-                            items={
-                                visibleReconciliationOrders
-                            }
-                            total={
-                                reconciliationOrders.length
-                            }
-                            query={
-                                reconciliationQuery
-                            }
-                        />
+                    {activeTab === "reconciliation" && (
+                        <div role="region" id="oc-reconciliation-panel" aria-label="Сверка нарядов">
+                            <ReconciliationTab since={reconcileInput} setSince={setReconcileInput} onApply={applyReconciliation}
+                                search={reconcileSearch} setSearch={setReconcileSearch} items={visibleReconciliationOrders}
+                                total={reconciliationOrders.length} query={reconciliationQuery} />
+                        </div>
                     )}
-            </div>
+                </div>
+            </section>
 
-
-            {/* MARK: Job modal */}
-
-            {selectedJob && (
-                <JobDetailsModal
-                    job={
-                        selectedJob
-                    }
-                    onClose={() =>
-                        setSelectedJob(
-                            null,
-                        )
-                    }
-                    onRetry={
-                        handleRetry
-                    }
-                    retrying={
-                        retryMutation.isPending
-                    }
-                />
+            {selectedJob && createPortal(
+                <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)}
+                    onRetry={handleRetry} retrying={retryMutation.isPending} />,
+                document.body
             )}
-
-
-            {/* MARK: Push modal */}
-
-            {pushOpen && (
-                <PushOrdersModal
-                    pending={
-                        pushMutation.isPending
-                    }
-                    onClose={() =>
-                        setPushOpen(
-                            false,
-                        )
-                    }
-                    onSubmit={
-                        handlePush
-                    }
-                />
+            {pushOpen && createPortal(
+                <PushOrdersModal pending={pushMutation.isPending}
+                    onClose={() => setPushOpen(false)} onSubmit={handlePush} />,
+                document.body
             )}
         </div>
     );
 }
 
-
-// MARK: Metric card
-
-function MetricCard({
-    title,
-    value,
-    icon: Icon,
-    description,
-    danger = false,
-}) {
+// MARK: KPI
+function MetricCard({ title, value, icon: Icon, description, tone, loading }) {
     return (
-        <div
-            className={`
-                rounded-2xl
-                border
-                bg-white
-                p-4
-                shadow-sm
-
-                ${danger
-                    ? "border-red-200"
-                    : "border-gray-200"
-                }
-            `}
-        >
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                        {title}
-                    </p>
-
-                    <p
-                        className={`
-                            mt-2
-                            text-2xl
-                            font-bold
-
-                            ${danger
-                                ? "text-red-600"
-                                : "text-gray-900"
-                            }
-                        `}
-                    >
-                        {value}
-                    </p>
-
-                    <p className="mt-1 text-[11px] text-gray-400">
-                        {
-                            description
-                        }
-                    </p>
-                </div>
-
-                <div
-                    className={`
-                        flex
-                        h-9
-                        w-9
-                        items-center
-                        justify-center
-                        rounded-lg
-
-                        ${danger
-                            ? "bg-red-50 text-red-600"
-                            : "bg-gray-100 text-gray-600"
-                        }
-                    `}
-                >
-                    <Icon
-                        size={
-                            18
-                        }
-                    />
-                </div>
+        <div className={`oc-kpi oc-kpi--${tone}`}>
+            <div className="oc-kpi__top">
+                <span className="oc-kpi__label">{title}</span>
+                <span className="oc-kpi__icon"><Icon size={21} /></span>
             </div>
+            {loading ? <span className="oc-kpi__skeleton" aria-label="Загрузка" /> : <strong className="oc-kpi__value">{value}</strong>}
+            <div className="oc-kpi__foot"><span className="oc-kpi__dot" />{description}</div>
         </div>
     );
 }
 
-
-// MARK: Tab
-
-function TabButton({
-    active,
-    onClick,
-    children,
-}) {
-    return (
-        <button
-            type="button"
-            onClick={
-                onClick
-            }
-            className={`
-                relative
-                whitespace-nowrap
-                px-4
-                py-4
-                text-sm
-                font-semibold
-                transition
-
-                ${active
-                    ? "text-blue-700"
-                    : "text-gray-500 hover:text-gray-900"
-                }
-            `}
-        >
-            {children}
-
-            {active && (
-                <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-blue-600" />
-            )}
-        </button>
-    );
-}
-
-
-// MARK: Jobs tab
-
-function JobsTab({
-    jobs,
-    query,
-
-    status,
-    setStatus,
-
-    direction,
-    setDirection,
-
-    search,
-    setSearch,
-
-    limit,
-    setLimit,
-
-    onJob,
-    onRetry,
-    retryingId,
-}) {
+// MARK: Jobs
+function JobsTab({ jobs, query, status, setStatus, direction, setDirection, search, setSearch, limit, setLimit, onJob, onRetry, retryingId }) {
     __useI18nReactive();
     return (
-        <div>
-            <div className="flex flex-col gap-3 border-b border-gray-100 p-4 xl:flex-row xl:items-center">
-                <div className="relative min-w-0 flex-1">
-                    <RiSearchLine
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-
-                    <input
-                        value={
-                            search
-                        }
-                        onChange={(
-                            event,
-                        ) =>
-                            setSearch(
-                                event
-                                    .target
-                                    .value,
-                            )
-                        }
-                        placeholder={i18nT("pages.integrations.onec.onec.bd2ee1c")}
-                        className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 pl-9 pr-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                    />
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                    <GlideSelect
-                        options={
-                            STATUS_OPTIONS()
-                        }
-                        value={
-                            status
-                        }
-                        onChange={
-                            setStatus
-                        }
-                        className="glide-select--filter"
-                        menuWidth={
-                            210
-                        }
-                    />
-
-                    <GlideSelect
-                        options={
-                            DIRECTION_OPTIONS()
-                        }
-                        value={
-                            direction
-                        }
-                        onChange={
-                            setDirection
-                        }
-                        className="glide-select--filter"
-                        menuWidth={
-                            210
-                        }
-                    />
-
-                    <GlideSelect
-                        options={
-                            LIMIT_OPTIONS()
-                        }
-                        value={
-                            limit
-                        }
-                        onChange={
-                            setLimit
-                        }
-                        className="glide-select--filter"
-                        menuWidth={
-                            150
-                        }
-                    />
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            query.refetch()
-                        }
-                        disabled={
-                            query.isFetching
-                        }
-                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 transition hover:bg-gray-50 disabled:opacity-50"
-                    >
-                        <RiRefreshLine
-                            className={
-                                query.isFetching
-                                    ? "animate-spin"
-                                    : ""
-                            }
-                        />
+        <div className="oc-tab-content">
+            <div className="oc-toolbar">
+                <label className="oc-search oc-search--wide">
+                    <RiSearchLine size={18} aria-hidden="true" />
+                    <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
+                        placeholder={i18nT("pages.integrations.onec.onec.bd2ee1c")} aria-label="Поиск заданий обмена" />
+                </label>
+                <div className="oc-toolbar__filters">
+                    <div className="oc-filter"><GlideSelect className="glide-select--field" options={STATUS_OPTIONS()} value={status} onChange={setStatus} menuWidth={195} portal ariaLabel="Статус задания" /></div>
+                    <div className="oc-filter"><GlideSelect className="glide-select--field" options={DIRECTION_OPTIONS()} value={direction} onChange={setDirection} menuWidth={185} portal ariaLabel="Направление обмена" /></div>
+                    <div className="oc-filter oc-filter--limit"><GlideSelect className="glide-select--field" options={LIMIT_OPTIONS()} value={limit} onChange={setLimit} menuWidth={240} portal ariaLabel="Количество заданий" /></div>
+                    <button type="button" className="oc-btn oc-btn--icon" onClick={() => query.refetch()} disabled={query.isFetching} title="Обновить задания" aria-label="Обновить задания">
+                        <RiRefreshLine size={19} className={query.isFetching ? "oc-spin" : ""} />
                     </button>
                 </div>
             </div>
-
-            {query.isLoading ? (
+            <div className="oc-list-topline">
+                <span><RiFileList3Line size={16} /> Найдено: <strong>{jobs.length}</strong></span>
+                <span className="oc-list-topline__hint">Обновление очереди каждые 10 секунд</span>
+            </div>
+            {query.isLoading && !query.data ? (
                 <LoadingState text="Загружаем задания обмена..." />
-            ) : query.isError ? (
-                <ErrorState
-                    text={
-                        getErrorMessage(
-                            query.error,
-                        )
-                    }
-                    onRetry={() =>
-                        query.refetch()
-                    }
-                />
-            ) : jobs.length ===
-                0 ? (
-                <EmptyState
-                    title={i18nT("pages.integrations.onec.onec.6f15733")}
-                    text="Для выбранных фильтров заданий обмена нет."
-                />
+            ) : query.isError && !query.data ? (
+                <ErrorState text={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
+            ) : jobs.length === 0 ? (
+                <EmptyState title={i18nT("pages.integrations.onec.onec.6f15733")} text="Для выбранных фильтров заданий обмена нет." />
             ) : (
-                <ScrollArea
-                    axis="both"
-                    className="max-h-[620px]"
-                >
-                    <table className="w-full min-w-[1180px] border-collapse text-left">
-                        <thead className="sticky top-0 z-10 bg-gray-50">
-                            <tr className="border-b border-gray-200">
-                                <Th>
-                                    ID
-                                </Th>
-
-                                <Th>
-                                    {i18nT("employeeModal.status")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.e4de622")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.de2925f")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.0153214")}
-                                </Th>
-
-                                <Th>
-                                    Local ID
-                                </Th>
-
-                                <Th>
-                                    External ID
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.80c8855")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.55fcf8f")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.d1227a4")}
-                                </Th>
-
-                                <Th align="right">
-                                    {i18nT("pages.integrations.onec.onec.fb3df31")}
-                                </Th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {jobs.map(
-                                (
-                                    job,
-                                ) => {
-                                    const canRetry =
-                                        job.status ===
-                                        "DEAD" &&
-                                        job.direction ===
-                                        "OUTBOUND";
-
-                                    return (
-                                        <tr
-                                            key={
-                                                job.id
-                                            }
-                                            onClick={() =>
-                                                onJob(
-                                                    job,
-                                                )
-                                            }
-                                            className="cursor-pointer border-b border-gray-100 transition hover:bg-gray-50"
-                                        >
-                                            <Td>
-                                                <span className="font-semibold text-gray-900">
-                                                    #
-                                                    {
-                                                        job.id
-                                                    }
-                                                </span>
-                                            </Td>
-
-                                            <Td>
-                                                <StatusBadge
-                                                    status={
-                                                        job.status
-                                                    }
-                                                />
-                                            </Td>
-
-                                            <Td>
-                                                <DirectionBadge
-                                                    direction={
-                                                        job.direction
-                                                    }
-                                                />
-                                            </Td>
-
-                                            <Td>
-                                                {job.entity ||
-                                                    "—"}
-                                            </Td>
-
-                                            <Td>
-                                                {job.eventType ||
-                                                    "—"}
-                                            </Td>
-
-                                            <Td>
-                                                {job.localId ??
-                                                    "—"}
-                                            </Td>
-
-                                            <Td>
-                                                <span className="max-w-[160px] truncate">
-                                                    {job.externalId ??
-                                                        "—"}
-                                                </span>
-                                            </Td>
-
-                                            <Td>
-                                                {job.attempts ??
-                                                    0}
-                                            </Td>
-
-                                            <Td>
-                                                {formatDate(
-                                                    job.nextAttemptAt,
-                                                )}
-                                            </Td>
-
-                                            <Td>
-                                                {formatDate(
-                                                    job.updatedAt,
-                                                )}
-                                            </Td>
-
-                                            <Td align="right">
-                                                {canRetry ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(
-                                                            event,
-                                                        ) => {
-                                                            event.stopPropagation();
-
-                                                            onRetry(
-                                                                job,
-                                                            );
-                                                        }}
-                                                        disabled={
-                                                            Number(
-                                                                retryingId,
-                                                            ) ===
-                                                            Number(
-                                                                job.id,
-                                                            )
-                                                        }
-                                                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
-                                                    >
-                                                        {i18nT("components.layout.appnavbar.b914bbb")}
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-xs text-gray-300">
-                                                        —
-                                                    </span>
-                                                )}
-                                            </Td>
-                                        </tr>
-                                    );
-                                },
-                            )}
-                        </tbody>
+                <div className="oc-table-area" tabIndex={0} role="region" aria-label="Прокручиваемая таблица">
+                    <table className="oc-table oc-table--jobs">
+                        <thead><tr>
+                            <Th>Задание</Th><Th>{i18nT("employeeModal.status")}</Th>
+                            <Th>{i18nT("pages.integrations.onec.onec.0153214")}</Th>
+                            <Th>Идентификаторы</Th><Th>Попытки / повтор</Th>
+                            <Th>{i18nT("pages.integrations.onec.onec.d1227a4")}</Th>
+                            <Th align="right">{i18nT("pages.integrations.onec.onec.fb3df31")}</Th>
+                        </tr></thead>
+                        <tbody>{jobs.map((job) => {
+                            const canRetry = job.status === "DEAD" && job.direction === "OUTBOUND";
+                            return (
+                                <tr key={job.id} className="oc-table__row oc-table__row--clickable" tabIndex={0}
+                                    onClick={() => onJob(job)}
+                                    onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onJob(job); } }}
+                                    aria-label={`Задание ${job.id}, открыть подробности`}>
+                                    <Td><div className="oc-cell-primary">#{job.id}</div><div className="oc-cell-secondary" title={job.entity || ""}>{entityLabel(job.entity)}</div></Td>
+                                    <Td><div className="oc-status-stack"><StatusBadge status={job.status} /></div></Td>
+                                    <Td><span className="oc-ellipsis oc-ellipsis--event" title={job.eventType || ""}>{eventLabel(job.eventType)}</span></Td>
+                                    <Td><div className="oc-cell-pair"><span className="oc-cell-pair__label">Local ID</span><b title={String(job.localId ?? "—")}>{job.localId ?? "—"}</b></div>
+                                        <div className="oc-cell-pair"><span className="oc-cell-pair__label">1С ID</span><b title={String(job.externalId ?? "—")}>{job.externalId ?? "—"}</b></div></Td>
+                                    <Td><div className="oc-cell-primary">{job.attempts ?? 0}</div><div className="oc-cell-secondary">{formatDate(job.nextAttemptAt)}</div></Td>
+                                    <Td><span className="oc-cell-date">{formatDate(job.updatedAt)}</span></Td>
+                                    <Td align="right">{canRetry ? (
+                                        <button type="button" className="oc-btn oc-btn--retry" onClick={(event) => { event.stopPropagation(); onRetry(job); }}
+                                            disabled={Number(retryingId) === Number(job.id)}>
+                                            <RiRefreshLine size={15} /> {i18nT("components.layout.appnavbar.b914bbb")}
+                                        </button>
+                                    ) : (
+                                        <button type="button" className="oc-btn oc-btn--details" onClick={(event) => { event.stopPropagation(); onJob(job); }} title="Открыть подробности задания">
+                                            Подробнее
+                                        </button>
+                                    )}</Td>
+                                </tr>
+                            );
+                        })}</tbody>
                     </table>
-                </ScrollArea>
+                </div>
             )}
+            {query.isError && query.data && <p className="oc-inline-warning">Не удалось обновить данные: {getErrorMessage(query.error)}</p>}
         </div>
     );
 }
-
 
 // MARK: Mappings
-
-function MappingsTab({
-    input,
-    setInput,
-
-    entity,
-    setEntity,
-
-    search,
-    setSearch,
-
-    items,
-    query,
-}) {
+function MappingsTab({ input, setInput, entity, setEntity, search, setSearch, items, query }) {
     __useI18nReactive();
     return (
-        <div>
-            <div className="border-b border-gray-100 p-4">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
-                    <div className="min-w-0 flex-1">
-                        <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                            {i18nT("pages.integrations.onec.onec.edd8fff")}
-                        </label>
-
-                        <input
-                            value={
-                                input
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                setInput(
-                                    event
-                                        .target
-                                        .value
-                                        .toUpperCase(),
-                                )
-                            }
-                            placeholder={i18nT("pages.integrations.onec.onec.bcaa832")}
-                            className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 text-sm font-medium uppercase outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                        />
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            setEntity(
-                                input.trim(),
-                            )
-                        }
-                        className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black"
-                    >
-                        {i18nT("pages.integrations.onec.onec.2cd8441")}
-                    </button>
-
-                    <div className="relative min-w-0 flex-[1.5]">
-                        <RiSearchLine
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                        />
-
-                        <input
-                            value={
-                                search
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                setSearch(
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            placeholder={i18nT("pages.integrations.onec.onec.1a89234")}
-                            className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 pl-9 pr-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                        />
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            query.refetch()
-                        }
-                        disabled={
-                            query.isFetching
-                        }
-                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50"
-                    >
-                        <RiRefreshLine
-                            className={
-                                query.isFetching
-                                    ? "animate-spin"
-                                    : ""
-                            }
-                        />
-                    </button>
-                </div>
-
-                <p className="mt-2 text-xs text-gray-400">
-                    {i18nT("pages.integrations.onec.onec.81cc281")}{" "}
-                    <strong>
-                        EQUIPMENT
-                    </strong>
-                    {i18nT("pages.integrations.onec.onec.b9488ea")}
-                </p>
+        <div className="oc-tab-content">
+            <div className="oc-toolbar oc-toolbar--mapping">
+                <label className="oc-field oc-field--entity">
+                    <span>{i18nT("pages.integrations.onec.onec.edd8fff")}</span>
+                    <input className="oc-input" value={input} onChange={(event) => setInput(event.target.value.toUpperCase())}
+                        placeholder={i18nT("pages.integrations.onec.onec.bcaa832")} />
+                </label>
+                <button type="button" className="oc-btn oc-btn--primary oc-btn--apply" onClick={() => setEntity(input.trim())}>
+                    {i18nT("pages.integrations.onec.onec.2cd8441")}
+                </button>
+                <label className="oc-field oc-field--search"><span>Поиск соответствия</span>
+                    <span className="oc-search"><RiSearchLine size={18} aria-hidden="true" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
+                        placeholder={i18nT("pages.integrations.onec.onec.1a89234")} /></span>
+                </label>
+                <button type="button" className="oc-btn oc-btn--icon oc-btn--mapping-refresh" onClick={() => query.refetch()} disabled={query.isFetching} title="Обновить соответствия" aria-label="Обновить соответствия">
+                    <RiRefreshLine size={19} className={query.isFetching ? "oc-spin" : ""} />
+                </button>
             </div>
-
-            {query.isLoading ? (
-                <LoadingState text="Загружаем соответствия 1С..." />
-            ) : query.isError ? (
-                <ErrorState
-                    text={
-                        getErrorMessage(
-                            query.error,
-                        )
-                    }
-                    onRetry={() =>
-                        query.refetch()
-                    }
-                />
-            ) : items.length ===
-                0 ? (
-                <EmptyState
-                    title={i18nT("pages.integrations.onec.onec.9f73c42")}
-                    text={`Для сущности ${entity ||
-                        "без фильтра"
-                        } записей не найдено.`}
-                />
-            ) : (
-                <ScrollArea
-                    axis="both"
-                    className="max-h-[620px]"
-                >
-                    <table className="w-full min-w-[760px] text-left">
-                        <thead className="sticky top-0 bg-gray-50">
-                            <tr className="border-b border-gray-200">
-                                <Th>
-                                    ID
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.de2925f")}
-                                </Th>
-
-                                <Th>
-                                    Local ID
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.e978367")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.342a6a5")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.d1227a4")}
-                                </Th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {items.map(
-                                (
-                                    item,
-                                ) => (
-                                    <tr
-                                        key={
-                                            item.id
-                                        }
-                                        className="border-b border-gray-100 hover:bg-gray-50"
-                                    >
-                                        <Td>
-                                            #
-                                            {
-                                                item.id
-                                            }
-                                        </Td>
-
-                                        <Td>
-                                            <span className="font-semibold text-gray-900">
-                                                {
-                                                    item.entity
-                                                }
-                                            </span>
-                                        </Td>
-
-                                        <Td>
-                                            {item.localId ??
-                                                "—"}
-                                        </Td>
-
-                                        <Td>
-                                            {item.externalId ??
-                                                "—"}
-                                        </Td>
-
-                                        <Td>
-                                            {formatDate(
-                                                item.createdAt,
-                                            )}
-                                        </Td>
-
-                                        <Td>
-                                            {formatDate(
-                                                item.updatedAt,
-                                            )}
-                                        </Td>
+            <div className="oc-mapping-hint"><RiInformationLine size={17} /><span>{i18nT("pages.integrations.onec.onec.81cc281")} <strong>EQUIPMENT</strong> {i18nT("pages.integrations.onec.onec.b9488ea")}</span></div>
+            <div className="oc-list-topline"><span><RiDatabase2Line size={16} /> Найдено: <strong>{items.length}</strong></span><span>Сущность: <b>{entity || "все"}</b></span></div>
+            {query.isLoading && !query.data ? <LoadingState text="Загружаем соответствия 1С..." />
+                : query.isError && !query.data ? <ErrorState text={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
+                    : items.length === 0 ? <EmptyState title={i18nT("pages.integrations.onec.onec.9f73c42")} text={`Для сущности ${entity || "без фильтра"} записей не найдено.`} />
+                        : <div className="oc-table-area" tabIndex={0} role="region" aria-label="Прокручиваемая таблица">
+                            <table className="oc-table oc-table--mappings">
+                                <thead><tr><Th>ID</Th><Th>{i18nT("pages.integrations.onec.onec.de2925f")}</Th><Th>Local ID</Th><Th>{i18nT("pages.integrations.onec.onec.e978367")}</Th><Th>{i18nT("pages.integrations.onec.onec.342a6a5")}</Th><Th>{i18nT("pages.integrations.onec.onec.d1227a4")}</Th></tr></thead>
+                                <tbody>{items.map((item) => (
+                                    <tr key={item.id} className="oc-table__row"><Td><strong>#{item.id}</strong></Td>
+                                        <Td><span className="oc-entity-badge" title={item.entity || ""}>{entityLabel(item.entity)}</span></Td>
+                                        <Td>{item.localId ?? "—"}</Td><Td>{item.externalId ?? "—"}</Td>
+                                        <Td>{formatDate(item.createdAt)}</Td><Td>{formatDate(item.updatedAt)}</Td>
                                     </tr>
-                                ),
-                            )}
-                        </tbody>
-                    </table>
-                </ScrollArea>
-            )}
+                                ))}</tbody>
+                            </table>
+                        </div>}
+            {query.isError && query.data && <p className="oc-inline-warning">Не удалось обновить данные: {getErrorMessage(query.error)}</p>}
         </div>
     );
 }
-
 
 // MARK: Reconciliation
-
-function ReconciliationTab({
-    since,
-    setSince,
-    onApply,
-
-    search,
-    setSearch,
-
-    items,
-    total,
-
-    query,
-}) {
+function ReconciliationTab({ since, setSince, onApply, search, setSearch, items, total, query }) {
     __useI18nReactive();
     return (
-        <div>
-            <div className="border-b border-gray-100 p-4">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
-                    <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                            {i18nT("pages.integrations.onec.onec.68f5567")}
-                        </label>
-
-                        <input
-                            type="datetime-local"
-                            value={
-                                since
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                setSince(
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            className="h-10 rounded-lg border border-gray-300 bg-gray-50 px-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                        />
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={
-                            onApply
-                        }
-                        className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black"
-                    >
-                        {i18nT("pages.integrations.onec.onec.9359cf8")}
-                    </button>
-
-                    <div className="relative min-w-0 flex-1">
-                        <RiSearchLine
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                        />
-
-                        <input
-                            value={
-                                search
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                setSearch(
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            placeholder={i18nT("pages.integrations.onec.onec.a1d4727")}
-                            className="h-10 w-full rounded-lg border border-gray-300 bg-gray-50 pl-9 pr-3 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                        />
-                    </div>
-
-                    <div className="rounded-lg bg-gray-100 px-3 py-2.5 text-xs font-semibold text-gray-600">
-                        {i18nT("pages.integrations.onec.onec.a5cbbd1")}{" "}
-                        {total}
-                    </div>
-                </div>
+        <div className="oc-tab-content">
+            <div className="oc-toolbar oc-toolbar--reconciliation">
+                <label className="oc-field oc-field--date"><span>{i18nT("pages.integrations.onec.onec.68f5567")}</span>
+                    <input className="oc-input" type="datetime-local" value={since} onChange={(event) => setSince(event.target.value)} />
+                </label>
+                <button type="button" className="oc-btn oc-btn--primary oc-btn--apply" onClick={onApply}>
+                    {i18nT("pages.integrations.onec.onec.9359cf8")}
+                </button>
+                <label className="oc-field oc-field--search"><span>Поиск наряда</span>
+                    <span className="oc-search"><RiSearchLine size={18} aria-hidden="true" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
+                        placeholder={i18nT("pages.integrations.onec.onec.a1d4727")} /></span>
+                </label>
             </div>
-
-            {query.isLoading ||
-                query.isFetching ? (
-                <LoadingState text="Получаем изменённые наряды..." />
-            ) : query.isError ? (
-                <ErrorState
-                    text={
-                        getErrorMessage(
-                            query.error,
-                        )
-                    }
-                    onRetry={() =>
-                        query.refetch()
-                    }
-                />
-            ) : items.length ===
-                0 ? (
-                <EmptyState
-                    title={i18nT("pages.integrations.onec.onec.c985d79")}
-                    text="После указанной даты изменённых нарядов не найдено."
-                />
-            ) : (
-                <ScrollArea
-                    axis="both"
-                    className="max-h-[620px]"
-                >
-                    <table className="w-full min-w-[1000px] text-left">
-                        <thead className="sticky top-0 bg-gray-50">
-                            <tr className="border-b border-gray-200">
-                                <Th>
-                                    ID
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.d6d264f")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("employeeModal.status")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.38ca0af")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("sidebar.equipment")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("ordersTable.area")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("ordersTable.assignee")}
-                                </Th>
-
-                                <Th>
-                                    {i18nT("pages.integrations.onec.onec.d1227a4")}
-                                </Th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {items.map(
-                                (
-                                    order,
-                                ) => (
-                                    <tr
-                                        key={
-                                            order.id
-                                        }
-                                        className="border-b border-gray-100 hover:bg-gray-50"
-                                    >
-                                        <Td>
-                                            #
-                                            {
-                                                order.id
-                                            }
-                                        </Td>
-
-                                        <Td>
-                                            <span className="font-semibold text-blue-700">
-                                                {order.number ||
-                                                    "—"}
-                                            </span>
-                                        </Td>
-
-                                        <Td>
-                                            {order.status ||
-                                                "—"}
-                                        </Td>
-
-                                        <Td>
-                                            <div className="max-w-[260px] truncate">
-                                                {order.description ||
-                                                    "—"}
-                                            </div>
-                                        </Td>
-
-                                        <Td>
-                                            {order.equipment
-                                                ?.name ||
-                                                "—"}
-                                        </Td>
-
-                                        <Td>
-                                            {order.area
-                                                ?.name ||
-                                                "—"}
-                                        </Td>
-
-                                        <Td>
-                                            {order.assignee
-                                                ?.fullName ||
-                                                "—"}
-                                        </Td>
-
-                                        <Td>
-                                            {formatDate(
-                                                order.updatedAt,
-                                            )}
-                                        </Td>
+            <div className="oc-list-topline"><span><RiFileList3Line size={16} /> {i18nT("pages.integrations.onec.onec.a5cbbd1")} <strong>{total}</strong></span><span className="oc-list-topline__hint">Сверка с выбранной даты</span></div>
+            {query.isLoading && !query.data ? <LoadingState text="Получаем изменённые наряды..." />
+                : query.isError && !query.data ? <ErrorState text={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
+                    : items.length === 0 ? <EmptyState title={i18nT("pages.integrations.onec.onec.c985d79")} text="После указанной даты изменённых нарядов не найдено." />
+                        : <div className="oc-table-area" tabIndex={0} role="region" aria-label="Прокручиваемая таблица">
+                            <table className="oc-table oc-table--reconcile">
+                                <thead><tr><Th>Наряд</Th><Th>{i18nT("employeeModal.status")}</Th><Th>Описание / оборудование</Th><Th>{i18nT("ordersTable.area")}</Th><Th>{i18nT("ordersTable.assignee")}</Th><Th>{i18nT("pages.integrations.onec.onec.d1227a4")}</Th></tr></thead>
+                                <tbody>{items.map((order) => (
+                                    <tr key={order.id} className="oc-table__row">
+                                        <Td><div className="oc-cell-primary">{order.number || "—"}</div><div className="oc-cell-secondary">#{order.id}</div></Td>
+                                        <Td><span className="oc-entity-badge" title={order.status || ""}>{orderStatusLabel(order.status)}</span></Td>
+                                        <Td><div className="oc-cell-primary oc-ellipsis" title={order.description || ""}>{order.description || "—"}</div><div className="oc-cell-secondary oc-ellipsis" title={order.equipment?.name || ""}>{order.equipment?.name || "—"}</div></Td>
+                                        <Td>{order.area?.name || "—"}</Td><Td>{order.assignee?.fullName || "—"}</Td>
+                                        <Td><span className="oc-cell-date">{formatDate(order.updatedAt)}</span></Td>
                                     </tr>
-                                ),
-                            )}
-                        </tbody>
-                    </table>
-                </ScrollArea>
-            )}
+                                ))}</tbody>
+                            </table>
+                        </div>}
+            {query.isError && query.data && <p className="oc-inline-warning">Не удалось обновить данные: {getErrorMessage(query.error)}</p>}
         </div>
     );
 }
-
 
 // MARK: Push modal
 
@@ -2204,7 +1359,7 @@ function PushOrdersModal({
                 ),
             [
                 idsText,
-             __i18nLocaleToken],
+                __i18nLocaleToken],
         );
 
 
@@ -2283,12 +1438,12 @@ function PushOrdersModal({
 
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/40 p-4">
+        <div className="oc-modal fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/40 p-4">
             <form
                 onSubmit={
                     submit
                 }
-                className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl"
+                role="dialog" aria-modal="true" aria-label="Отправка нарядов в 1С" className="oc-modal__dialog oc-modal__dialog--form w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl"
             >
                 <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                     <div>
@@ -2468,8 +1623,8 @@ function JobDetailsModal({
         "OUTBOUND";
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/40 p-4">
-            <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="oc-modal fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/40 p-4">
+            <div role="dialog" aria-modal="true" aria-label="Подробности задания обмена" className="oc-modal__dialog oc-modal__dialog--details flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
                 <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
                     <div>
                         <div className="flex items-center gap-2">
@@ -2488,11 +1643,9 @@ function JobDetailsModal({
                         </div>
 
                         <p className="mt-1 text-xs text-gray-500">
-                            {job.entity ||
-                                "—"}
+                            <span title={job.entity || ""}>{entityLabel(job.entity)}</span>
                             {" • "}
-                            {job.eventType ||
-                                "—"}
+                            <span title={job.eventType || ""}>{eventLabel(job.eventType)}</span>
                         </p>
                     </div>
 
@@ -2511,28 +1664,23 @@ function JobDetailsModal({
                     </button>
                 </div>
 
-                <ScrollArea
-                    axis="y"
-                    className="min-h-0 flex-1"
-                >
+                <div className="oc-modal-scroll min-h-0 flex-1" tabIndex={0} role="region" aria-label="Содержимое задания">
                     <div className="space-y-5 p-5">
                         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                             <DetailBox
                                 label={i18nT("pages.integrations.onec.onec.e4de622")}
-                                value={
-                                    job.direction
-                                }
+                                value={directionLabel(job.direction)}
                             />
 
                             <DetailBox
-                                label="Local ID"
+                                label="Локальный ID"
                                 value={
                                     job.localId
                                 }
                             />
 
                             <DetailBox
-                                label="External ID"
+                                label="ID в 1С"
                                 value={
                                     job.externalId
                                 }
@@ -2587,8 +1735,7 @@ function JobDetailsModal({
 
                         <div>
                             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">
-                                Idempotency
-                                key
+                                Ключ идемпотентности
                             </p>
 
                             <div className="break-all rounded-xl bg-gray-50 p-3 font-mono text-xs text-gray-600">
@@ -2612,7 +1759,7 @@ function JobDetailsModal({
                         )}
 
                         <JsonBlock
-                            title="Payload"
+                            title="Данные запроса"
                             value={
                                 job.payload
                             }
@@ -2625,7 +1772,7 @@ function JobDetailsModal({
                             }
                         />
                     </div>
-                </ScrollArea>
+                </div>
 
                 <div className="flex justify-between gap-3 border-t border-gray-100 px-5 py-4">
                     <span className="text-xs text-gray-400">
@@ -2664,66 +1811,10 @@ function JobDetailsModal({
 
 // MARK: Small components
 
-function StatusBadge({
-    status,
-}) {
-    return (
-        <span
-            className={`
-                inline-flex
-                rounded-full
-                px-2.5
-                py-1
-                text-[10px]
-                font-bold
-
-                ${getStatusClass(
-                status,
-            )}
-            `}
-        >
-            {STATUS_LABELS[
-                status
-            ] ||
-                status ||
-                "—"}
-        </span>
-    );
-}
-
-function DirectionBadge({
-    direction,
-}) {
-    __useI18nReactive();
-    const outbound =
-        direction ===
-        "OUTBOUND";
-
-    return (
-        <span
-            className={`
-                inline-flex
-                rounded-full
-                px-2
-                py-1
-                text-[10px]
-                font-bold
-
-                ${outbound
-                    ? "bg-blue-50 text-blue-700"
-                    : "bg-violet-50 text-violet-700"
-                }
-            `}
-        >
-            {outbound
-                ? i18nT("pages.integrations.onec.onec.e06c0ff")
-                : direction ===
-                    "INBOUND"
-                    ? i18nT("pages.integrations.onec.onec.cdc2a62")
-                    : direction ||
-                    "—"}
-        </span>
-    );
+function StatusBadge({ status }) {
+    return <span className={`oc-status oc-status--${String(status || "unknown").toLowerCase()}`}>
+        <span className="oc-status__dot" />{STATUS_LABELS[status] || status || "—"}
+    </span>;
 }
 
 function Th({
@@ -2816,135 +1907,38 @@ function JsonBlock({
     );
 }
 
-function LoadingState({
-    text,
-}) {
-    return (
-        <div className="flex min-h-[320px] items-center justify-center">
-            <div className="text-center">
-                <RiLoader4Line
-                    size={
-                        28
-                    }
-                    className="mx-auto animate-spin text-blue-600"
-                />
-
-                <p className="mt-3 text-sm text-gray-500">
-                    {text}
-                </p>
-            </div>
+function LoadingState({ text }) {
+    return <div className="oc-state" role="status">
+        <div className="oc-state__inner">
+            <div className="oc-state__icon"><RiLoader4Line className="oc-spin" size={25} /></div>
+            <h3>Загрузка данных</h3><p>{text}</p>
         </div>
-    );
+    </div>;
 }
 
-function ErrorState({
-    text,
-    onRetry,
-}) {
+function ErrorState({ text, onRetry }) {
     __useI18nReactive();
-    return (
-        <div className="flex min-h-[320px] items-center justify-center p-6 text-center">
-            <div>
-                <RiErrorWarningLine
-                    size={
-                        32
-                    }
-                    className="mx-auto text-red-500"
-                />
-
-                <p className="mt-3 text-sm font-semibold text-gray-900">
-                    {i18nT("pages.integrations.onec.onec.e0e3af6")}
-                </p>
-
-                <p className="mt-1 max-w-lg text-xs text-gray-500">
-                    {text}
-                </p>
-
-                <button
-                    type="button"
-                    onClick={
-                        onRetry
-                    }
-                    className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white"
-                >
-                    {i18nT("components.layout.appnavbar.b914bbb")}
-                </button>
-            </div>
+    return <div className="oc-state" role="alert">
+        <div className="oc-state__inner">
+            <div className="oc-state__icon" style={{ background: "#fff1f2", color: "#e34d5f" }}><RiErrorWarningLine size={25} /></div>
+            <h3>{i18nT("pages.integrations.onec.onec.e0e3af6")}</h3><p>{text}</p>
+            {onRetry && <button type="button" className="oc-btn oc-btn--primary oc-state__retry" onClick={onRetry}>
+                <RiRefreshLine size={16} />{i18nT("components.layout.appnavbar.b914bbb")}
+            </button>}
         </div>
-    );
+    </div>;
 }
 
-function EmptyState({
-    title,
-    text,
-}) {
-    return (
-        <div className="flex min-h-[320px] items-center justify-center p-6 text-center">
-            <div>
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-400">
-                    <RiDatabase2Line
-                        size={
-                            22
-                        }
-                    />
-                </div>
-
-                <p className="mt-3 text-sm font-semibold text-gray-900">
-                    {title}
-                </p>
-
-                <p className="mt-1 text-xs text-gray-500">
-                    {text}
-                </p>
-            </div>
-        </div>
-    );
+function EmptyState({ title, text }) {
+    return <div className="oc-state"><div className="oc-state__inner">
+        <div className="oc-state__icon"><RiDatabase2Line size={25} /></div>
+        <h3>{title}</h3><p>{text}</p>
+    </div></div>;
 }
 
-function Notice({
-    notice,
-    onClose,
-}) {
-    const styles =
-        notice.type ===
-            "success"
-            ? "border-green-200 bg-green-50 text-green-700"
-            : notice.type ===
-                "warning"
-                ? "border-amber-200 bg-amber-50 text-amber-700"
-                : "border-red-200 bg-red-50 text-red-700";
-
-    return (
-        <div
-            className={`
-                flex
-                items-center
-                justify-between
-                gap-3
-                rounded-xl
-                border
-                px-4
-                py-3
-                text-sm
-
-                ${styles}
-            `}
-        >
-            <span>
-                {
-                    notice.text
-                }
-            </span>
-
-            <button
-                type="button"
-                onClick={
-                    onClose
-                }
-                className="shrink-0 rounded-lg p-1 hover:bg-black/5"
-            >
-                <RiCloseLine />
-            </button>
-        </div>
-    );
+function Notice({ notice, onClose }) {
+    const type = ["success", "warning", "error"].includes(notice?.type) ? notice.type : "warning";
+    return <div role="status" className={`oc-notice oc-notice--${type}`}>
+        <span>{notice.text}</span><button type="button" onClick={onClose} aria-label="Закрыть уведомление"><RiCloseLine size={18} /></button>
+    </div>;
 }
