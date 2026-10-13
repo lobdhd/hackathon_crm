@@ -1,0 +1,65 @@
+/* Сводка отчёта по смене — самостоятельный стиль, не меняет другие блоки. */
+.rp .rp-insights { margin: 0 0 22px; min-width: 0; }
+.rp .rp-insights__heading { display: flex; align-items: center; gap: 10px; margin: 0 0 13px; }
+.rp .rp-insights__heading-icon { display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px; background: #eaf2ff; border-radius: 10px; color: #2563eb; }
+.rp .rp-insights__heading h3 { margin: 0; color: #193758; font-weight: 800; font-size: 14px; }
+.rp .rp-insights__heading p { margin: 2px 0 0; color: #7790ab; font-size: 12px; }
+.rp .rp-insights__grid { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 12px; align-items: stretch; }
+.rp .rp-insight-card { min-width: 0; padding: 16px 17px; background: #fff; border: 1px solid #dfeafa; border-radius: 15px; box-shadow: 0 3px 14px rgba(40,85,145,.035); }
+.rp .rp-insight-card--orders { background: #fafcff; }
+.rp .rp-insight-card__heading { display: flex; align-items: center; gap: 9px; min-height: 28px; font-size: 12px; line-height: 1.3; font-weight: 750; color: #476789; }
+.rp .rp-insight-card__symbol { display: grid; place-items: center; color: #2563eb; }
+.rp .rp-insight-card__chip { margin-left: auto; flex-shrink: 0; padding: 5px 8px; font-size: 11px; font-weight: 750; line-height: 1.2; white-space: nowrap; background: #e9f7ef; color: #159a62; border-radius: 7px; }
+.rp .rp-insight-card__main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin: 15px 0 17px; }
+.rp .rp-insight-card__main > strong { min-width: 0; color: #173657; font-size: 29px; letter-spacing: -.045em; font-weight: 850; line-height: 1.15; }
+.rp .rp-insight-card__main > span { font-size: 12px; color: #7891ad; font-weight: 550; }
+.rp .rp-insight-card__main .rp-insight-card__time { font-size: clamp(19px, 1.5vw, 26px); letter-spacing: -.025em; }
+.rp .rp-insight-card__bars { display: flex; flex-direction: column; gap: 10px; }
+.rp .rp-insight-bar__top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 5px; color: #6582a2; font-size: 11px; font-weight: 600; }
+.rp .rp-insight-bar__top strong { color: #2b4c6f; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rp .rp-insight-bar__track { width: 100%; height: 7px; overflow: hidden; border-radius: 100px; background: #e9f0f9; }
+.rp .rp-insight-bar__fill { display: block; height: 100%; border-radius: inherit; transition: width .35s ease; }
+.rp .rp-insight-bar__fill--success { background: #27b77a; }
+.rp .rp-insight-bar__fill--warning { background: #f2a54b; }
+.rp .rp-insight-bar__fill--danger { background: #ea6070; }
+.rp .rp-insight-downtime { margin-top: 22px; display: grid; grid-template-columns: 1fr auto; align-items: center; row-gap: 8px; column-gap: 10px; padding-top: 13px; border-top: 1px solid #e6eef8; }
+.rp .rp-insight-downtime > span { color: #6784a3; font-size: 12px; font-weight: 650; }
+.rp .rp-insight-downtime > strong { font-size: 22px; color: #dd8d39; font-weight: 850; line-height: 1; }
+.rp .rp-insight-downtime__dots { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; min-height: 15px; }
+.rp .rp-insight-downtime__dots i { display: block; width: 12px; height: 12px; border-radius: 4px; background: #ffcd8a; border: 1px solid #f7b96b; }
+.rp .rp-insight-downtime__dots span { color: #9d7958; font-size: 11px; font-weight: 700; }
+.rp .rp-insight-team { display: flex; gap: 17px; margin-top: 24px; align-items: center; }
+.rp .rp-insight-team__ring { display: grid; place-items: center; flex: 0 0 120px; width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#2563eb var(--rp-fill), #e7effb var(--rp-fill) 100%); }
+.rp .rp-insight-team__ring > div { display: grid; align-content: center; justify-items: center; width: 90px; height: 90px; border-radius: 50%; background: #fff; }
+.rp .rp-insight-team__ring strong { font-size: 25px; letter-spacing: -.03em; font-weight: 850; color: #193758; line-height: 1.15; }
+.rp .rp-insight-team__ring span { font-size: 11px; color: #8296b0; }
+.rp .rp-insight-team__stats { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 10px; }
+.rp .rp-insight-team__stats > div { display: flex; align-items: center; gap: 7px; color: #6683a2; font-size: 11px; line-height: 1.2; white-space: nowrap; }
+.rp .rp-insight-team__stats strong { margin-left: auto; font-size: 12px; color: #1a3a60; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rp .rp-insight-team__dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; }
+.rp .rp-insight-team__dot--all { background: #9cb1cb; }
+.rp .rp-insight-team__dot--busy { background: #2563eb; }
+.rp .rp-insight-team__dot--free { background: #cbdcf4; }
+.rp .rp-insight-actions { display: flex; align-items: flex-start; gap: 18px; margin-top: 12px; padding: 13px 15px; border: 1px solid #dfeafb; background: #f1f7ff; border-radius: 13px; }
+.rp .rp-insight-actions__title { display: flex; align-items: center; flex: 0 0 auto; gap: 7px; padding-top: 5px; color: #2d64b0; font-size: 12px; font-weight: 750; }
+.rp .rp-insight-actions__list { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.rp .rp-insight-actions__list span { display: inline-flex; align-items: center; padding: 6px 10px; min-height: 27px; color: #45678c; font-size: 11px; line-height: 1.35; border-radius: 8px; background: #fff; border: 1px solid #dde9f9; }
+.rp .rp-insights__original { margin: 9px 2px 0; color: #7892ae; font-size: 11px; }
+.rp .rp-insights__original summary { cursor: pointer; width: fit-content; user-select: none; }
+.rp .rp-insights__original p { margin: 8px 0 0; padding: 11px; color: #547292; border-left: 2px solid #b9d5fa; line-height: 1.6; }
+.rp .rp-insight-fallback { display: flex; align-items: flex-start; gap: 10px; padding: 15px 17px; margin-bottom: 18px; background: #f1f7ff; border: 1px solid #dfeafb; border-radius: 12px; color: #255c9d; }
+.rp .rp-insight-fallback svg { flex-shrink: 0; }
+.rp .rp-insight-fallback p { font-size: 13px; line-height: 1.6; margin: 0; }
+@media (max-width: 1180px) {
+  .rp .rp-insights__grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .rp .rp-insight-card--team { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .rp .rp-insights__grid { grid-template-columns: 1fr; }
+  .rp .rp-insight-card--team { grid-column: auto; }
+  .rp .rp-insight-actions { flex-direction: column; gap: 8px; }
+  .rp .rp-insight-team { margin-top: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp .rp-insight-bar__fill { transition: none; }
+}

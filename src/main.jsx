@@ -1,3 +1,4 @@
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -8,10 +9,7 @@ import {
 } from "@tanstack/react-query";
 
 import App from "./App.jsx";
-
-import {
-  AuthProvider,
-} from "./auth/AuthProvider.jsx";
+import { AuthProvider } from "./auth/AuthProvider.jsx";
 
 import "./index.css";
 
@@ -22,28 +20,13 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
 
-      retry: (
-        failureCount,
-        error,
-      ) => {
-        const status =
-          error?.status;
+      retry: (failureCount, error) => {
+        const status = error?.status;
 
-        /*
-         * Клиентские ошибки повторять
-         * автоматически бессмысленно.
-         */
-        if (
-          status >= 400 &&
-          status < 500
-        ) {
+        if (status >= 400 && status < 500) {
           return false;
         }
 
-        /*
-         * Network / 5xx:
-         * максимум одна повторная попытка.
-         */
         return failureCount < 1;
       },
     },
@@ -54,21 +37,18 @@ const queryClient = new QueryClient({
   },
 });
 
-
 // MARK: Render
 
 createRoot(
   document.getElementById("root"),
 ).render(
   <StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider
-        client={queryClient}
-      >
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
   </StrictMode>,
 );
