@@ -1,754 +1,256 @@
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-    useMemo,
-    useState,
-} from "react";
-
-import { useNavigate } from "react-router-dom";
-import {
-    RiCloseLine,
-    RiFilter3Line,
-    RiLayoutGridLine,
-    RiListCheck2,
-    RiLoader4Line,
-    RiRefreshLine,
-    RiSearchLine,
-    RiTeamLine,
-    RiUserAddLine,
-    RiUserFollowLine,
-    RiUserUnfollowLine,
+  RiArrowRightUpLine, RiCloseLine, RiFilter3Line, RiLayoutGridLine,
+  RiListCheck2, RiLoader4Line, RiRefreshLine, RiSearchLine,
+  RiTeamLine, RiUserAddLine, RiUserFollowLine, RiUserUnfollowLine,
 } from "react-icons/ri";
 import SmartTable from "../../../react-components/SmartTable/SmartTable.jsx";
-import EmployeeCard from "../../../components/employees/EmployeeCard";
-import CreateEmployeeModal from "../../../components/employees/CreateEmployeeModal";
-import {
-    useAuth,
-} from "../../../auth/AuthProvider.jsx";
-import {
-    useBrigades,
-    useExecutors,
-} from "../../../hooks/useReferences.js";
-import {
-    useCreateAdminUser,
-} from "../../../hooks/useAdmin.js";
-import {
-    t as i18nT,
-    useI18n,
-} from "../../../i18n/index.js";
+import GlideSelect from "../../../react-components/GlideSelect/GlideSelect.jsx";
+import RubberSegment from "../../../react-components/RubberSegment/RubberSegment.jsx";
+import CreateEmployeeModal from "../../../components/employees/CreateEmployeeModal.jsx";
+import { useAuth } from "../../../auth/AuthProvider.jsx";
+import { useBrigades, useExecutors } from "../../../hooks/useReferences.js";
+import { useCreateAdminUser } from "../../../hooks/useAdmin.js";
+import { t as i18nT, useI18n } from "../../../i18n/index.js";
+import "./Employees.css";
 
-import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
+const STATUS_LABELS = {
+  AVAILABLE: "Свободен", BUSY: "В работе", QUEUED: "Есть очередь", OFF_SHIFT: "Не на смене",
+};
+const STATUS_OPTIONS = [
+  { value: "", label: "Все статусы" },
+  ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
+];
+const SHIFT_OPTIONS = [
+  { value: "", label: "Все смены" },
+  { value: "ON", label: "На смене" },
+  { value: "OFF", label: "Не на смене" },
+];
+const VIEW_OPTIONS = [
+  { value: "cards", label: "Карточки" },
+  { value: "table", label: "Таблица" },
+];
+const getInitials = (name) => String(name || "?").trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
-const LIST_HEIGHT = "clamp(360px, calc(100dvh - 430px), 640px)";
+function StatusChip({ status }) {
+  return <span className={`emp-status emp-status--${String(status || "unknown").toLowerCase()}`}><span className="emp-status__dot" />{STATUS_LABELS[status] || status || "Не указан"}</span>;
+}
 
-const STATUS_LABELS = { AVAILABLE: "Свободен", BUSY: "В работе", QUEUED: "Есть очередь", OFF_SHIFT: "Не на смене" };
-const STATUS_STYLES = { AVAILABLE: "bg-green-50 text-green-700", BUSY: "bg-orange-50 text-orange-700", QUEUED: "bg-blue-50 text-blue-700", OFF_SHIFT: "bg-gray-100 text-gray-600" };
+function StatCard({ title, value, note, icon: Icon, tone }) {
+  return (
+    <div className={`emp-stat emp-stat--${tone}`}>
+      <div className="emp-stat__top">
+        <span>{title}</span>
+        <span className="emp-stat__icon"><Icon size={20} /></span>
+      </div>
+      <strong>{value}</strong>
+      <small>{note}</small>
+    </div>
+  );
+}
+
+function EmployeeTile({ employee }) {
+  const count = employee._count?.assignedOrders ?? 0;
+  return (
+    <Link to={`/employees/${employee.id}`} className="emp-tile">
+      <div className="emp-tile__head">
+        <span className="emp-tile__avatar">{getInitials(employee.fullName)}</span>
+        <StatusChip status={employee.employeeStatus} />
+      </div>
+      <div className="emp-tile__name" title={employee.fullName}>{employee.fullName}</div>
+      <div className="emp-tile__specialty" title={employee.specialty || ""}>{employee.specialty || "Специальность не указана"}</div>
+      <div className="emp-tile__details">
+        <div><span>Разряд</span><strong>{employee.grade ?? "—"}</strong></div>
+        <div><span>Назначено нарядов</span><strong>{count}</strong></div>
+      </div>
+      <div className="emp-tile__footer">
+        <span className={employee.isOnShift ? "emp-shift emp-shift--on" : "emp-shift"}>
+          <span />{employee.isOnShift ? "На смене" : "Не на смене"}
+        </span>
+        <span className="emp-tile__link">Профиль <RiArrowRightUpLine size={16} /></span>
+      </div>
+    </Link>
+  );
+}
+
+function PageState({ loading, message, onRetry }) {
+  return (
+    <div className="emp-page p-7">
+      <div className="emp-state">
+        <span className="emp-state__icon">{loading ? <RiLoader4Line className="emp-spin" /> : <RiTeamLine />}</span>
+        <h2>{loading ? "Загружаем исполнителей" : "Не удалось загрузить исполнителей"}</h2>
+        <p>{message}</p>
+        {onRetry && <button className="emp-btn emp-btn--primary" type="button" onClick={onRetry}><RiRefreshLine /> Повторить</button>}
+      </div>
+    </div>
+  );
+}
 
 export default function Employees() {
-    const __i18nLocaleToken = i18nT("sidebar.home");
-    useI18n();
-    const navigate = useNavigate();
-    const {
-        role,
-    } = useAuth();
-    const [view, setView] = useState("cards");
-    const [
-        createModalOpen,
-        setCreateModalOpen,
-    ] = useState(false);
-    const [
-        filters,
-        setFilters,
-    ] = useState({
-        search: "",
-        specialty: "",
-        status: "",
-        shift: "",
+  useI18n();
+  const localeToken = i18nT("sidebar.home");
+  const navigate = useNavigate();
+  const { role } = useAuth();
+  const [view, setView] = useState("cards");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [filters, setFilters] = useState({ search: "", specialty: "", status: "", shift: "" });
+  const executorsQuery = useExecutors();
+  const brigadesQuery = useBrigades();
+  const createUser = useCreateAdminUser();
+  const employees = Array.isArray(executorsQuery.data) ? executorsQuery.data : [];
+  const brigades = Array.isArray(brigadesQuery.data) ? brigadesQuery.data : [];
+  const isAdmin = role === "ADMIN";
+  const updateFilter = (key, value) => setFilters(current => ({ ...current, [key]: value }));
+  const resetFilters = () => setFilters({ search: "", specialty: "", status: "", shift: "" });
+  const specialtyOptions = useMemo(() => [
+    { value: "", label: "Все специальности" },
+    ...[...new Set(employees.map(item => item.specialty).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "ru"))
+      .map(value => ({ value, label: value })),
+  ], [executorsQuery.data, localeToken]);
+  const filteredEmployees = useMemo(() => {
+    const search = filters.search.trim().toLowerCase();
+    return employees.filter(employee => {
+      const searchable = [employee.fullName, employee.specialty, employee.grade].some(value =>
+        String(value ?? "").toLowerCase().includes(search)
+      );
+      return (!search || searchable) &&
+        (!filters.specialty || employee.specialty === filters.specialty) &&
+        (!filters.status || employee.employeeStatus === filters.status) &&
+        (!filters.shift || employee.isOnShift === (filters.shift === "ON"));
     });
-    const executorsQuery =
-        useExecutors();
-    const brigadesQuery =
-        useBrigades();
-    const createUser =
-        useCreateAdminUser();
-    const employees =
-        Array.isArray(
-            executorsQuery.data,
-        )
-            ? executorsQuery.data
-            : [];
-    const brigades =
-        Array.isArray(
-            brigadesQuery.data,
-        )
-            ? brigadesQuery.data
-            : [];
-    const isAdmin =
-        role === "ADMIN";
-    function updateFilter(
-        field,
-        value,
-    ) {
-        setFilters(
-            (current) => ({
-                ...current,
-                [field]: value,
-            }),
-        );
-    }
-    function resetFilters() {
-        setFilters({
-            search: "",
-            specialty: "",
-            status: "",
-            shift: "",
-        });
-    }
-    async function handleCreateEmployee(
-        payload,
-    ) {
-        return createUser.mutateAsync(
-            payload,
-        );
-    }
-    const specialties =
-        useMemo(() => {
-            return [
-                ...new Set(
-                    employees
-                        .map(
-                            (
-                                employee,
-                            ) =>
-                                employee.specialty,
-                        )
-                        .filter(
-                            Boolean,
-                        ),
-                ),
-            ].sort((a, b) =>
-                a.localeCompare(
-                    b,
-                    "ru",
-                ),
-            );
-        }, [employees, __i18nLocaleToken]);
-    const filteredEmployees =
-        useMemo(() => {
-            const search =
-                filters.search
-                    .trim()
-                    .toLowerCase();
-            return employees.filter(
-                (
-                    employee,
-                ) => {
-                    const matchesSearch =
-                        !search ||
-                        employee.fullName
-                            ?.toLowerCase()
-                            .includes(
-                                search,
-                            ) ||
-                        employee.specialty
-                            ?.toLowerCase()
-                            .includes(
-                                search,
-                            ) ||
-                        String(
-                            employee.grade ??
-                            "",
-                        ).includes(
-                            search,
-                        );
-                    const matchesSpecialty =
-                        !filters.specialty ||
-                        employee.specialty ===
-                        filters.specialty;
-                    const matchesStatus =
-                        !filters.status ||
-                        employee.employeeStatus ===
-                        filters.status;
-                    const matchesShift =
-                        !filters.shift ||
-                        (filters.shift ===
-                            "ON"
-                            ? employee.isOnShift ===
-                            true
-                            : employee.isOnShift ===
-                            false);
-                    return (
-                        matchesSearch &&
-                        matchesSpecialty &&
-                        matchesStatus &&
-                        matchesShift
-                    );
-                },
-            );
-        }, [
-            employees,
-            filters,
-            __i18nLocaleToken]);
-    const stats =
-        useMemo(() => {
-            return {
-                total:
-                    employees.length,
-                free:
-                    employees.filter(
-                        (
-                            employee,
-                        ) =>
-                            employee.employeeStatus ===
-                            "AVAILABLE",
-                    ).length,
-                busy:
-                    employees.filter(
-                        (
-                            employee,
-                        ) =>
-                            employee.employeeStatus ===
-                            "BUSY" ||
-                            employee.employeeStatus ===
-                            "QUEUED",
-                    ).length,
-                offShift:
-                    employees.filter(
-                        (
-                            employee,
-                        ) =>
-                            employee.employeeStatus ===
-                            "OFF_SHIFT",
-                    ).length,
-            };
-        }, [employees, __i18nLocaleToken]);
-    const activeFiltersCount =
-        Object.entries(
-            filters,
-        ).filter(
-            ([key, value]) =>
-                key !==
-                "search" &&
-                Boolean(value),
-        ).length;
-    const columns = useMemo(() => [
-        {
-            field: "fullName",
-            header: i18nT("ordersTable.assignee"),
-            minWidth: 240,
-            render: (employee) => (
-                <div className="min-w-0">
-                    <div className="truncate font-semibold text-gray-900">{employee.fullName}</div>
-                </div>
-            ),
-        },
-        { field: "specialty", header: i18nT("components.employees.createemployeemodal.500aacb"), minWidth: 190, render: (employee) => employee.specialty || "—" },
-        { field: "grade", header: i18nT("employeeModal.grade"), width: 100, align: "center", render: (employee) => employee.grade ?? "—" },
-        {
-            field: "employeeStatus",
-            header: i18nT("employeeModal.status"),
-            minWidth: 150,
-            render: (employee) => (
-                <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[employee.employeeStatus] || "bg-gray-100 text-gray-600"}`}>
-                    {STATUS_LABELS[employee.employeeStatus] || employee.employeeStatus}
-                </span>
-            ),
-        },
-        {
-            field: "isOnShift",
-            header: i18nT("reportModal.shift"),
-            minWidth: 130,
-            sortValue: (employee) => employee.isOnShift ? 1 : 0,
-            render: (employee) => (
-                <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${employee.isOnShift ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-                    {employee.isOnShift ? i18nT("pages.admin.admin.admin.958b816") : i18nT("pages.employees.employees.employees.ece3411")}
-                </span>
-            ),
-        },
-        {
-            key: "assignedOrders",
-            header: "Активных нарядов",
-            minWidth: 155,
-            align: "center",
-            sortField: "assignedOrders",
-            sortValue: (employee) => Number(employee._count?.assignedOrders ?? 0),
-            render: (employee) => <span className="font-semibold text-gray-800">{employee._count?.assignedOrders ?? 0}</span>,
-        },
-    ], [__i18nLocaleToken]);
-
-    if (
-        executorsQuery.isLoading
-    ) {
-        return (
-            <PageState
-                icon={
-                    RiLoader4Line
-                }
-                spin
-                title={i18nT("pages.employees.employees.employees.1ad9806")}
-                text="Получаем актуальные данные с сервера"
-            />
-        );
-    }
-    if (
-        executorsQuery.isError
-    ) {
-        return (
-            <PageState
-                icon={
-                    RiTeamLine
-                }
-                title={i18nT("pages.employees.employees.employees.c52c210")}
-                text={
-                    executorsQuery
-                        .error
-                        ?.message ||
-                    "Попробуйте повторить запрос"
-                }
-                action={
-                    <button
-                        type="button"
-                        onClick={() =>
-                            executorsQuery.refetch()
-                        }
-                        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >
-                        <RiRefreshLine
-                            size={
-                                17
-                            }
-                        />
-                        {i18nT("components.layout.appnavbar.b914bbb")}
-                    </button>
-                }
-            />
-        );
-    }
-    return (
-        <>
-            <div className="mx-auto max-w-[1800px]">
-                <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                            {i18nT(
-                                "sidebar.employees",
-                            )}
-                        </h1>
-                        <p className="mt-1 text-sm text-gray-500">
-                            {i18nT("pages.employees.employees.employees.1fe2e0c")}
-                        </p>
-                    </div>
-                    {isAdmin && (
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setCreateModalOpen(
-                                    true,
-                                )
-                            }
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-                        >
-                            <RiUserAddLine
-                                size={
-                                    18
-                                }
-                            />
-                            {i18nT("components.employees.createemployeemodal.698e3c6")}
-                        </button>
-                    )}
-                </div>
-                <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                    <StatCard
-                        label="Всего исполнителей"
-                        value={
-                            stats.total
-                        }
-                        icon={
-                            RiTeamLine
-                        }
-                        tone="blue"
-                    />
-                    <StatCard
-                        label={i18nT("pages.analytics.analytics.f3fd6df")}
-                        value={
-                            stats.free
-                        }
-                        icon={
-                            RiUserFollowLine
-                        }
-                        tone="green"
-                    />
-                    <StatCard
-                        label={i18nT("pages.analytics.analytics.90fc82e")}
-                        value={
-                            stats.busy
-                        }
-                        icon={
-                            RiLoader4Line
-                        }
-                        tone="orange"
-                    />
-                    <StatCard
-                        label={i18nT(
-                            "employeeModal.offShift",
-                        )}
-                        value={
-                            stats.offShift
-                        }
-                        icon={
-                            RiUserUnfollowLine
-                        }
-                        tone="gray"
-                    />
-                </div>
-                <div className="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-                        <div className="relative flex-1">
-                            <RiSearchLine
-                                size={
-                                    18
-                                }
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                            />
-                            <input
-                                value={
-                                    filters.search
-                                }
-                                onChange={(
-                                    event,
-                                ) =>
-                                    updateFilter(
-                                        "search",
-                                        event
-                                            .target
-                                            .value,
-                                    )
-                                }
-                                placeholder={i18nT("pages.employees.employees.employees.ce63a8a")}
-                                className="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                            />
-                        </div>
-                        <select
-                            value={
-                                filters.specialty
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                updateFilter(
-                                    "specialty",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            className="min-w-[190px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-                        >
-                            <option value="">
-                                {i18nT("pages.employees.employees.employees.a5503eb")}
-                            </option>
-                            {specialties.map(
-                                (
-                                    specialty,
-                                ) => (
-                                    <option
-                                        key={
-                                            specialty
-                                        }
-                                        value={
-                                            specialty
-                                        }
-                                    >
-                                        {
-                                            specialty
-                                        }
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                        <select
-                            value={
-                                filters.status
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                updateFilter(
-                                    "status",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            className="min-w-[180px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-                        >
-                            <option value="">
-                                {i18nT("pages.employees.employees.employees.ac1bbd6")}
-                            </option>
-                            <option value="AVAILABLE">
-                                {i18nT("employeeModal.free")}
-                            </option>
-                            <option value="BUSY">
-                                {i18nT("status.inProgress")}
-                            </option>
-                            <option value="QUEUED">
-                                {i18nT("employeeModal.hasQueue")}
-                            </option>
-                            <option value="OFF_SHIFT">
-                                {i18nT("employeeModal.offShift")}
-                            </option>
-                        </select>
-                        <select
-                            value={
-                                filters.shift
-                            }
-                            onChange={(
-                                event,
-                            ) =>
-                                updateFilter(
-                                    "shift",
-                                    event
-                                        .target
-                                        .value,
-                                )
-                            }
-                            className="min-w-[170px] rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-                        >
-                            <option value="">
-                                {i18nT("pages.employees.employees.employees.e95141c")}
-                            </option>
-                            <option value="ON">
-                                {i18nT("pages.admin.admin.admin.958b816")}
-                            </option>
-                            <option value="OFF">
-                                {i18nT("pages.employees.employees.employees.ece3411")}
-                            </option>
-                        </select>
-                    </div>
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <RiFilter3Line
-                                size={
-                                    17
-                                }
-                            />
-                            {i18nT("pages.employees.employees.employees.35dbd85")}
-                            <span className="font-semibold text-gray-900">
-                                {
-                                    filteredEmployees.length
-                                }
-                            </span>
-                            {activeFiltersCount >
-                                0 && (
-                                    <button
-                                        type="button"
-                                        onClick={
-                                            resetFilters
-                                        }
-                                        className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
-                                    >
-                                        <RiCloseLine
-                                            size={
-                                                14
-                                            }
-                                        />
-                                        {i18nT("pages.employees.employees.employees.02d901c")}
-                                    </button>
-                                )}
-                        </div>
-                        <div className="flex items-center gap-3">
-
-                            <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setView("cards")}
-                                    className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === "cards" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
-                                >
-                                    <RiLayoutGridLine size={17} />
-                                    {i18nT("pages.employees.employees.employees.152beb3")}
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setView("table")}
-                                    className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === "table" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"}`}
-                                >
-                                    <RiListCheck2 size={17} />
-                                    {i18nT("pages.employees.employees.employees.0f3bd19")}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {view === "cards" ? (
-                    <ScrollArea
-                        axis="y"
-                        className="rounded-xl pr-1"
-                        style={{
-                            height:
-                                LIST_HEIGHT,
-                        }}
-                    >
-                        {filteredEmployees.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                                {filteredEmployees.map(
-                                    (
-                                        employee,
-                                    ) => (
-                                        <EmployeeCard
-                                            key={
-                                                employee.id
-                                            }
-                                            employee={
-                                                employee
-                                            }
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        ) : (
-                            <div className="flex h-full min-h-[320px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white px-6 text-center">
-                                <div>
-                                    <RiTeamLine
-                                        size={28}
-                                        className="mx-auto text-gray-300"
-                                    />
-
-                                    <h3 className="mt-4 text-sm font-semibold text-gray-800">
-                                        {i18nT("pages.employees.employees.employees.c132a70")}
-                                    </h3>
-
-                                    <p className="mt-1 text-sm text-gray-400">
-                                        {i18nT("pages.employees.employees.employees.82f00e1")}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </ScrollArea>
-                ) : (
-                    <SmartTable
-                        data={filteredEmployees}
-                        columns={columns}
-                        dataKey="id"
-                        mode="sort"
-                        stickyHeader
-                        striped
-                        scrollHeight={LIST_HEIGHT}
-                        minWidth={1000}
-                        emptyText={i18nT("pages.employees.employees.employees.c132a70")}
-                        emptyDescription={i18nT("pages.employees.employees.employees.82f00e1")}
-                        rowClassName={() => "cursor-pointer"}
-                        onRowClick={(employee, _index, event) => {
-                            if (event.target.closest("button, a, input, select, textarea")) return;
-                            navigate(`/employees/${employee.id}`);
-                        }}
-                    />
-                )}
-            </div>
-            {isAdmin && (
-                <CreateEmployeeModal
-                    open={
-                        createModalOpen
-                    }
-                    onClose={() =>
-                        setCreateModalOpen(
-                            false,
-                        )
-                    }
-                    brigades={
-                        brigades
-                    }
-                    onCreate={
-                        handleCreateEmployee
-                    }
-                />
-            )}
-        </>
-    );
-}
-function StatCard({
-    label,
-    value,
-    icon: Icon,
-    tone,
-}) {
-    const tones = {
-        blue: {
-            icon:
-                "bg-blue-50 text-blue-600",
-            value:
-                "text-blue-700",
-        },
-        green: {
-            icon:
-                "bg-green-50 text-green-600",
-            value:
-                "text-green-700",
-        },
-        orange: {
-            icon:
-                "bg-orange-50 text-orange-600",
-            value:
-                "text-orange-700",
-        },
-        gray: {
-            icon:
-                "bg-gray-100 text-gray-500",
-            value:
-                "text-gray-800",
-        },
-    };
-    const current =
-        tones[tone] ??
-        tones.blue;
-    return (
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div>
-                <p className="text-xs font-medium text-gray-500">
-                    {label}
-                </p>
-                <p
-                    className={`mt-1 text-2xl font-bold ${current.value}`}
-                >
-                    {value}
-                </p>
-            </div>
-            <div
-                className={`flex h-10 w-10 items-center justify-center rounded-xl ${current.icon}`}
-            >
-                <Icon
-                    size={20}
-                />
-            </div>
+  }, [executorsQuery.data, filters]);
+  const stats = useMemo(() => ({
+    total: employees.length,
+    free: employees.filter(e => e.employeeStatus === "AVAILABLE").length,
+    busy: employees.filter(e => ["BUSY", "QUEUED"].includes(e.employeeStatus)).length,
+    offShift: employees.filter(e => e.employeeStatus === "OFF_SHIFT").length,
+  }), [executorsQuery.data]);
+  const activeFilters = [filters.specialty, filters.status, filters.shift].filter(Boolean).length;
+  const columns = useMemo(() => [
+    {
+      field: "fullName", header: "Исполнитель", minWidth: 255,
+      render: employee => (
+        <div className="emp-table-person">
+          <span className="emp-table-avatar">{getInitials(employee.fullName)}</span>
+          <span><strong>{employee.fullName}</strong><small>{employee.specialty || "Специальность не указана"}</small></span>
         </div>
-    );
-}
-function PageState({
-    icon: Icon,
-    title,
-    text,
-    spin = false,
-    action = null,
-}) {
-    return (
-        <div className="flex min-h-[520px] items-center justify-center">
-            <div className="max-w-md text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
-                    <Icon
-                        size={23}
-                        className={
-                            spin
-                                ? "animate-spin"
-                                : ""
-                        }
-                    />
-                </div>
-                <h2 className="mt-4 text-lg font-semibold text-gray-900">
-                    {title}
-                </h2>
-                <p className="mt-2 text-sm text-gray-500">
-                    {text}
-                </p>
-                {action}
-            </div>
+      ),
+    },
+    { field: "specialty", header: "Специальность", minWidth: 190, render: employee => employee.specialty || "—" },
+    { field: "grade", header: "Разряд", minWidth: 100, render: employee => employee.grade ?? "—" },
+    { field: "employeeStatus", header: "Статус", minWidth: 150, render: employee => <StatusChip status={employee.employeeStatus} /> },
+    {
+      field: "isOnShift", header: "Смена", minWidth: 135,
+      sortValue: employee => employee.isOnShift ? 1 : 0,
+      render: employee => <span className={employee.isOnShift ? "emp-shift emp-shift--on" : "emp-shift"}><span />{employee.isOnShift ? "На смене" : "Не на смене"}</span>,
+    },
+    {
+      key: "assignedOrders", header: "Назначено нарядов", minWidth: 155,
+      sortField: "assignedOrders", sortValue: employee => Number(employee._count?.assignedOrders ?? 0),
+      render: employee => <strong className="emp-table-count">{employee._count?.assignedOrders ?? 0}</strong>,
+    },
+  ], [localeToken]);
+  if (executorsQuery.isLoading && !executorsQuery.data) return <PageState loading message="Получаем актуальные данные с сервера" />;
+  if (executorsQuery.isError && !executorsQuery.data) return <PageState message={executorsQuery.error?.message || "Повторите запрос"} onRetry={() => executorsQuery.refetch()} />;
+  return (
+    <div className="emp-page mx-auto max-w-[1800px] p-7">
+      <header className="emp-header">
+        <div>
+          <h1>{i18nT("sidebar.employees")}</h1>
+          <p>Состав команды, текущая загрузка и назначенные работы</p>
         </div>
-    );
+        {isAdmin && (
+          <button type="button" className="emp-btn emp-btn--primary" onClick={() => setCreateModalOpen(true)}>
+            <RiUserAddLine size={18} /> Добавить исполнителя
+          </button>
+        )}
+      </header>
+      <div className="emp-stats">
+        <StatCard title="Всего исполнителей" value={stats.total} note="В справочнике" icon={RiTeamLine} tone="blue" />
+        <StatCard title="Свободны" value={stats.free} note="Готовы к работе" icon={RiUserFollowLine} tone="green" />
+        <StatCard title="Заняты" value={stats.busy} note="Работают или в очереди" icon={RiLoader4Line} tone="orange" />
+        <StatCard title="Не на смене" value={stats.offShift} note="Сейчас недоступны" icon={RiUserUnfollowLine} tone="gray" />
+      </div>
+      <section className="emp-panel">
+        <div className="emp-panel__heading">
+          <div className="emp-panel__title"><span className="emp-panel__icon"><RiFilter3Line size={19} /></span><div><h2>Список исполнителей</h2><p>Поиск и фильтрация сотрудников</p></div></div>
+          <div className="emp-view">
+            <RubberSegment
+              items={VIEW_OPTIONS}
+              value={view}
+              onChange={setView}
+              trackColor="#ffffff"
+              thumbColor="#2563eb"
+              textColor="#2563eb"
+              activeTextColor="#ffffff"
+              radius={10}
+              size="md"
+              equalSlots
+              draggable
+              aria-label="Вид списка исполнителей"
+            />
+          </div>
+        </div>
+        <div className="emp-filters">
+          <label className="emp-search">
+            <RiSearchLine size={18} />
+            <input
+              value={filters.search}
+              onChange={event => updateFilter("search", event.target.value)}
+              placeholder="ФИО, специальность, разряд..."
+              aria-label="Поиск исполнителей"
+            />
+            {filters.search && <button type="button" onClick={() => updateFilter("search", "")} aria-label="Очистить поиск"><RiCloseLine /></button>}
+          </label>
+          <div className="emp-filter-select"><GlideSelect options={specialtyOptions} value={filters.specialty} onChange={value => updateFilter("specialty", value)} className="glide-select--field" portal searchable ariaLabel="Специальность" /></div>
+          <div className="emp-filter-select"><GlideSelect options={STATUS_OPTIONS} value={filters.status} onChange={value => updateFilter("status", value)} className="glide-select--field" portal ariaLabel="Статус" /></div>
+          <div className="emp-filter-select"><GlideSelect options={SHIFT_OPTIONS} value={filters.shift} onChange={value => updateFilter("shift", value)} className="glide-select--field" portal ariaLabel="Смена" /></div>
+        </div>
+        <div className="emp-panel__meta">
+          <div><RiFilter3Line size={15} /><span>Найдено: <strong>{filteredEmployees.length}</strong></span>{(activeFilters > 0 || filters.search) && <button type="button" onClick={resetFilters}><RiCloseLine size={14} /> Сбросить</button>}</div>
+          {executorsQuery.isFetching && <span className="emp-refresh"><RiRefreshLine size={14} /> Обновление</span>}
+        </div>
+        {view === "cards" ? (
+          <div className="emp-cards-viewport">
+            {filteredEmployees.length ? (
+              <div className="emp-cards-grid">{filteredEmployees.map(employee => <EmployeeTile key={employee.id} employee={employee} />)}</div>
+            ) : <div className="emp-empty"><RiTeamLine size={28} /><strong>Исполнители не найдены</strong><p>Попробуйте изменить фильтры или строку поиска</p></div>}
+          </div>
+        ) : (
+          <div className="emp-table-wrap">
+            <SmartTable
+              key="employees"
+              className="emp-smart-table"
+              data={filteredEmployees}
+              columns={columns}
+              dataKey="id"
+              mode="sort"
+              stickyHeader
+              striped
+              compact
+              scrollHeight="clamp(380px, calc(100dvh - 430px), 650px)"
+              minWidth={1020}
+              emptyText="Исполнители не найдены"
+              emptyDescription="Попробуйте изменить фильтры"
+              rowClassName={() => "cursor-pointer"}
+              onRowClick={(employee, _index, event) => {
+                if (event?.target?.closest?.("button, a, input, select, textarea")) return;
+                navigate(`/employees/${employee.id}`);
+              }}
+            />
+          </div>
+        )}
+      </section>
+      {isAdmin && (
+        <CreateEmployeeModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          brigades={brigades}
+          onCreate={payload => createUser.mutateAsync(payload)}
+        />
+      )}
+    </div>
+  );
 }

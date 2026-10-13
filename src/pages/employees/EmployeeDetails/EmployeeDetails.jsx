@@ -1,955 +1,230 @@
+import { useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-    useMemo,
-} from "react";
-import {
-    Link,
-    useNavigate,
-    useParams,
-} from "react-router-dom";
-import {
-    RiArrowLeftLine,
-    RiBriefcaseLine,
-    RiCalendarCheckLine,
-    RiFileList3Line,
-    RiHistoryLine,
-    RiLoader4Line,
-    RiMedalLine,
-    RiRefreshLine,
-    RiStackLine,
-    RiTimeLine,
-    RiToolsLine,
-    RiUserLine,
+  RiArrowLeftLine, RiBriefcaseLine, RiCalendarCheckLine, RiFileList3Line,
+  RiHistoryLine, RiLoader4Line, RiMedalLine, RiRefreshLine,
+  RiStackLine, RiTimeLine, RiToolsLine, RiUserLine,
 } from "react-icons/ri";
-import EmployeeStatus from "../../../components/employees/EmployeeStatus";
-import StatusBadge from "../../../components/common/StatusBadge";
+import EmployeeStatus from "../../../components/employees/EmployeeStatus.jsx";
+import StatusBadge from "../../../components/common/StatusBadge.jsx";
+import PriorityBadge from "../../../components/common/PriorityBadge.jsx";
 import SmartTable from "../../../react-components/SmartTable/SmartTable.jsx";
-import PriorityBadge from "../../../components/common/PriorityBadge";
-import {
-    useExecutors,
-} from "../../../hooks/useReferences.js";
-import {
-    useWorkOrders,
-} from "../../../hooks/useWorkOrders.js";
-import {
-    t as i18nT,
-    useI18n,
-} from "../../../i18n/index.js";
-const TERMINAL_STATUSES =
-    new Set([
-        "CLOSED",
-        "REJECTED",
-        "CANCELLED",
-    ]);
+import { useExecutors } from "../../../hooks/useReferences.js";
+import { useWorkOrders } from "../../../hooks/useWorkOrders.js";
+import { t as i18nT, useI18n } from "../../../i18n/index.js";
+import "./EmployeeDetails.css";
 
-export default function EmployeeDetails() {
-    const __i18nLocaleToken = i18nT("sidebar.home");
-    useI18n();
-    const {
-        id,
-    } = useParams();
-    const navigate =
-        useNavigate();
-    const employeeId =
-        Number(id);
-    const executorsQuery =
-        useExecutors();
-    const ordersQuery =
-        useWorkOrders(
-            {
-                assigneeId:
-                    employeeId,
-                compact: true,
-                limit: 500,
-                offset: 0,
-            },
-            {
-                enabled:
-                    Number.isInteger(
-                        employeeId,
-                    ) &&
-                    employeeId > 0,
-            },
-        );
-    const employees =
-        Array.isArray(
-            executorsQuery.data,
-        )
-            ? executorsQuery.data
-            : [];
-    const employee =
-        useMemo(
-            () =>
-                employees.find(
-                    (
-                        item,
-                    ) =>
-                        Number(
-                            item.id,
-                        ) ===
-                        employeeId,
-                ),
-            [
-                employees,
-                employeeId,
-                __i18nLocaleToken],
-        );
-    const employeeOrders =
-        Array.isArray(
-            ordersQuery.data
-                ?.items,
-        )
-            ? ordersQuery.data
-                .items
-            : [];
-    const activeOrders =
-        useMemo(
-            () =>
-                employeeOrders.filter(
-                    (
-                        order,
-                    ) =>
-                        !TERMINAL_STATUSES.has(
-                            order.status,
-                        ),
-                ),
-            [employeeOrders, __i18nLocaleToken],
-        );
-    const closedOrders =
-        useMemo(
-            () =>
-                employeeOrders.filter(
-                    (
-                        order,
-                    ) =>
-                        order.status ===
-                        "CLOSED",
-                ),
-            [employeeOrders, __i18nLocaleToken],
-        );
-    const overdueOrders =
-        useMemo(
-            () =>
-                employeeOrders.filter(
-                    isOverdue,
-                ),
-            [employeeOrders, __i18nLocaleToken],
-        );
-    const aiReviewOrders =
-        useMemo(
-            () =>
-                employeeOrders.filter(
-                    (
-                        order,
-                    ) =>
-                        order.status ===
-                        "AI_REVIEW",
-                ),
-            [employeeOrders, __i18nLocaleToken],
-        );
-    if (
-        executorsQuery.isLoading
-    ) {
-        return (
-            <StateView
-                icon={
-                    RiLoader4Line
-                }
-                spin
-                title={i18nT("pages.employees.employeedetails.employeedetails.fa1b991")}
-                text="Получаем актуальные данные"
-            />
-        );
-    }
-    if (
-        executorsQuery.isError
-    ) {
-        return (
-            <StateView
-                icon={
-                    RiUserLine
-                }
-                title={i18nT("pages.employees.employeedetails.employeedetails.723df7a")}
-                text={
-                    executorsQuery
-                        .error
-                        ?.message ||
-                    "Попробуйте ещё раз"
-                }
-                action={
-                    <button
-                        type="button"
-                        onClick={() =>
-                            executorsQuery.refetch()
-                        }
-                        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
-                    >
-                        <RiRefreshLine
-                            size={
-                                17
-                            }
-                        />
-                        {i18nT("components.layout.appnavbar.b914bbb")}
-                    </button>
-                }
-            />
-        );
-    }
-    if (!employee) {
-        return (
-            <StateView
-                icon={
-                    RiUserLine
-                }
-                title={i18nT(
-                    "employeeDetails.notFound",
-                )}
-                text={i18nT(
-                    "employeeDetails.notFoundHint",
-                )}
-                action={
-                    <button
-                        type="button"
-                        onClick={() =>
-                            navigate(
-                                "/employees",
-                            )
-                        }
-                        className="mt-5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >
-                        {i18nT(
-                            "employeeDetails.back",
-                        )}
-                    </button>
-                }
-            />
-        );
-    }
-    return (
-        <div className="mx-auto max-w-[1600px]">
-            <Link
-                to="/employees"
-                className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-900"
-            >
-                <RiArrowLeftLine
-                    size={18}
-                />
-                {i18nT(
-                    "employeeDetails.allEmployees",
-                )}
-            </Link>
-            <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <div className="flex flex-col justify-between gap-5 p-6 lg:flex-row lg:items-center">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-xl font-bold text-blue-700">
-                            {getInitials(
-                                employee.fullName,
-                            )}
-                        </div>
-                        <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <h1 className="text-2xl font-bold text-gray-900">
-                                    {
-                                        employee.fullName
-                                    }
-                                </h1>
-                                <EmployeeStatus
-                                    status={
-                                        employee.employeeStatus
-                                    }
-                                />
-                            </div>
-                            <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500">
-                                <span className="inline-flex items-center gap-1.5">
-                                    <RiBriefcaseLine
-                                        size={
-                                            16
-                                        }
-                                    />
-                                    {employee.specialty ||
-                                        "Специальность не указана"}
-                                </span>
-                                {employee.grade && (
-                                    <span className="inline-flex items-center gap-1.5">
-                                        <RiMedalLine
-                                            size={
-                                                16
-                                            }
-                                        />
-                                        {
-                                            employee.grade
-                                        }{" "}
-                                        {i18nT("employeeModal.gradeLower")}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        className={`
-                            flex items-center gap-3
-                            rounded-xl border px-5 py-3
-                            ${employee.isOnShift
-                                ? "border-green-100 bg-green-50/70"
-                                : "border-gray-200 bg-gray-50"
-                            }
-                        `}
-                    >
-                        <RiTimeLine
-                            size={22}
-                            className={
-                                employee.isOnShift
-                                    ? "text-green-600"
-                                    : "text-gray-400"
-                            }
-                        />
-                        <div>
-                            <p className="text-xs text-gray-500">
-                                {i18nT("reportModal.shift")}
-                            </p>
-                            <p className="text-sm font-bold text-gray-900">
-                                {employee.isOnShift
-                                    ? i18nT("pages.admin.admin.admin.958b816")
-                                    : i18nT("employeeModal.offShift")}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-                <div className="min-w-0 space-y-6">
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                        <SmallKpi
-                            label="Всего нарядов"
-                            value={
-                                employeeOrders.length
-                            }
-                            icon={
-                                RiFileList3Line
-                            }
-                            tone="blue"
-                        />
-                        <SmallKpi
-                            label="Активные"
-                            value={
-                                activeOrders.length
-                            }
-                            icon={
-                                RiTimeLine
-                            }
-                            tone="orange"
-                        />
-                        <SmallKpi
-                            label="Закрытые"
-                            value={
-                                closedOrders.length
-                            }
-                            icon={
-                                RiCalendarCheckLine
-                            }
-                            tone="green"
-                        />
-                        <SmallKpi
-                            label={i18nT("pages.orders.orders.orders.97a53e1")}
-                            value={
-                                overdueOrders.length
-                            }
-                            icon={
-                                RiMedalLine
-                            }
-                            tone={
-                                overdueOrders.length >
-                                    0
-                                    ? "red"
-                                    : "violet"
-                            }
-                        />
-                    </div>
-                    <Section
-                        title={i18nT(
-                            "employeeDetails.currentOrders",
-                        )}
-                        description="Текущие назначенные работы"
-                        icon={
-                            RiToolsLine
-                        }
-                        tone="orange"
-                    >
-                        {ordersQuery.isLoading ? (
-                            <InlineLoading />
-                        ) : activeOrders.length >
-                            0 ? (
-                            <div className="space-y-3">
-                                {activeOrders.map(
-                                    (
-                                        order,
-                                    ) => (
-                                        <OrderRow
-                                            key={
-                                                order.id
-                                            }
-                                            order={
-                                                order
-                                            }
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        ) : (
-                            <EmptyText>
-                                {i18nT(
-                                    "employeeDetails.noActiveOrders",
-                                )}
-                            </EmptyText>
-                        )}
-                    </Section>
-                    <Section
-                        title={i18nT(
-                            "employeeDetails.workHistory",
-                        )}
-                        description="Наряды, назначенные исполнителю"
-                        icon={
-                            RiHistoryLine
-                        }
-                        tone="blue"
-                    >
-                        {ordersQuery.isLoading ? (
-                            <InlineLoading />
-                        ) : ordersQuery.isError ? (
-                            <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
-                                {ordersQuery
-                                    .error
-                                    ?.message ||
-                                    i18nT("pages.orders.orders.orders.ac0c6fb")}
-                            </div>
-                        ) : employeeOrders.length >
-                            0 ? (
-                            <HistoryTable orders={employeeOrders} />
-                        ) : (
-                            <EmptyText>
-                                {i18nT(
-                                    "employeeDetails.noHistory",
-                                )}
-                            </EmptyText>
-                        )}
-                    </Section>
-                </div>
-                <aside className="space-y-5">
-                    <Section
-                        title={i18nT(
-                            "employeeDetails.currentLoad",
-                        )}
-                        icon={
-                            RiStackLine
-                        }
-                        tone="green"
-                    >
-                        <p className="text-xs text-gray-500">
-                            {i18nT("employeeModal.status")}
-                        </p>
-                        <div className="mt-2">
-                            <EmployeeStatus
-                                status={
-                                    employee.employeeStatus
-                                }
-                            />
-                        </div>
-                        <div className="mt-5 grid grid-cols-2 gap-3">
-                            <MiniValue
-                                label="Активных"
-                                value={
-                                    activeOrders.length
-                                }
-                            />
-                            <MiniValue
-                                label="На проверке"
-                                value={
-                                    aiReviewOrders.length
-                                }
-                            />
-                        </div>
-                        <div className="mt-3">
-                            <MiniValue
-                                label="Назначено по данным сервера"
-                                value={
-                                    Number(
-                                        employee
-                                            ?._count
-                                            ?.assignedOrders ??
-                                        0,
-                                    )
-                                }
-                            />
-                        </div>
-                    </Section>
-                    <Section
-                        title={i18nT(
-                            "employeeDetails.data",
-                        )}
-                        icon={
-                            RiUserLine
-                        }
-                        tone="violet"
-                    >
-                        <InfoRow
-                            label={i18nT("components.employees.createemployeemodal.500aacb")}
-                            value={
-                                employee.specialty ||
-                                "—"
-                            }
-                        />
-                        <InfoRow
-                            label={i18nT(
-                                "employeeModal.grade",
-                            )}
-                            value={
-                                employee.grade
-                                    ? `${employee.grade} разряд`
-                                    : "—"
-                            }
-                        />
-                        <InfoRow
-                            label={i18nT("pages.admin.admin.admin.958b816")}
-                            value={
-                                employee.isOnShift
-                                    ? "Да"
-                                    : "Нет"
-                            }
-                        />
-                        <InfoRow
-                            label={i18nT("employeeModal.status")}
-                            value={employeeStatusLabel(
-                                employee.employeeStatus,
-                            )}
-                            last
-                        />
-                    </Section>
-                </aside>
-            </div>
-        </div>
-    );
-}
-// MARK: Employee work history — local scrolling inside SmartTable.
-
-function HistoryTable({ orders }) {
-    useI18n();
-    const navigate = useNavigate();
-    const localeToken = i18nT("sidebar.home");
-    const columns = useMemo(() => [
-        {
-            field: "number",
-            header: i18nT("pages.employees.employeedetails.employeedetails.5072957"),
-            minWidth: 185,
-            render: (order) => (
-                <div className="min-w-0">
-                    <Link to={`/orders/${order.id}`} className="text-sm font-semibold text-gray-900 hover:text-blue-600 hover:underline">
-                        {order.number}
-                    </Link>
-                    <p className="mt-1 max-w-[230px] truncate text-xs text-gray-400" title={order.description || ""}>
-                        {order.description || "Без описания"}
-                    </p>
-                </div>
-            ),
-        },
-        {
-            key: "equipment",
-            header: i18nT("sidebar.equipment"),
-            minWidth: 195,
-            sortField: "equipmentName",
-            sortValue: (order) => order.equipment?.name || "",
-            render: (order) => (
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-700" title={order.equipment?.name || ""}>
-                        {order.equipment?.name || "—"}
-                    </p>
-                    {order.equipment?.inventoryNumber && (
-                        <p className="mt-1 truncate text-xs text-gray-400">{order.equipment.inventoryNumber}</p>
-                    )}
-                </div>
-            ),
-        },
-        {
-            field: "priority",
-            header: i18nT("pages.employees.employeedetails.employeedetails.a0f9f1a"),
-            minWidth: 135,
-            sortValue: (order) => ({ EMERGENCY: 4, HIGH: 3, NORMAL: 2, PLANNED: 1 })[order.priority] ?? 0,
-            render: (order) => <PriorityBadge priority={order.priority} />,
-        },
-        {
-            field: "status",
-            header: i18nT("employeeModal.status"),
-            minWidth: 150,
-            render: (order) => <StatusBadge status={order.status} />,
-        },
-        {
-            field: "deadline",
-            header: i18nT("pages.employees.employeedetails.employeedetails.bae913f"),
-            minWidth: 165,
-            sortValue: (order) => order.deadline ? new Date(order.deadline).getTime() : null,
-            render: (order) => isOverdue(order) ? (
-                <span className="font-semibold text-red-600">
-                    {i18nT("pages.assistant.assistant.assistant.0a04820")}
-                </span>
-            ) : (
-                <span className="text-sm text-gray-600">{formatDate(order.deadline)}</span>
-            ),
-        },
-    ], [localeToken]);
-    return (
-        <SmartTable
-            data={orders}
-            columns={columns}
-            dataKey="id"
-            mode="sort"
-            removableSort
-            compact
-            stickyHeader
-            scrollHeight="min(480px, 55dvh)"
-            minWidth={830}
-            rowClassName={() => "cursor-pointer"}
-            onRowClick={(order, _index, event) => {
-                if (event?.target?.closest?.("a, button, input")) return;
-                navigate(`/orders/${order.id}`);
-            }}
-            emptyText="История работ пуста"
-        />
-    );
-}
-
-function OrderRow({
-    order,
-}) {
-    useI18n();
-    const navigate =
-        useNavigate();
-    return (
-        <button
-            type="button"
-            onClick={() =>
-                navigate(
-                    `/orders/${order.id}`,
-                )
-            }
-            className="flex w-full flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition hover:border-blue-200 hover:bg-blue-50/20 sm:flex-row sm:items-center sm:justify-between"
-        >
-            <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">
-                        {
-                            order.number
-                        }
-                    </span>
-                    <PriorityBadge
-                        priority={
-                            order.priority
-                        }
-                    />
-                    <StatusBadge
-                        status={
-                            order.status
-                        }
-                    />
-                </div>
-                <p className="mt-2 truncate text-sm font-medium text-gray-800">
-                    {order.description ||
-                        "Без описания"}
-                </p>
-                <p className="mt-1 text-xs text-gray-400">
-                    {order.area
-                        ?.name ??
-                        "Участок не указан"}
-                    {" • "}
-                    {order
-                        .equipment
-                        ?.name ??
-                        "Оборудование не указано"}
-                </p>
-            </div>
-            <div className="shrink-0">
-                {isOverdue(
-                    order,
-                ) ? (
-                    <span className="text-sm font-semibold text-red-600">
-                        {i18nT("pages.assistant.assistant.assistant.0a04820")}
-                    </span>
-                ) : (
-                    <span className="text-xs text-gray-500">
-                        {i18nT("pages.employees.employeedetails.employeedetails.538dc63")}{" "}
-                        {formatDate(
-                            order.deadline,
-                        )}
-                    </span>
-                )}
-            </div>
-        </button>
-    );
-}
-
-function Section({
-    title,
-    description,
-    icon: Icon,
-    tone = "blue",
-    children,
-}) {
-    const tones = {
-        blue:
-            "bg-blue-50 text-blue-600",
-        green:
-            "bg-green-50 text-green-600",
-        orange:
-            "bg-orange-50 text-orange-600",
-        violet:
-            "bg-violet-50 text-violet-600",
-    };
-    return (
-        <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
-                <div>
-                    <h2 className="text-[15px] font-semibold text-gray-900">
-                        {title}
-                    </h2>
-                    {description && (
-                        <p className="mt-1 text-xs text-gray-500">
-                            {
-                                description
-                            }
-                        </p>
-                    )}
-                </div>
-                {Icon && (
-                    <div
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tones[tone] ?? tones.blue}`}
-                    >
-                        <Icon
-                            size={18}
-                        />
-                    </div>
-                )}
-            </div>
-            <div className="p-5">
-                {children}
-            </div>
-        </section>
-    );
-}
-
-function SmallKpi({
-    label,
-    value,
-    icon: Icon,
-    tone,
-}) {
-    const tones = {
-        blue:
-            "bg-blue-50 text-blue-600",
-        orange:
-            "bg-orange-50 text-orange-600",
-        green:
-            "bg-green-50 text-green-600",
-        violet:
-            "bg-violet-50 text-violet-600",
-        red:
-            "bg-red-50 text-red-600",
-    };
-    return (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-xs text-gray-500">
-                        {label}
-                    </p>
-                    <p className="mt-2 text-2xl font-bold text-gray-900">
-                        {value}
-                    </p>
-                </div>
-                <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg ${tones[tone] ?? tones.blue}`}
-                >
-                    <Icon
-                        size={18}
-                    />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function MiniValue({
-    label,
-    value,
-}) {
-    return (
-        <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
-            <p className="text-xs text-gray-500">
-                {label}
-            </p>
-            <p className="mt-1 text-xl font-bold text-gray-900">
-                {value}
-            </p>
-        </div>
-    );
-}
-
-function InfoRow({
-    label,
-    value,
-    last = false,
-}) {
-    return (
-        <div
-            className={`
-                flex items-center
-                justify-between
-                gap-4 py-3
-                ${last
-                    ? ""
-                    : "border-b border-gray-100"
-                }
-            `}
-        >
-            <span className="text-xs text-gray-500">
-                {label}
-            </span>
-            <span className="text-right text-sm font-semibold text-gray-900">
-                {value}
-            </span>
-        </div>
-    );
-}
-
-function EmptyText({
-    children,
-}) {
-    return (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-5 py-10 text-center text-sm text-gray-400">
-            {children}
-        </div>
-    );
-}
-
-function InlineLoading() {
-    useI18n();
-    return (
-        <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-400">
-            <RiLoader4Line
-                size={19}
-                className="animate-spin"
-            />
-            {i18nT("pages.employees.employeedetails.employeedetails.43e40d4")}
-        </div>
-    );
-}
-
-function StateView({
-    icon: Icon,
-    title,
-    text,
-    action,
-    spin = false,
-}) {
-    return (
-        <div className="flex min-h-[520px] items-center justify-center">
-            <div className="max-w-md text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
-                    <Icon
-                        size={23}
-                        className={
-                            spin
-                                ? "animate-spin"
-                                : ""
-                        }
-                    />
-                </div>
-                <h1 className="mt-4 text-xl font-bold text-gray-900">
-                    {title}
-                </h1>
-                <p className="mt-2 text-sm text-gray-500">
-                    {text}
-                </p>
-                {action}
-            </div>
-        </div>
-    );
-}
+const TERMINAL_STATUSES = new Set(["CLOSED", "REJECTED", "CANCELLED"]);
+const STATUS_LABELS = {
+  AVAILABLE: "Свободен", BUSY: "В работе", QUEUED: "Есть очередь", OFF_SHIFT: "Не на смене",
+};
+const initials = name => String(name || "?").trim().split(/\s+/).slice(0, 2).map(item => item[0]).join("").toUpperCase();
 
 function isOverdue(order) {
-    if (!order?.deadline) {
-        return false;
-    }
-    if (
-        [
-            "CLOSED",
-            "CANCELLED",
-            "REJECTED",
-        ].includes(
-            order.status,
-        )
-    ) {
-        return false;
-    }
-    return (
-        new Date(
-            order.deadline,
-        ).getTime() <
-        Date.now()
-    );
+  if (!order?.deadline || TERMINAL_STATUSES.has(order.status)) return false;
+  const deadline = new Date(order.deadline).getTime();
+  return Number.isFinite(deadline) && deadline < Date.now();
 }
-
-function getInitials(
-    fullName = "",
-) {
-    return fullName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(
-            (item) =>
-                item[0],
-        )
-        .join("")
-        .toUpperCase();
-}
-
 function formatDate(value) {
-    if (!value) {
-        return "—";
-    }
-    const date =
-        new Date(value);
-    if (
-        Number.isNaN(
-            date.getTime(),
-        )
-    ) {
-        return "—";
-    }
-    return date.toLocaleString(
-        "ru-RU",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        },
-    );
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toLocaleString("ru-RU", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  }) : "—";
+}
+function SummaryCard({ label, value, icon: Icon, tone }) {
+  return (
+    <div className={`ed-summary-card ed-summary-card--${tone}`}>
+      <div className="ed-summary-card__top"><span>{label}</span><span><Icon size={19} /></span></div>
+      <strong>{value}</strong>
+      <div className="ed-summary-card__line" />
+    </div>
+  );
+}
+function Panel({ title, description, icon: Icon, children }) {
+  return (
+    <section className="ed-panel">
+      <div className="ed-panel__head">
+        <span className="ed-panel__icon"><Icon size={19} /></span>
+        <div><h2>{title}</h2>{description && <p>{description}</p>}</div>
+      </div>
+      <div className="ed-panel__body">{children}</div>
+    </section>
+  );
+}
+function OrderRow({ order }) {
+  const navigate = useNavigate();
+  return (
+    <button type="button" className="ed-order" onClick={() => navigate(`/orders/${order.id}`)}>
+      <div className="ed-order__main">
+        <div className="ed-order__top">
+          <strong>{order.number || `#${order.id}`}</strong>
+          <PriorityBadge priority={order.priority} />
+          <StatusBadge status={order.status} />
+        </div>
+        <p title={order.description || ""}>{order.description || "Без описания"}</p>
+        <small>{order.area?.name || "Участок не указан"} · {order.equipment?.name || "Оборудование не указано"}</small>
+      </div>
+      <span className={isOverdue(order) ? "ed-order__date ed-order__date--overdue" : "ed-order__date"}>
+        {isOverdue(order) ? "Просрочен" : `Срок: ${formatDate(order.deadline)}`}
+      </span>
+    </button>
+  );
+}
+function InfoRow({ label, children }) {
+  return <div className="ed-info-row"><span>{label}</span><strong>{children ?? "—"}</strong></div>;
+}
+function HistoryTable({ orders }) {
+  useI18n();
+  const localeToken = i18nT("sidebar.home");
+  const navigate = useNavigate();
+  const columns = useMemo(() => [
+    {
+      field: "number", header: "Наряд", minWidth: 195,
+      render: order => (
+        <div className="ed-table-order">
+          <Link to={`/orders/${order.id}`}>{order.number || `#${order.id}`}</Link>
+          <small title={order.description || ""}>{order.description || "Без описания"}</small>
+        </div>
+      ),
+    },
+    {
+      key: "equipment", header: "Оборудование", minWidth: 185,
+      sortField: "equipmentName", sortValue: order => order.equipment?.name || "",
+      render: order => (
+        <div className="ed-table-order"><strong>{order.equipment?.name || "—"}</strong><small>{order.equipment?.inventoryNumber || ""}</small></div>
+      ),
+    },
+    {
+      field: "priority", header: "Приоритет", minWidth: 135,
+      sortValue: order => ({ EMERGENCY: 4, HIGH: 3, NORMAL: 2, PLANNED: 1 })[order.priority] ?? 0,
+      render: order => <PriorityBadge priority={order.priority} />,
+    },
+    { field: "status", header: "Статус", minWidth: 150, render: order => <StatusBadge status={order.status} /> },
+    {
+      field: "deadline", header: "Срок", minWidth: 150,
+      sortValue: order => order.deadline ? new Date(order.deadline).getTime() : null,
+      render: order => <span className={isOverdue(order) ? "ed-table-overdue" : ""}>{isOverdue(order) ? "Просрочен" : formatDate(order.deadline)}</span>,
+    },
+  ], [localeToken]);
+  return (
+    <div className="ed-table-wrap">
+      <SmartTable
+        data={orders}
+        columns={columns}
+        dataKey="id"
+        mode="sort"
+        removableSort
+        compact
+        stickyHeader
+        scrollHeight="min(480px, 55dvh)"
+        minWidth={815}
+        rowClassName={() => "cursor-pointer"}
+        onRowClick={(order, _index, event) => {
+          if (event?.target?.closest?.("a, button, input")) return;
+          navigate(`/orders/${order.id}`);
+        }}
+        emptyText="История нарядов пуста"
+      />
+    </div>
+  );
+}
+function PageState({ icon: Icon, title, text, action, spin }) {
+  return (
+    <div className="ed-page p-7">
+      <div className="ed-state">
+        <span><Icon className={spin ? "ed-spin" : ""} size={26} /></span>
+        <h2>{title}</h2>
+        <p>{text}</p>
+        {action}
+      </div>
+    </div>
+  );
 }
 
-function employeeStatusLabel(
-    status,
-) {
-    const labels = {
-        AVAILABLE:
-            "Свободен",
-        BUSY:
-            "В работе",
-        QUEUED:
-            "Есть очередь",
-        OFF_SHIFT:
-            "Не на смене",
-    };
-    return (
-        labels[status] ??
-        status ??
-        "—"
-    );
+export default function EmployeeDetails() {
+  useI18n();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const employeeId = Number(id);
+  const validId = Number.isInteger(employeeId) && employeeId > 0;
+  const executorsQuery = useExecutors();
+  const ordersQuery = useWorkOrders(
+    { assigneeId: employeeId, compact: true, limit: 500, offset: 0 },
+    { enabled: validId },
+  );
+  const employees = Array.isArray(executorsQuery.data) ? executorsQuery.data : [];
+  const employee = employees.find(item => Number(item.id) === employeeId);
+  const employeeOrders = Array.isArray(ordersQuery.data?.items) ? ordersQuery.data.items : [];
+  const activeOrders = useMemo(() => employeeOrders.filter(order => !TERMINAL_STATUSES.has(order.status)), [ordersQuery.data]);
+  const closedOrders = useMemo(() => employeeOrders.filter(order => order.status === "CLOSED"), [ordersQuery.data]);
+  const overdueOrders = useMemo(() => employeeOrders.filter(isOverdue), [ordersQuery.data]);
+  const aiReviewOrders = useMemo(() => employeeOrders.filter(order => order.status === "AI_REVIEW"), [ordersQuery.data]);
+  if (!validId) return <PageState icon={RiUserLine} title="Некорректный ID исполнителя" text="Проверьте ссылку на карточку" action={<button className="ed-btn ed-btn--primary" onClick={() => navigate("/employees")}>Вернуться к списку</button>} />;
+  if (executorsQuery.isLoading && !executorsQuery.data) return <PageState icon={RiLoader4Line} spin title="Загружаем исполнителя" text="Получаем актуальные данные" />;
+  if (executorsQuery.isError && !executorsQuery.data) return <PageState icon={RiUserLine} title="Не удалось загрузить сотрудника" text={executorsQuery.error?.message || "Попробуйте ещё раз"} action={<button className="ed-btn ed-btn--primary" onClick={() => executorsQuery.refetch()}><RiRefreshLine /> Повторить</button>} />;
+  if (!employee) return <PageState icon={RiUserLine} title="Исполнитель не найден" text="Возможно, сотрудник был удалён из справочника" action={<button className="ed-btn ed-btn--primary" onClick={() => navigate("/employees")}>К списку исполнителей</button>} />;
+  return (
+    <div className="ed-page mx-auto max-w-[1800px] p-7">
+      <Link className="ed-back" to="/employees"><RiArrowLeftLine size={17} /> Все исполнители</Link>
+      <header className="ed-profile">
+        <div className="ed-profile__identity">
+          <div className="ed-profile__avatar">{initials(employee.fullName)}</div>
+          <div className="ed-profile__name">
+            <div className="ed-profile__eyebrow">КАРТОЧКА ИСПОЛНИТЕЛЯ</div>
+            <div className="ed-profile__heading"><h1>{employee.fullName}</h1><EmployeeStatus status={employee.employeeStatus} /></div>
+            <div className="ed-profile__sub">
+              <span><RiBriefcaseLine size={16} />{employee.specialty || "Специальность не указана"}</span>
+              {employee.grade != null && <span><RiMedalLine size={16} />{employee.grade} разряд</span>}
+            </div>
+          </div>
+        </div>
+        <div className={employee.isOnShift ? "ed-duty ed-duty--on" : "ed-duty"}>
+          <RiTimeLine size={20} />
+          <div><small>Текущая смена</small><strong>{employee.isOnShift ? "На смене" : "Не на смене"}</strong></div>
+        </div>
+      </header>
+      <div className="ed-summary">
+        <SummaryCard label="Всего нарядов" value={employeeOrders.length} icon={RiFileList3Line} tone="blue" />
+        <SummaryCard label="Активные" value={activeOrders.length} icon={RiTimeLine} tone="orange" />
+        <SummaryCard label="Закрытые" value={closedOrders.length} icon={RiCalendarCheckLine} tone="green" />
+        <SummaryCard label="Просроченные" value={overdueOrders.length} icon={RiMedalLine} tone={overdueOrders.length ? "red" : "slate"} />
+      </div>
+      <div className="ed-layout">
+        <div className="ed-main">
+          <Panel title="Текущие наряды" description="Активные и ожидающие завершения работы" icon={RiToolsLine}>
+            {ordersQuery.isLoading && !ordersQuery.data ? (
+              <div className="ed-inline-loading"><RiLoader4Line className="ed-spin" /> Загрузка нарядов...</div>
+            ) : ordersQuery.isError && !ordersQuery.data ? (
+              <div className="ed-inline-error">{ordersQuery.error?.message || "Не удалось загрузить наряды"}<button onClick={() => ordersQuery.refetch()} type="button">Повторить</button></div>
+            ) : activeOrders.length ? (
+              <div className="ed-active-orders">{activeOrders.map(order => <OrderRow key={order.id} order={order} />)}</div>
+            ) : <div className="ed-empty">Нет активных нарядов</div>}
+          </Panel>
+          <Panel title="История работ" description="Все полученные наряды за доступный период" icon={RiHistoryLine}>
+            {ordersQuery.isLoading && !ordersQuery.data ? (
+              <div className="ed-inline-loading"><RiLoader4Line className="ed-spin" /> Загрузка истории...</div>
+            ) : ordersQuery.isError && !ordersQuery.data ? (
+              <div className="ed-inline-error">{ordersQuery.error?.message || "Ошибка загрузки"}</div>
+            ) : employeeOrders.length ? <HistoryTable orders={employeeOrders} /> : <div className="ed-empty">История работ пока пуста</div>}
+          </Panel>
+        </div>
+        <aside className="ed-aside">
+          <Panel title="Текущая нагрузка" description="Состояние работ исполнителя" icon={RiStackLine}>
+            <div className="ed-load-status"><span>Статус</span><EmployeeStatus status={employee.employeeStatus} /></div>
+            <div className="ed-load-grid">
+              <div><span>Активных</span><strong>{activeOrders.length}</strong></div>
+              <div><span>На AI-проверке</span><strong>{aiReviewOrders.length}</strong></div>
+            </div>
+          </Panel>
+          <Panel title="Информация" description="Данные сотрудника" icon={RiUserLine}>
+            <InfoRow label="Специальность">{employee.specialty || "—"}</InfoRow>
+            <InfoRow label="Разряд">{employee.grade != null ? `${employee.grade} разряд` : "—"}</InfoRow>
+            <InfoRow label="Смена">{employee.isOnShift ? "На смене" : "Не на смене"}</InfoRow>
+            <InfoRow label="Статус">{STATUS_LABELS[employee.employeeStatus] || employee.employeeStatus || "—"}</InfoRow>
+          </Panel>
+        </aside>
+      </div>
+    </div>
+  );
 }
