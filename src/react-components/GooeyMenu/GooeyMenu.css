@@ -1,0 +1,181 @@
+/* GooeyMenu: clean, solid surface. Absolutely no drop shadow or shadow animation. */
+.gooey-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  isolation: isolate;
+}
+
+.gooey-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #101114;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 0 0 auto;
+  appearance: none;
+}
+
+.gooey-menu__trigger:not(.gooey-menu__trigger--icon) {
+  width: auto;
+  min-width: 40px;
+  padding: 0 12px;
+}
+
+.gooey-menu__trigger:disabled { opacity: .48; cursor: not-allowed; }
+.gooey-menu__trigger:focus-visible,
+.gooey-menu__item:focus-visible,
+.gooey-menu__floating-icon:focus-visible {
+  outline: 2px solid #8cb4ff;
+  outline-offset: 2px;
+}
+
+.gooey-menu__overlay {
+  position: fixed;
+  z-index: 2147480000;
+  isolation: isolate;
+  overflow: visible;
+  color: #fff;
+  box-sizing: border-box;
+  touch-action: pan-x;
+}
+
+.gooey-menu__filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gooey-menu__liquid {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.gooey-menu__button-shape,
+.gooey-menu__stem,
+.gooey-menu__drop,
+.gooey-menu__panel-shape {
+  position: absolute;
+  background: #101114;
+  pointer-events: none;
+  border: 0;
+}
+
+.gooey-menu__button-shape { top: 0; right: 0; width: 40px; height: 40px; border-radius: 50%; }
+.gooey-menu__stem { top: 0; right: 13px; border-radius: 999px; }
+.gooey-menu__drop { top: 0; right: 5px; width: 28px; height: 28px; border-radius: 50%; transform-origin: center; }
+.gooey-menu__panel-shape { top: 0; right: 0; width: 40px; height: 40px; border-radius: 20px; }
+
+.gooey-menu__floating-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  appearance: none;
+}
+
+.gooey-menu__floating-icon:disabled { pointer-events: none; }
+
+.gooey-menu__panel {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 6px 7px;
+  overflow: hidden;
+  background: transparent;
+  box-sizing: border-box;
+  transform-origin: right center;
+}
+
+.gooey-menu__items {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.gooey-menu__items::-webkit-scrollbar { display: none; }
+
+.gooey-menu__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  min-width: 0;
+  height: 37px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #f0f0f2;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: left;
+  white-space: nowrap;
+  appearance: none;
+  transition: background-color 130ms ease;
+}
+
+.gooey-menu__item:hover:not(:disabled),
+.gooey-menu__item--selected { background: #292b31; }
+.gooey-menu__item:disabled { pointer-events: none; }
+.gooey-menu__item > svg:first-child { flex: 0 0 auto; color: #c3c5d0; }
+.gooey-menu__item-label { white-space: nowrap; }
+.gooey-menu__check { flex: 0 0 auto; color: #c3d6ff; }
+
+/* Overrides generic theme/Tailwind button rules. SVG output is an opaque, hard-edged mask. */
+.gooey-menu, .gooey-menu *, .gooey-menu *::before, .gooey-menu *::after,
+.gooey-menu__overlay, .gooey-menu__overlay *,
+.gooey-menu__overlay *::before, .gooey-menu__overlay *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+.gooey-menu,
+.gooey-menu__trigger,
+.gooey-menu__overlay,
+.gooey-menu__floating-icon,
+.gooey-menu__panel,
+.gooey-menu__item {
+  filter: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gooey-menu__item { transition: none; }
+}
