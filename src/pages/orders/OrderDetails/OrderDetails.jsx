@@ -3,11 +3,8 @@ import {
     useState,
 } from "react";
 
-import {
-    Link,
-    useNavigate,
-    useParams,
-} from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { createPortal } from "react-dom";
 
 import {
     RiAddCircleLine,
@@ -43,6 +40,7 @@ import {
 } from "react-icons/ri";
 
 import GlideSelect from "../../../react-components/GlideSelect/GlideSelect.jsx";
+import RubberSegment from "../../../react-components/RubberSegment/RubberSegment.jsx";
 
 import {
     useAuth,
@@ -87,7 +85,7 @@ import {
 } from "../../../hooks/useVoiceInput.js";
 import { t as i18nT } from "../../../i18n/index.js";
 import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
-
+import "./OrderDetails.css";
 
 // MARK: Config
 
@@ -259,12 +257,11 @@ const SCORE_OPTIONS = [
 
 const GLIDE_LIGHT = {
     accentColor: "#2563eb",
-    surfaceColor: "#f9fafb",
+    surfaceColor: "#ffffff",
     highlightColor: "#eff6ff",
     textColor: "#111827",
     radius: 10,
 };
-
 
 // MARK: Helpers
 
@@ -562,7 +559,6 @@ function downloadBlob(
     );
 }
 
-
 // MARK: Page
 
 export default function OrderDetails() {
@@ -833,10 +829,10 @@ export default function OrderDetails() {
 
     return (
         <>
-            <div className="mx-auto max-w-[1600px]">
+            <div className="od-page mx-auto max-w-[1800px] p-7">
                 <Link
                     to="/orders"
-                    className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-900"
+                    className="od-back mb-5 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-blue-600"
                 >
                     <RiArrowLeftLine size={18} />
                     {i18nT("pages.orders.orderdetails.orderdetails.3afeb19")}
@@ -922,12 +918,12 @@ export default function OrderDetails() {
                     </div>
                 )}
 
-                <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="od-hero mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white">
                     <div className="p-5 md:p-6">
                         <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-start">
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                                    <h1 className="od-hero__number text-2xl font-bold tracking-tight text-gray-900">
                                         {order.number}
                                     </h1>
 
@@ -944,11 +940,11 @@ export default function OrderDetails() {
                                     />
                                 </div>
 
-                                <h2 className="mt-3 max-w-4xl text-lg font-semibold text-gray-800">
+                                <h2 className="od-hero__description mt-3 max-w-4xl text-lg font-semibold text-gray-800">
                                     {order.description}
                                 </h2>
 
-                                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
+                                <div className="od-hero__metadata mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
                                     <span className="inline-flex items-center gap-1.5">
                                         <RiToolsLine />
                                         {order.equipment
@@ -1091,49 +1087,23 @@ export default function OrderDetails() {
                         )}
                     </div>
 
-                    <div className="overflow-x-auto border-t border-gray-200">
-                        <div className="flex min-w-max px-3">
-                            {tabs.map(
-                                (tab) => {
-                                    const Icon =
-                                        tab.icon;
-                                    const active =
-                                        activeTab ===
-                                        tab.id;
-
-                                    return (
-                                        <button
-                                            type="button"
-                                            key={tab.id}
-                                            onClick={() =>
-                                                setActiveTab(
-                                                    tab.id,
-                                                )
-                                            }
-                                            className={`relative flex items-center gap-2 px-4 py-3.5 text-sm font-medium transition ${
-                                                active
-                                                    ? "text-blue-600"
-                                                    : "text-gray-500 hover:text-gray-900"
-                                            }`}
-                                        >
-                                            <Icon size={17} />
-                                            {tab.title}
-
-                                            {tab.count !==
-                                                undefined && (
-                                                <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold">
-                                                    {tab.count}
-                                                </span>
-                                            )}
-
-                                            {active && (
-                                                <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-blue-600" />
-                                            )}
-                                        </button>
-                                    );
-                                },
-                            )}
-                        </div>
+                    <div className="od-tabs">
+                        <RubberSegment
+                            items={tabs.map((tab) => ({
+                                value: tab.id,
+                                label: tab.count != null ? `${tab.title} · ${tab.count}` : tab.title,
+                            }))}
+                            value={activeTab}
+                            onChange={setActiveTab}
+                            trackColor="#ffffff"
+                            thumbColor="#2563eb"
+                            textColor="#2563eb"
+                            activeTextColor="#ffffff"
+                            size="md"
+                            radius={11}
+                            inset={3}
+                            aria-label="Раздел карточки наряда"
+                        />
                     </div>
                 </div>
 
@@ -1538,7 +1508,6 @@ export default function OrderDetails() {
     );
 }
 
-
 // MARK: Comments
 
 function CommentsSection({
@@ -1686,7 +1655,6 @@ function CommentsSection({
         </Section>
     );
 }
-
 
 // MARK: Evaluation report
 
@@ -2030,7 +1998,6 @@ function ReportChronology({
     );
 }
 
-
 // MARK: Edit
 
 function EditOrderModal({
@@ -2192,7 +2159,6 @@ function EditOrderModal({
         </Modal>
     );
 }
-
 
 // MARK: Reassign
 
@@ -2421,7 +2387,6 @@ function ReassignModal({
     );
 }
 
-
 // MARK: Action modal
 
 function ActionModal({
@@ -2625,7 +2590,6 @@ function ActionModal({
         </Modal>
     );
 }
-
 
 // MARK: Complete modal
 
@@ -3117,7 +3081,6 @@ function CompleteModal({
     );
 }
 
-
 // MARK: Completion voice
 
 function CompletionVoiceInput({
@@ -3246,7 +3209,6 @@ function CompletionVoiceInput({
     );
 }
 
-
 // MARK: Timing
 
 function TimingCard({
@@ -3358,7 +3320,6 @@ function TimingRow({
     );
 }
 
-
 // MARK: AI compact
 
 function AiAssessmentCompact({
@@ -3420,7 +3381,6 @@ function AiAssessmentCompact({
         </div>
     );
 }
-
 
 // MARK: Timeline
 
@@ -3525,7 +3485,6 @@ function Timeline({
     );
 }
 
-
 // MARK: Materials
 
 function MaterialsTable({
@@ -3590,7 +3549,6 @@ function MaterialsTable({
     );
 }
 
-
 // MARK: Photos
 
 function PhotoColumn({
@@ -3646,7 +3604,6 @@ function PhotoColumn({
     );
 }
 
-
 // MARK: Select
 
 function FieldSelect({
@@ -3663,49 +3620,28 @@ function FieldSelect({
     );
 }
 
-
 // MARK: UI
 
-function Section({
-    title,
-    icon: Icon,
-    children,
-}) {
+function Section({ title, icon: Icon, children }) {
     return (
-        <section className="overflow-visible rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-4">
-                <h3 className="text-[15px] font-semibold text-gray-900">
-                    {title}
-                </h3>
-
-                {Icon && (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                        <Icon size={18} />
-                    </div>
-                )}
+        <section className="od-section rounded-2xl border border-gray-200 bg-white">
+            <div className="od-section__head">
+                {Icon && <span className="od-section__icon"><Icon size={19} /></span>}
+                <h3>{title}</h3>
             </div>
-
-            <div className="p-5">
-                {children}
-            </div>
+            <div className="od-section__body">{children}</div>
         </section>
     );
 }
-
 function InfoItem({
     label,
     value,
     helper,
 }) {
     return (
-        <div>
-            <p className="text-xs font-medium text-gray-500">
-                {label}
-            </p>
-
-            <p className="mt-2 text-sm font-semibold text-gray-900">
-                {value || "—"}
-            </p>
+        <div className="od-info-item">
+            <p className="od-info-item__label">{label}</p>
+            <p className="od-info-item__value">{value || "—"}</p>
 
             {helper && (
                 <p className="mt-1 text-xs text-gray-400">
@@ -3836,7 +3772,7 @@ function ActionButton({
             type="button"
             onClick={onClick}
             disabled={pending}
-            className={`rounded-lg px-3.5 py-2 text-sm font-semibold disabled:opacity-50 ${
+            className={`od-action-btn rounded-lg px-3.5 py-2 text-sm font-semibold disabled:opacity-50 ${
                 danger
                     ? "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
                     : "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
@@ -3849,50 +3785,26 @@ function ActionButton({
     );
 }
 
-function Modal({
-    title,
-    onClose,
-    children,
-    width = "640px",
-}) {
-    return (
-        <div
-            className="fixed inset-0 z-[5000] flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm"
-            onMouseDown={onClose}
-        >
+function Modal({ title, onClose, children, width = "640px" }) {
+    return createPortal(
+        <div className="od-modal-backdrop" onMouseDown={onClose}>
             <div
-                className="max-h-[calc(100vh-32px)] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl"
-                style={{
-                    maxWidth: width,
-                }}
-                onMouseDown={(
-                    event,
-                ) =>
-                    event.stopPropagation()
-                }
+                className="od-modal-dialog"
+                style={{ maxWidth: width }}
+                onMouseDown={(event) => event.stopPropagation()}
             >
-                <div className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-5">
-                    <h2 className="text-lg font-bold text-gray-900">
-                        {title}
-                    </h2>
-
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-                    >
+                <div className="od-modal-head">
+                    <h2>{title}</h2>
+                    <button type="button" aria-label="Закрыть окно" onClick={onClose}>
                         <RiCloseLine size={20} />
                     </button>
                 </div>
-
-                <div className="p-6">
-                    {children}
-                </div>
+                <div className="od-modal-content">{children}</div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }
-
 function ModalFooter({
     onClose,
     pending,

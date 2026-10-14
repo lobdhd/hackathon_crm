@@ -79,6 +79,11 @@
   pointer-events: none;
 }
 
+/* Пока слоты не измерены, у thumb нет clip-path и он закрашивает весь контрол
+   (все подписи белым на синем). Прячем его до первого удачного замера —
+   JS ставит data-ready на корень. */
+.rubber-segment:not([data-ready]) .rubber-segment__thumb { visibility: hidden; }
+
 .rubber-segment[data-equal] .rubber-segment__thumb { grid-auto-columns: minmax(0, 1fr); }
 .rubber-segment__copy { color: inherit; opacity: 1; cursor: default; }
 

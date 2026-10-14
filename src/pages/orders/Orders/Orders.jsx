@@ -1,20 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
     RiAddLine,
     RiAlarmWarningLine,
     RiArrowRightLine,
     RiCloseLine,
     RiFilter3Line,
-    RiLayoutGridLine,
-    RiListCheck2,
     RiLoader4Line,
     RiRefreshLine,
     RiSearchLine,
     RiToolsLine,
 } from "react-icons/ri";
-import SmartTable from "../../../react-components/SmartTable/SmartTable.jsx";
 import GlideSelect from "../../../react-components/GlideSelect/GlideSelect.jsx";
+import RubberSegment from "../../../react-components/RubberSegment/RubberSegment.jsx";
+import WakeSlider from "../../../react-components/WakeSlider/WakeSlider.jsx";
 import { useAuth } from "../../../auth/AuthProvider.jsx";
 import { isOrderStaff } from "../../../auth/roles.js";
 import {
@@ -28,13 +28,13 @@ import {
     useWorkOrders,
 } from "../../../hooks/useWorkOrders.js";
 import { useWorkOrderAction } from "../../../hooks/useWorkOrderAction.js";
-import ScrollArea from "../../../components/ScrollArea/ScrollArea.jsx";
 import CreateOrderModal from "../../../components/orders/CreateOrderModal.jsx";
 import { DROP_COLUMNS, canDrag, resolveMove } from "./kanbanMoves.js";
 import { t as i18nT } from "../../../i18n/index.js";
+import "./Orders.css";
 import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 // MARK: Config
-const LIST_HEIGHT = "clamp(380px, calc(100dvh - 430px), 660px)";
+const LIST_HEIGHT = "clamp(540px, calc(100dvh - 300px), 980px)";
 const STATUS_LABELS = {
     ISSUED: "Выдан",
     QUEUED: "В очереди",
@@ -81,14 +81,6 @@ const BOARD_COLUMNS = () => ([
     { key: "completed", title: i18nT("pages.orders.orders.orders.a6caf7e") },
     { key: "overdue", title: i18nT("pages.orders.orders.orders.97a53e1"), danger: true },
 ]);
-const BOARD_TONES = {
-    issued: { top: "border-t-blue-400", head: "border-blue-100 bg-blue-50", text: "text-blue-800", count: "text-blue-700", shell: "bg-blue-50/30" },
-    queued: { top: "border-t-slate-400", head: "border-slate-200 bg-slate-100", text: "text-slate-800", count: "text-slate-700", shell: "bg-slate-50" },
-    accepted: { top: "border-t-indigo-400", head: "border-indigo-100 bg-indigo-50", text: "text-indigo-800", count: "text-indigo-700", shell: "bg-indigo-50/30" },
-    inProgress: { top: "border-t-amber-400", head: "border-amber-200 bg-amber-100", text: "text-amber-900", count: "text-amber-800", shell: "bg-amber-50/40" },
-    completed: { top: "border-t-emerald-400", head: "border-emerald-200 bg-emerald-100", text: "text-emerald-900", count: "text-emerald-800", shell: "bg-emerald-50/40" },
-    overdue: { top: "border-t-rose-400", head: "border-rose-200 bg-rose-100", text: "text-rose-800", count: "text-rose-700", shell: "bg-rose-50/40" },
-};
 const TYPE_OPTIONS = () => ([
     { value: "", label: i18nT("pages.equipment.equipment.equipment.729d3f6") },
     { value: "EMERGENCY", label: i18nT("priority.emergency") },
@@ -293,8 +285,7 @@ export default function Orders() {
     const executors = asArray(executorsQuery.data);
     const brigades = asArray(brigadesQuery.data);
     const orders = asArray(ordersQuery.data?.items);
-    const board = boardQuery.data ?? { counters: {}, columns: {} };
-    const counters = board.counters ?? {};
+    const board = boardQuery.data ?? { columns: {} };
     const search = filters.search.trim().toLowerCase();
     const filteredOrders = useMemo(
         () => orders.filter((order) => matchesSearch(order, search)),
@@ -423,10 +414,10 @@ export default function Orders() {
         ],
         [__i18nLocaleToken],
     );
-    if (boardQuery.isLoading && !boardQuery.data) {
+    if (view === "kanban" && boardQuery.isLoading && !boardQuery.data) {
         return <PageLoader />;
     }
-    if (boardQuery.isError && !boardQuery.data) {
+    if (view === "kanban" && boardQuery.isError && !boardQuery.data) {
         return (
             <PageError
                 text={extractError(boardQuery.error)}
@@ -436,24 +427,10 @@ export default function Orders() {
     }
     return (
         <>
-            <style>{`
-                .orders-page { width: 100%; max-width: 100%; min-width: 0; overflow-x: clip; }
-                .orders-filter-item { display: block; min-width: 0; max-width: 100%; width: 100%; }
-                @media (min-width: 1024px) {
-                    .orders-filter-item { flex: 0 0 auto; width: 135px; }
-                    .orders-filter-area { width: 135px; }
-                    .orders-filter-equipment { width: 180px; }
-                    .orders-filter-assignee { width: 165px; }
-                    .orders-filter-brigade { width: 135px; }
-                    .orders-filter-type { width: 115px; }
-                    .orders-filter-priority { width: 156px; }
-                    .orders-filter-status { width: 145px; }
-                }
-            `}</style>
-            <div className="orders-page mx-auto w-full min-w-0 max-w-[1800px]">
-                <div className="mb-5 flex min-w-0 flex-col justify-between gap-4 lg:flex-row lg:items-center">
+            <div className="orders-page mx-auto w-full min-w-0 max-w-[1800px] p-7">
+                <div className="orders-header mb-4 flex min-w-0 flex-col justify-between gap-4 lg:flex-row lg:items-center">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                        <h1 className="orders-page__title text-2xl font-bold tracking-tight text-gray-900">
                             {i18nT("sidebar.orders")}
                         </h1>
                         <p className="mt-1 text-sm text-gray-500">
@@ -467,7 +444,7 @@ export default function Orders() {
                             <button
                                 type="button"
                                 onClick={() => setCreateOpen(true)}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                                className="orders-create-btn inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
                             >
                                 <RiAddLine size={19} />
                                 {i18nT("pages.orders.orders.orders.2538d5c")}
@@ -475,18 +452,8 @@ export default function Orders() {
                         )}
                     </div>
                 </div>
-                <div className="mb-5 grid min-w-0 grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
-                    <SmallStat label="Выдано за смену" value={counters.issued ?? 0} tone="blue" />
-                    <SmallStat label={i18nT("dashboard.completedShift")} value={counters.completed ?? 0} tone="green" />
-                    <SmallStat label={i18nT("kanban.overdue")} value={counters.overdue ?? 0} tone="red" />
-                    <SmallStat
-                        label={i18nT("pages.analytics.analytics.0f7ca97")}
-                        value={counters.equipmentInDowntime ?? 0}
-                        tone="amber"
-                    />
-                </div>
-                <div className="mb-5 min-w-0 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
-                    <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-center lg:justify-start lg:gap-2">
+                <div className="orders-filters mb-4 min-w-0 rounded-2xl border border-gray-200 bg-white p-4">
+                    <div className="orders-filters__grid grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-center">
                         <div className="relative col-span-2 min-w-0 sm:col-span-3 lg:col-auto lg:w-[245px] lg:shrink-0 xl:w-[260px]">
                             <RiSearchLine
                                 size={18}
@@ -498,7 +465,7 @@ export default function Orders() {
                                     updateFilter("search", event.target.value)
                                 }
                                 placeholder={i18nT("pages.orders.orders.orders.431aa2f")}
-                                className="h-11 w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                className="orders-search h-11 w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
                         <OrdersSelect
@@ -565,7 +532,7 @@ export default function Orders() {
                             value={filters.priority}
                             onChange={(value) => updateFilter("priority", value)}
                             options={PRIORITY_OPTIONS()}
-                            menuWidth={190}
+                            menuWidth={220}
                             ariaLabel="Приоритет"
                         />
                         <OrdersSelect
@@ -597,24 +564,21 @@ export default function Orders() {
                                 </button>
                             )}
                         </div>
-                        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
-                            {[
-                                ["kanban", "Kanban", RiLayoutGridLine],
-                                ["table", "Таблица", RiListCheck2],
-                            ].map(([key, label, Icon]) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    onClick={() => setView(key)}
-                                    className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition ${view === key
-                                        ? "bg-white text-gray-900 shadow-sm"
-                                        : "text-gray-500 hover:text-gray-900"
-                                        }`}
-                                >
-                                    <Icon size={17} />
-                                    {label}
-                                </button>
-                            ))}
+                        <div className="orders-view-switch">
+                            <RubberSegment
+                                items={[{ value: "kanban", label: "Kanban" }, { value: "table", label: "Таблица" }]}
+                                value={view}
+                                onChange={setView}
+                                trackColor="#ffffff"
+                                thumbColor="#2563eb"
+                                textColor="#2563eb"
+                                activeTextColor="#ffffff"
+                                size="md"
+                                radius={10}
+                                inset={3}
+                                equalSlots
+                                aria-label="Вид отображения нарядов"
+                            />
                         </div>
                     </div>
                 </div>
@@ -634,32 +598,11 @@ export default function Orders() {
                         onRetry={ordersQuery.refetch}
                     />
                 ) : (
-                    <SmartTable
+                    <OrdersTable
                         data={filteredOrders}
                         columns={columns}
-                        dataKey="id"
-                        mode="sort"
-                        stickyHeader
-                        striped
-                        scrollHeight={LIST_HEIGHT}
-                        minWidth={1180}
-                        emptyText={i18nT("ordersTable.empty")}
-                        emptyDescription={
-                            canCreate
-                                ? "Измените фильтры или создайте новый наряд"
-                                : "Измените фильтры"
-                        }
-                        rowClassName={() => "cursor-pointer"}
-                        onRowClick={(order, _index, event) => {
-                            if (
-                                event.target.closest(
-                                    "button, a, input, select, textarea",
-                                )
-                            ) {
-                                return;
-                            }
-                            navigate(`/orders/${order.id}`);
-                        }}
+                        canCreate={canCreate}
+                        navigate={navigate}
                     />
                 )}
             </div>
@@ -676,6 +619,128 @@ export default function Orders() {
         </>
     );
 }
+// MARK: Single table view (independent of Kanban lane layout)
+function OrdersTable({ data, columns, canCreate, navigate }) {
+    const [sort, setSort] = useState({ key: null, direction: "asc" });
+    const viewportRef = useRef(null);
+    const collator = useMemo(() => new Intl.Collator("ru", { numeric: true, sensitivity: "base" }), []);
+    const sorted = useMemo(() => {
+        if (!sort.key) return data;
+        const column = columns.find((item) => (item.key || item.field) === sort.key);
+        if (!column) return data;
+        const getValue = (order) => column.sortValue
+            ? column.sortValue(order)
+            : order[column.sortField || column.field || column.key];
+        return [...data].sort((a, b) => {
+            const first = getValue(a);
+            const second = getValue(b);
+            if (first == null || first === "") return second == null || second === "" ? 0 : 1;
+            if (second == null || second === "") return -1;
+            const comparison = typeof first === "number" && typeof second === "number"
+                ? first - second
+                : collator.compare(String(first), String(second));
+            return sort.direction === "asc" ? comparison : -comparison;
+        });
+    }, [data, columns, sort, collator]);
+
+    function toggleSort(key) {
+        setSort((previous) => {
+            if (previous.key !== key) return { key, direction: "asc" };
+            if (previous.direction === "asc") return { key, direction: "desc" };
+            return { key: null, direction: "asc" };
+        });
+    }
+
+    useEffect(() => {
+        const viewport = viewportRef.current;
+        if (!viewport) return undefined;
+        const onWheel = (event) => {
+            if (!event.shiftKey || event.ctrlKey || event.metaKey) return;
+            const delta = (event.deltaY || event.deltaX) * (
+                event.deltaMode === 1 ? 18 : event.deltaMode === 2 ? viewport.clientWidth : 1
+            );
+            if (!delta || viewport.scrollWidth <= viewport.clientWidth) return;
+            const next = Math.max(0, Math.min(
+                viewport.scrollWidth - viewport.clientWidth, viewport.scrollLeft + delta,
+            ));
+            if (Math.abs(next - viewport.scrollLeft) < 0.25) return;
+            event.preventDefault();
+            viewport.scrollLeft = next;
+        };
+        viewport.addEventListener("wheel", onWheel, { passive: false });
+        return () => viewport.removeEventListener("wheel", onWheel);
+    }, []);
+
+    return (
+        <section className="orders-table-wrap" aria-label="Таблица нарядов">
+            <div className="orders-table-toolbar">
+                <div>
+                    <h2 className="orders-table-toolbar__title">Список нарядов</h2>
+                    <p className="orders-table-toolbar__subtitle">Все найденные наряды в одной таблице</p>
+                </div>
+                <span className="orders-table-toolbar__count">{data.length} нарядов</span>
+            </div>
+            <div className="orders-table-viewport" ref={viewportRef} style={{ height: LIST_HEIGHT }} tabIndex={0} role="region" aria-label="Таблица с вертикальной и горизонтальной прокруткой">
+                <table className="orders-data-table">
+                    <colgroup>
+                        {columns.map((column) => (
+                            <col key={column.key || column.field} className={`orders-data-table__col--${column.key || column.field}`} />
+                        ))}
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            {columns.map((column) => {
+                                const key = column.key || column.field;
+                                const sortable = column.sortable !== false;
+                                return (
+                                    <th key={key} scope="col" aria-sort={sortable && sort.key === key ? (sort.direction === "asc" ? "ascending" : "descending") : undefined}>
+                                        {sortable ? (
+                                            <button type="button" className="orders-data-table__sort" onClick={() => toggleSort(key)}>
+                                                <span>{column.header}</span>
+                                                <span className={`orders-data-table__sort-icon ${sort.key === key ? "is-active" : ""}`} aria-hidden="true">
+                                                    {sort.key === key ? (sort.direction === "asc" ? "↑" : "↓") : "↕"}
+                                                </span>
+                                            </button>
+                                        ) : column.header}
+                                    </th>
+                                );
+                            })}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {sorted.length ? sorted.map((order) => (
+                            <tr
+                                key={order.id}
+                                tabIndex={0}
+                                className="orders-data-table__row"
+                                onClick={(event) => {
+                                    if (event.target.closest("a, button, input, select, textarea")) return;
+                                    navigate(`/orders/${order.id}`);
+                                }}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" && event.target === event.currentTarget) navigate(`/orders/${order.id}`);
+                                }}
+                            >
+                                {columns.map((column) => (
+                                    <td key={column.key || column.field}>{column.render?.(order) ?? "—"}</td>
+                                ))}
+                            </tr>
+                        )) : (
+                            <tr>
+                                <td className="orders-data-table__empty" colSpan={columns.length}>
+                                    <strong>{i18nT("ordersTable.empty")}</strong>
+                                    <span>{canCreate ? "Измените фильтры или создайте новый наряд" : "Измените фильтры"}</span>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+            <div className="orders-table-footer">Прокрутка по вертикали — колесом · по горизонтали — Shift + колесо или трекпадом</div>
+        </section>
+    );
+}
+
 // MARK: Kanban
 function Kanban({ board, search, status, user, onChanged }) {
     __useI18nReactive();
@@ -683,6 +748,11 @@ function Kanban({ board, search, status, user, onChanged }) {
     const [dragging, setDragging] = useState(null);
     const [overKey, setOverKey] = useState(null);
     const [reasonFor, setReasonFor] = useState(null);
+    const boardViewportRef = useRef(null);
+    const boardScrollApiRef = useRef(null); // плавный скролл: { scrollTo, cancel }
+    const sliderPressRef = useRef(null); // нажатие на WakeSlider: клик (плавно) или перетаскивание (напрямую)
+    const draggingRef = useRef(false);
+    const [boardScroll, setBoardScroll] = useState({ left: 0, max: 0 });
     const { run, pendingId, error, clearError } = useWorkOrderAction({
         onDone: onChanged,
     });
@@ -694,6 +764,143 @@ function Kanban({ board, search, status, user, onChanged }) {
     const interactive = visibleColumns.some((column) =>
         DROP_COLUMNS.includes(column.key),
     );
+    draggingRef.current = Boolean(dragging);
+    // Scroll logic:
+    //  - plain wheel over a lane scrolls only the lane (never leaks to the board or page);
+    //  - Shift + wheel moves the board horizontally with smooth inertia;
+    //  - horizontal touchpad gestures are native (already smooth).
+    useEffect(() => {
+        const viewport = boardViewportRef.current;
+        const content = viewport?.querySelector(".orders-kanban-grid");
+        if (!viewport) return undefined;
+
+        let syncFrame = 0;
+        let animFrame = 0;
+        let animating = false;
+        let lastTime = 0;
+        let target = viewport.scrollLeft;
+        let tau = 85; /* постоянная времени анимации, мс: больше — плавнее и медленнее */
+
+        const maxScroll = () => Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        const clamp = (value) => Math.max(0, Math.min(maxScroll(), value));
+
+        /* Плавная анимация к target (не зависит от частоты кадров монитора) */
+        const step = (time) => {
+            const dt = Math.min(48, time - (lastTime || time));
+            lastTime = time;
+            const diff = target - viewport.scrollLeft;
+            if (Math.abs(diff) < 0.5) {
+                viewport.scrollLeft = target;
+                animating = false;
+                animFrame = 0;
+                lastTime = 0;
+                return;
+            }
+            const k = 1 - Math.exp(-dt / tau);
+            const move = Math.min(Math.abs(diff), Math.max(Math.abs(diff) * k, 0.8));
+            viewport.scrollLeft += Math.sign(diff) * move;
+            animFrame = requestAnimationFrame(step);
+        };
+        const start = () => {
+            if (animating) return;
+            animating = true;
+            lastTime = 0;
+            animFrame = requestAnimationFrame(step);
+        };
+        const cancel = () => {
+            cancelAnimationFrame(animFrame);
+            animating = false;
+            animFrame = 0;
+            lastTime = 0;
+            target = viewport.scrollLeft;
+        };
+
+        boardScrollApiRef.current = {
+            scrollTo(x, options) {
+                tau = options?.slow ? 140 : 85;
+                target = clamp(x);
+                start();
+            },
+            cancel,
+        };
+
+        const syncPosition = () => {
+            /* нативный скролл (трекпад, перетаскивание) — держим target в актуальном состоянии */
+            if (!animating) target = viewport.scrollLeft;
+            cancelAnimationFrame(syncFrame);
+            syncFrame = requestAnimationFrame(() => {
+                const max = maxScroll();
+                const left = Math.min(max, Math.max(0, viewport.scrollLeft));
+                setBoardScroll((previous) =>
+                    Math.abs(previous.left - left) < 0.5 && Math.abs(previous.max - max) < 0.5
+                        ? previous
+                        : { left, max },
+                );
+            });
+        };
+
+        /* Перехватываем ТОЛЬКО Shift + колесо. Всё остальное — нативное поведение:
+           вертикальное колесо крутит колонку и никогда не уходит в горизонталь. */
+        const onWheel = (event) => {
+            if (!event.shiftKey || event.ctrlKey || event.metaKey || draggingRef.current) return;
+            if (maxScroll() <= 1) return;
+            const scale = event.deltaMode === 1 ? 18 : event.deltaMode === 2 ? viewport.clientWidth : 1;
+            const raw = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            const delta = raw * scale;
+            if (Math.abs(delta) < 0.1) return;
+            event.preventDefault();
+            tau = 85;
+            target = clamp((animating ? target : viewport.scrollLeft) + delta);
+            start();
+        };
+
+        viewport.addEventListener("wheel", onWheel, { passive: false });
+        viewport.addEventListener("scroll", syncPosition, { passive: true });
+        const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(syncPosition) : null;
+        observer?.observe(viewport);
+        if (content) observer?.observe(content);
+        window.addEventListener("resize", syncPosition);
+        syncPosition();
+
+        return () => {
+            viewport.removeEventListener("wheel", onWheel);
+            viewport.removeEventListener("scroll", syncPosition);
+            window.removeEventListener("resize", syncPosition);
+            observer?.disconnect();
+            cancelAnimationFrame(syncFrame);
+            cancelAnimationFrame(animFrame);
+            boardScrollApiRef.current = null;
+        };
+    }, [visibleColumns.length]);
+    function moveToPosition(position) {
+        const viewport = boardViewportRef.current;
+        if (!viewport) return;
+        const max = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        const x = (Number(position) / 100) * max; /* position: 0–100 % */
+        const press = sliderPressRef.current;
+        if (press && !press.dragging) {
+            /* просто кликнули по слайдеру — плавно доезжаем до места */
+            boardScrollApiRef.current?.scrollTo(x, { slow: true });
+            return;
+        }
+        /* тянем ручку (или клавиатура) — двигаем напрямую, без лага */
+        boardScrollApiRef.current?.cancel();
+        viewport.scrollLeft = x;
+    }
+    function autoScrollDuringDrag(event) {
+        if (!draggingRef.current) return;
+        const viewport = boardViewportRef.current;
+        if (!viewport) return;
+        const rect = viewport.getBoundingClientRect();
+        const edge = Math.min(85, rect.width * 0.17);
+        if (event.clientX < rect.left + edge) {
+            boardScrollApiRef.current?.cancel();
+            viewport.scrollLeft -= 24;
+        } else if (event.clientX > rect.right - edge) {
+            boardScrollApiRef.current?.cancel();
+            viewport.scrollLeft += 24;
+        }
+    }
     function handleDragOver(event, column) {
         if (!dragging || !DROP_COLUMNS.includes(column.key)) return;
         if (resolveMove(dragging, column.key, user)) {
@@ -736,80 +943,119 @@ function Kanban({ board, search, status, user, onChanged }) {
                     <ErrorBox text={error} />
                 </div>
             )}
-            <ScrollArea axis="x" className="w-full min-w-0 max-w-full rounded-xl" style={{ height: LIST_HEIGHT, maxWidth: "100%" }}>
-                <div
-                    className="grid h-full gap-3 lg:gap-4"
-                    style={{
-                        minWidth: `${Math.max(1, visibleColumns.length) * 284}px`,
-                        gridTemplateColumns: `repeat(${Math.max(
-                            1,
-                            visibleColumns.length,
-                        )}, minmax(270px, 1fr))`,
-                    }}
-                >
-                    {visibleColumns.map((column) => {
-                        const items = asArray(columns[column.key]).filter((order) => {
-                            if (!matchesSearch(order, search)) return false;
-                            if (status && status !== "OVERDUE") {
-                                return order.status === status;
-                            }
-                            return true;
-                        });
-                        const droppable =
-                            Boolean(dragging) &&
-                            DROP_COLUMNS.includes(column.key) &&
-                            Boolean(resolveMove(dragging, column.key, user));
-                        const highlighted = droppable && overKey === column.key;
-                        const tone = BOARD_TONES[column.key] ?? BOARD_TONES.queued;
-                        return (
-                            <section
-                                key={column.key}
-                                onDragOver={(event) => handleDragOver(event, column)}
-                                onDragLeave={() =>
-                                    setOverKey((current) =>
-                                        current === column.key ? null : current,
-                                    )
+            <div className="orders-kanban-root" onDragOverCapture={autoScrollDuringDrag}>
+                {boardScroll.max > 2 && (
+                    <nav className="orders-kanban-nav" aria-label="Прокрутка Kanban-доски">
+                        <span className="orders-kanban-nav__hint">Навигация по колонкам</span>
+                        <div
+                            className="orders-kanban-nav__controls"
+                            onPointerDownCapture={(event) => {
+                                sliderPressRef.current = { x: event.clientX, dragging: false };
+                            }}
+                            onPointerMoveCapture={(event) => {
+                                const press = sliderPressRef.current;
+                                if (press && !press.dragging && Math.abs(event.clientX - press.x) > 4) {
+                                    press.dragging = true;
                                 }
-                                onDrop={(event) => handleDrop(event, column)}
-                                className={`flex min-h-0 flex-col overflow-hidden rounded-xl border border-t-4 transition-all ${tone.top} ${tone.shell} ${highlighted
-                                    ? "border-blue-400 ring-2 ring-blue-200"
-                                    : droppable ? "border-dashed border-blue-200" : "border-gray-200"
-                                    } ${dragging && !droppable ? "opacity-60" : ""}`}
-                            >
-                                <div className={`flex shrink-0 items-center justify-between border-b px-4 py-3.5 ${tone.head}`}>
-                                    <span className={`text-sm font-bold ${tone.text}`}>{column.title}</span>
-                                    <span className={`min-w-7 rounded-full px-2 py-0.5 text-center text-xs font-bold ${tone.count}`}>
-                                        {items.length}
-                                    </span>
-                                </div>
-                                <ScrollArea axis="y" className="min-h-0 flex-1 p-2.5 sm:p-3">
-                                    {items.length === 0 ? (
-                                        <div className="flex h-full min-h-[180px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-3 text-center text-xs text-gray-400">
-                                            {droppable ? "Отпустите здесь" : i18nT("kanban.empty")}
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2.5">
-                                            {items.map((order) => (
-                                                <OrderCard
-                                                    key={order.id}
-                                                    order={order}
-                                                    draggable={canDrag(order, user)}
-                                                    pending={pendingId === order.id}
-                                                    onDragStart={() => setDragging(order)}
-                                                    onDragEnd={() => {
-                                                        setDragging(null);
-                                                        setOverKey(null);
-                                                    }}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </ScrollArea>
-                            </section>
-                        );
-                    })}
+                            }}
+                            onPointerUpCapture={() => { sliderPressRef.current = null; }}
+                            onPointerCancelCapture={() => { sliderPressRef.current = null; }}
+                        >
+                            <WakeSlider
+                                value={boardScroll.max ? (boardScroll.left / boardScroll.max) * 100 : 0}
+                                onChange={moveToPosition}
+                                min={0}
+                                max={100}
+                                step={0.1}
+                                bars={90}
+                                height={50}
+                                restHeight={14}
+                                gap={3}
+                                fillColor="#2563eb"
+                                trackColor="#e7edf5"
+                                reach={5}
+                                glide={0.3}
+                                smoothing={100}
+                                ariaLabel="Положение Kanban-доски"
+                            />
+                        </div>
+                        <span className="orders-kanban-nav__tip">Колесо — по колонке · Shift + колесо — по доске</span>
+                    </nav>
+                )}
+                <div
+                    ref={boardViewportRef}
+                    className="orders-kanban-scroll w-full min-w-0 max-w-full rounded-xl"
+                    style={{ height: LIST_HEIGHT, maxWidth: "100%" }}
+                    role="region"
+                    aria-label="Kanban-доска — горизонтальная прокрутка"
+                    tabIndex={0}
+                >
+                    <div
+                        className={`orders-kanban-grid ${visibleColumns.length === 1 ? "orders-kanban-grid--single" : ""}`}
+                    >
+                        {visibleColumns.map((column) => {
+                            const items = asArray(columns[column.key]).filter((order) => {
+                                if (!matchesSearch(order, search)) return false;
+                                if (status && status !== "OVERDUE") {
+                                    return order.status === status;
+                                }
+                                return true;
+                            });
+                            const droppable =
+                                Boolean(dragging) &&
+                                DROP_COLUMNS.includes(column.key) &&
+                                Boolean(resolveMove(dragging, column.key, user));
+                            const highlighted = droppable && overKey === column.key;
+                            return (
+                                <section
+                                    key={column.key}
+                                    onDragOver={(event) => handleDragOver(event, column)}
+                                    onDragLeave={() =>
+                                        setOverKey((current) =>
+                                            current === column.key ? null : current,
+                                        )
+                                    }
+                                    onDrop={(event) => handleDrop(event, column)}
+                                    className={`orders-kanban-lane orders-kanban-lane--${column.key} flex min-h-0 flex-col overflow-hidden rounded-2xl border transition-colors ${highlighted
+                                        ? "orders-kanban-lane--over"
+                                        : droppable ? "orders-kanban-lane--droppable" : ""
+                                        } ${dragging && !droppable ? "opacity-60" : ""}`}
+                                >
+                                    <div className="orders-kanban-lane__head flex shrink-0 items-center justify-between border-b px-3 py-3">
+                                        <span className="orders-kanban-lane__title text-sm font-bold">{column.title}</span>
+                                        <span className="orders-kanban-lane__count min-w-7 rounded-full px-2 py-0.5 text-center text-xs font-bold">
+                                            {items.length}
+                                        </span>
+                                    </div>
+                                    <div className="orders-kanban-lane__body min-h-0 flex-1 p-2.5" tabIndex={0} aria-label={`Наряды: ${column.title}`} role="region">
+                                        {items.length === 0 ? (
+                                            <div className="flex h-full min-h-[180px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-3 text-center text-xs text-gray-400">
+                                                {droppable ? "Отпустите здесь" : i18nT("kanban.empty")}
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {items.map((order) => (
+                                                    <OrderCard
+                                                        key={order.id}
+                                                        order={order}
+                                                        draggable={canDrag(order, user)}
+                                                        pending={pendingId === order.id}
+                                                        onDragStart={() => setDragging(order)}
+                                                        onDragEnd={() => {
+                                                            setDragging(null);
+                                                            setOverKey(null);
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            );
+                        })}
+                    </div>
                 </div>
-            </ScrollArea>
+            </div>
             {interactive && user?.role !== "MANAGER" && (
                 <p className="mt-2 text-[11px] text-gray-400">
                     {i18nT("pages.orders.orders.orders.0aa695f")}
@@ -908,7 +1154,7 @@ function OrderCard({
             <Link
                 to={`/orders/${order.id}`}
                 draggable={false}
-                className="block rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                className="orders-order-card block rounded-xl border border-gray-200 bg-white p-3.5 transition-colors hover:border-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -992,44 +1238,18 @@ function PriorityBadge({ priority }) {
         </span>
     );
 }
-function SmallStat({ label, value, tone = "blue" }) {
-    const colors = {
-        blue: "border-blue-100 bg-blue-50/60 text-blue-800",
-        green: "border-emerald-100 bg-emerald-50/60 text-emerald-800",
-        red: "border-rose-100 bg-rose-50/60 text-rose-700",
-        amber: "border-amber-100 bg-amber-50/60 text-amber-800",
-    };
-    return (
-        <div className={`min-w-0 rounded-xl border px-4 py-3 shadow-sm ${colors[tone] || colors.blue}`}>
-            <p className="truncate text-xs font-medium opacity-75" title={label}>{label}</p>
-            <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
-        </div>
-    );
-}
 function Modal({ title, onClose, children, width = "680px" }) {
-    return (
-        <div
-            className="fixed inset-0 z-[5000] flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm"
-            onMouseDown={onClose}
-        >
-            <div
-                className="max-h-[calc(100vh-32px)] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl"
-                style={{ maxWidth: width }}
-                onMouseDown={(event) => event.stopPropagation()}
-            >
-                <div className="sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-5">
-                    <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-                    >
-                        <RiCloseLine size={20} />
-                    </button>
+    return createPortal(
+        <div className="orders-modal-backdrop" onMouseDown={onClose}>
+            <div className="orders-modal-dialog" style={{ maxWidth: width }} onMouseDown={(event) => event.stopPropagation()}>
+                <div className="orders-modal-head">
+                    <h2>{title}</h2>
+                    <button type="button" aria-label="Закрыть" onClick={onClose}><RiCloseLine size={20} /></button>
                 </div>
-                <div className="p-6">{children}</div>
+                <div className="orders-modal-content">{children}</div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }
 function Field({ label, children }) {

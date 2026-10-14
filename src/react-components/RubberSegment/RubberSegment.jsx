@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
+import { animate, frame, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 
 import './RubberSegment.css';
 
@@ -78,6 +78,7 @@ export default function RubberSegment({
   const itemRefs = useRef([]);
   const slots = useRef([]);
   const box = useRef(null);
+  const scale = useRef(1); // реальный масштаб трека (transform: scale у предка), обычно 1
   const committed = useRef(index);
   const handoff = useRef(0);
   const drag = useRef(null);
@@ -102,19 +103,39 @@ export default function RubberSegment({
     edgeR.jump(s.r);
   };
 
-  const measure = () => {
+  /* Читает рамку трека и масштаб. Возвращает null, если трек сейчас не имеет размера
+     (display:none, масштаб 0 при входной анимации страницы) — тогда замерять нельзя. */
+  const readBox = () => {
     const track = trackRef.current;
-    if (!track) return;
+    if (!track) return null;
     const rect = track.getBoundingClientRect();
+    if (!track.offsetWidth || !rect.width) return null;
+    const k = Math.abs(rect.width - track.offsetWidth) > 1 ? rect.width / track.offsetWidth : 1;
+    scale.current = k;
     box.current = rect;
+    return { rect, k };
+  };
+
+  const measure = () => {
+    const read = readBox();
+    if (!read) return;
+    const { rect, k } = read;
     slots.current = list.map((_, i) => {
       const el = itemRefs.current[i];
       if (!el) return { l: 0, r: 0 };
       const r = el.getBoundingClientRect();
-      return { l: r.left - rect.left - inset, r: r.right - rect.left - inset };
+      return { l: (r.left - rect.left) / k - inset, r: (r.right - rect.left) / k - inset };
     });
-    innerW.set(rect.width - inset * 2);
+    innerW.set(rect.width / k - inset * 2);
     jumpTo(committed.current);
+    const track = trackRef.current;
+    /* Показываем thumb только после первого удачного замера и после того, как motion
+       применил clip-path к DOM (postRender идёт после render-шага того же кадра). */
+    if (track && track.dataset.ready === undefined) {
+      frame.postRender(() => {
+        if (trackRef.current) trackRef.current.dataset.ready = '';
+      });
+    }
   };
 
   const listKey = list.map(item => item.value).join('|');
@@ -190,11 +211,11 @@ export default function RubberSegment({
     handoff.current = setTimeout(() => land(to, null, false, true), t(HANDOFF) * 1000);
   };
 
-  const localX = e => e.clientX - (box.current ? box.current.left : 0) - inset;
+  const localX = e => (e.clientX - (box.current ? box.current.left : 0)) / scale.current - inset;
 
   const handlePointerDown = (e, i) => {
     if (disabled || drag.current || e.button !== 0) return;
-    box.current = trackRef.current.getBoundingClientRect();
+    readBox();
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {}
