@@ -1,10 +1,7 @@
 'use client';
-
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { animate, frame, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
-
 import './RubberSegment.css';
-
 const EASE_OUT = [0.23, 1, 0.32, 1];
 const SPRING_UI = { type: 'spring', duration: 0.3, bounce: 0 };
 const SPRING_MOMENTUM = { type: 'spring', duration: 0.4, bounce: 0.2 };
@@ -21,7 +18,6 @@ const SIZES = {
   md: { height: 36, font: 13, pad: 14, min: 44 },
   lg: { height: 44, font: 14, pad: 18, min: 48 }
 };
-
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const rubber = (over, dim) => (over * dim * RUBBER) / (dim + RUBBER * Math.abs(over));
 const project = (v, glide) => {
@@ -42,7 +38,6 @@ const nearestSlot = (slots, x) => {
   }
   return best;
 };
-
 export default function RubberSegment({
   items,
   value,
@@ -73,27 +68,31 @@ export default function RubberSegment({
     list.findIndex(item => item.value === current)
   );
   const reduce = useReducedMotion();
-
   const trackRef = useRef(null);
   const itemRefs = useRef([]);
   const slots = useRef([]);
   const box = useRef(null);
-  const scale = useRef(1); // реальный масштаб трека (transform: scale у предка), обычно 1
+  const scale = useRef(1); // Учитываем масштаб предка (transform: scale).
   const committed = useRef(index);
   const handoff = useRef(0);
   const drag = useRef(null);
   const gen = useRef(0);
-
   const edgeL = useMotionValue(0);
   const edgeR = useMotionValue(0);
   const innerW = useMotionValue(0);
   const thumbRadius = Math.max(0, radius - inset);
-  const clipPath = useTransform(
-    () => `inset(0 ${Math.max(0, innerW.get() - edgeR.get())}px 0 ${Math.max(0, edgeL.get())}px round ${thumbRadius}px)`
-  );
-
+  // Initial MotionValues are all zero. Without a guard, clip-path becomes
+  // inset(0 0 0 0), exposing the FULL blue overlay and all its white labels.
+  const clipPath = useTransform(() => {
+    const width = innerW.get();
+    const left = edgeL.get();
+    const right = edgeR.get();
+    if (![width, left, right].every(Number.isFinite) || width <= 0 || right - left <= 0.5) {
+      return `inset(0 100% 0 0 round ${thumbRadius}px)`;
+    }
+    return `inset(0 ${Math.max(0, width - right)}px 0 ${Math.max(0, left)}px round ${thumbRadius}px)`;
+  });
   const t = seconds => seconds / speed;
-
   const jumpTo = i => {
     const s = slots.current[i];
     if (!s) return;
@@ -103,48 +102,102 @@ export default function RubberSegment({
     edgeR.jump(s.r);
   };
 
-  /* Читает рамку трека и масштаб. Возвращает null, если трек сейчас не имеет размера
-     (display:none, масштаб 0 при входной анимации страницы) — тогда замерять нельзя. */
+  // Pointer coordinates need the current visual transform, but the tab geometry
+  // itself MUST use untransformed layout sizes (offsetLeft/offsetWidth).
+  // That remains correct inside scale()/entrance animations and does not change
+  // when a pressed button briefly has transform:scale(.96).
   const readBox = () => {
     const track = trackRef.current;
     if (!track) return null;
     const rect = track.getBoundingClientRect();
-    if (!track.offsetWidth || !rect.width) return null;
-    const k = Math.abs(rect.width - track.offsetWidth) > 1 ? rect.width / track.offsetWidth : 1;
+    if (!track.offsetWidth || rect.width < 1) return null;
+    const k = rect.width / track.offsetWidth;
+    if (!Number.isFinite(k) || k <= 0) return null;
     scale.current = k;
     box.current = rect;
     return { rect, k };
   };
 
   const measure = () => {
-    const read = readBox();
-    if (!read) return;
-    const { rect, k } = read;
-    slots.current = list.map((_, i) => {
-      const el = itemRefs.current[i];
-      if (!el) return { l: 0, r: 0 };
-      const r = el.getBoundingClientRect();
-      return { l: (r.left - rect.left) / k - inset, r: (r.right - rect.left) / k - inset };
-    });
-    innerW.set(rect.width / k - inset * 2);
-    jumpTo(committed.current);
     const track = trackRef.current;
-    /* Показываем thumb только после первого удачного замера и после того, как motion
-       применил clip-path к DOM (postRender идёт после render-шага того же кадра). */
-    if (track && track.dataset.ready === undefined) {
+    if (!track) return false;
+    const width = track.clientWidth - inset * 2;
+    const nextSlots = list.map((_, i) => {
+      const el = itemRefs.current[i];
+      if (!el || el.offsetParent === null || el.offsetWidth < 1) return null;
+      return { l: el.offsetLeft - inset, r: el.offsetLeft + el.offsetWidth - inset };
+    });
+    const valid = width > 1 && nextSlots.length > 0 && nextSlots.every((s, i) =>
+      s && Number.isFinite(s.l) && Number.isFinite(s.r) &&
+      s.l >= -2 && s.r <= width + 2 && s.r - s.l > 1 &&
+      (i === 0 || s.l >= nextSlots[i - 1].r - 2)
+    );
+    if (!valid) {
+      // Hide the highlight while a tab is display:none or has not been laid out.
+      delete track.dataset.ready;
+      innerW.set(0);
+      return false;
+    }
+    const oldWidth = innerW.get();
+    const oldSlot = slots.current[committed.current];
+    slots.current = nextSlots;
+    innerW.set(width);
+    // Do not interrupt the rubber motion on redundant resize notifications.
+    const newSlot = nextSlots[committed.current];
+    if (!oldSlot || oldWidth !== width ||
+        Math.abs(oldSlot.l - newSlot.l) > .5 || Math.abs(oldSlot.r - newSlot.r) > .5) {
+      jumpTo(committed.current);
+    }
+    if (track.dataset.ready === undefined) {
       frame.postRender(() => {
-        if (trackRef.current) trackRef.current.dataset.ready = '';
+        if (trackRef.current === track && innerW.get() > 0) {
+          track.dataset.ready = '';
+        }
       });
     }
+    return true;
   };
 
   const listKey = list.map(item => item.value).join('|');
   useLayoutEffect(() => {
-    measure();
-    const observer = new ResizeObserver(measure);
+    let mounted = true;
+    let raf = 0;
+    let attempts = 0;
+    const attemptMeasure = () => {
+      if (!mounted) return;
+      if (measure()) {
+        attempts = 0;
+        return;
+      }
+      // Hidden tabs can be introduced after mount; defer measurement rather
+      // than assuming a zero-size slot means that the active highlight is full.
+      if (attempts++ < 120 && !raf) {
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          attemptMeasure();
+        });
+      }
+    };
+    attemptMeasure();
+    const observer = new ResizeObserver(attemptMeasure);
     if (trackRef.current) observer.observe(trackRef.current);
-    if (typeof document !== 'undefined' && document.fonts) document.fonts.ready.then(measure);
-    return () => observer.disconnect();
+    itemRefs.current.forEach(el => { if (el) observer.observe(el); });
+    const intersection = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver(entries => {
+          if (entries.some(entry => entry.isIntersecting)) {
+            attempts = 0;
+            attemptMeasure();
+          }
+        })
+      : null;
+    if (trackRef.current) intersection?.observe(trackRef.current);
+    document.fonts?.ready.then(() => { if (mounted) attemptMeasure(); });
+    return () => {
+      mounted = false;
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      intersection?.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listKey, size, inset, equalSlots]);
 
@@ -154,7 +207,6 @@ export default function RubberSegment({
       jumpTo(index);
     }
   });
-
   useEffect(
     () => () => {
       clearTimeout(handoff.current);
@@ -163,14 +215,12 @@ export default function RubberSegment({
     },
     [edgeL, edgeR]
   );
-
   const commit = i => {
     committed.current = i;
     if (i === index) return;
     if (value === undefined) setInner(list[i].value);
     onChange?.(list[i].value, i);
   };
-
   const land = (to, v, flick, withSquash) => {
     const b = slots.current[to];
     if (!b) return;
@@ -192,7 +242,7 @@ export default function RubberSegment({
       if (gen.current === g) animate(trail, trailTo, { ...SPRING_RELAX, duration: t(0.16) });
     });
   };
-
+  // Original React Bits-style rubber stretch/squash animation is preserved.
   const travel = (from, to) => {
     const a = slots.current[from];
     const b = slots.current[to];
@@ -210,11 +260,10 @@ export default function RubberSegment({
     animate(edgeR, b.r + (Math.max(a.r, b.r) - b.r) * u, tween);
     handoff.current = setTimeout(() => land(to, null, false, true), t(HANDOFF) * 1000);
   };
-
   const localX = e => (e.clientX - (box.current ? box.current.left : 0)) / scale.current - inset;
-
   const handlePointerDown = (e, i) => {
     if (disabled || drag.current || e.button !== 0) return;
+    if (!trackRef.current?.hasAttribute('data-ready')) measure();
     readBox();
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -223,7 +272,6 @@ export default function RubberSegment({
     const onThumb = draggable && x >= edgeL.get() && x <= edgeR.get();
     drag.current = { id: e.pointerId, x0: x, slot: i, onThumb, live: false, offset: 0, w: 0, hist: [[e.timeStamp, x]] };
     if (onThumb) {
-      clearTimeout(handoff.current);
       gen.current += 1;
       edgeL.stop();
       edgeR.stop();
@@ -231,7 +279,6 @@ export default function RubberSegment({
       e.currentTarget.dataset.pressed = '';
     }
   };
-
   const handlePointerMove = e => {
     const d = drag.current;
     if (!d || e.pointerId !== d.id || !d.onThumb) return;
@@ -263,7 +310,6 @@ export default function RubberSegment({
       edgeR.set(l + d.w);
     }
   };
-
   const release = () => {
     const d = drag.current;
     drag.current = null;
@@ -272,7 +318,6 @@ export default function RubberSegment({
     if (el) delete el.dataset.pressed;
     return d;
   };
-
   const handlePointerUp = e => {
     const d = drag.current;
     if (!d || e.pointerId !== d.id) return;
@@ -294,7 +339,6 @@ export default function RubberSegment({
     if (reduce) jumpTo(to);
     else land(to, v, flick, flick);
   };
-
   const handlePointerCancel = e => {
     const d = drag.current;
     if (!d || e.pointerId !== d.id) return;
@@ -303,7 +347,6 @@ export default function RubberSegment({
     if (reduce) jumpTo(committed.current);
     else land(committed.current, null, false, false);
   };
-
   const handleKeyDown = e => {
     if (disabled) return;
     const last = list.length - 1;
@@ -319,9 +362,7 @@ export default function RubberSegment({
     jumpTo(next);
     itemRefs.current[next]?.focus();
   };
-
   const preset = SIZES[size] || SIZES.md;
-
   return (
     <div
       ref={trackRef}
@@ -368,7 +409,11 @@ export default function RubberSegment({
           {item.label}
         </button>
       ))}
-      <motion.div className="rubber-segment__thumb" aria-hidden="true" style={{ clipPath }}>
+      <motion.div
+        className="rubber-segment__thumb"
+        aria-hidden="true"
+        style={{ clipPath }}
+      >
         {list.map(item => (
           <span key={item.value} className="rubber-segment__item rubber-segment__copy">
             {item.icon}

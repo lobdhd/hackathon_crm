@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import {
   RiAlarmWarningLine, RiArrowRightLine, RiBarChartBoxLine,
   RiFlashlightLine, RiLoader4Line, RiMapPinLine,
   RiRobot2Line, RiSparkling2Line, RiTeamLine,
-  RiTimeLine, RiUserLine, RiFileCopyLine, RiListCheck2,
+  RiTimeLine, RiUserLine, RiFileCopyLine, RiListCheck2, RiArrowDownSLine,
 } from "react-icons/ri";
 import { useAssistantChat, useAssistantHistory } from "../../../hooks/useAssistant.js";
 import AssistantPromptInput from "../../../components/AssistantInput/AssistantPromptInput.jsx";
@@ -195,35 +195,83 @@ export default function Assistant() {
   const [error, setError,] = useState("");
   const hydratedRef = useRef(false);
   const scrollRef = useRef(null);
+  const freshMessageIds = useRef(new Set());
+  const followBottomRef = useRef(true);
+  const didInitialScrollRef = useRef(false);
+  const [historyHydrated, setHistoryHydrated] = useState(false);
+  const [threadVisible, setThreadVisible] = useState(false);
   // MARK: Hydrate history
   useEffect(() => {
     if (hydratedRef.current || !historyQuery.data)
       return;
     setMessages((previous) => mergeHistoryWithCache(historyQuery.data, previous));
     hydratedRef.current = true;
+    setHistoryHydrated(true);
   }, [historyQuery.data]);
   // MARK: Persist rich responses
   useEffect(() => {
     writeAssistantCache(messages);
   }, [messages]);
-  // MARK: Auto scroll
-  useEffect(() => {
-    const element = scrollRef.current?.querySelector(".os-viewport") || scrollRef.current;
-    if (!element) {
-      return;
+  // MARK: Auto scroll: first place the viewport at the end, then reveal the conversation.
+  // Do not reset the user's position when they intentionally scroll into older messages.
+  const canRevealHistory = historyHydrated || historyQuery.isError;
+  useLayoutEffect(() => {
+    const holder = scrollRef.current;
+    if (!holder || !messages.length || !canRevealHistory) return undefined;
+    let viewport = null;
+    let DOMObserver = null;
+    let resizeObserver = null;
+    let frames = [];
+    let disposed = false;
+    const scrollBottom = (force = false) => {
+      if (!disposed && viewport && (force || followBottomRef.current)) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    };
+    const trackScroll = () => {
+      if (!viewport) return;
+      const remaining = viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop;
+      followBottomRef.current = remaining < 90;
+    };
+    const connect = () => {
+      if (disposed || viewport) return;
+      viewport = holder.querySelector('[data-overlayscrollbars-viewport]') || holder.querySelector('.os-viewport');
+      if (!viewport) return;
+      viewport.addEventListener('scroll', trackScroll, { passive: true });
+      DOMObserver?.disconnect();
+      const initial = !didInitialScrollRef.current;
+      scrollBottom(initial);
+      const conversation = holder.querySelector('.ai-conversation');
+      if (conversation && typeof ResizeObserver !== 'undefined') {
+        resizeObserver = new ResizeObserver(() => scrollBottom());
+        resizeObserver.observe(conversation);
+      }
+      // OverlayScrollbars and rich charts may finish their layout over two frames.
+      frames.push(requestAnimationFrame(() => {
+        scrollBottom(initial);
+        frames.push(requestAnimationFrame(() => {
+          scrollBottom(initial);
+          if (!disposed && initial) {
+            didInitialScrollRef.current = true;
+            setThreadVisible(true);
+          }
+        }));
+      }));
+    };
+    connect();
+    if (!viewport) {
+      DOMObserver = new MutationObserver(connect);
+      DOMObserver.observe(holder, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-overlayscrollbars-viewport'] });
+      connect();
     }
-    requestAnimationFrame(() => {
-      element.scrollTo({
-        top: element.scrollHeight,
-        behavior: messages.length > 1
-          ? "smooth"
-          : "auto",
-      });
-    });
-  }, [
-    messages,
-    chatMutation.isPending,
-  ]);
+    return () => {
+      disposed = true;
+      DOMObserver?.disconnect();
+      resizeObserver?.disconnect();
+      viewport?.removeEventListener('scroll', trackScroll);
+      frames.forEach(cancelAnimationFrame);
+    };
+  }, [messages, chatMutation.isPending, canRevealHistory]);
   // MARK: Send
   async function send(rawMessage = input) {
     const message = String(rawMessage ??
@@ -240,6 +288,7 @@ export default function Assistant() {
     }
     setError("");
     setInput("");
+    followBottomRef.current = true;
     const userMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -247,10 +296,8 @@ export default function Assistant() {
       createdAt: new Date()
         .toISOString(),
     };
-    setMessages((previous) => [
-      ...previous,
-      userMessage,
-    ]);
+    freshMessageIds.current.add(userMessage.id);
+    setMessages((previous) => [...previous, userMessage]);
     try {
       const result = await chatMutation.mutateAsync(message);
       const assistantMessage = {
@@ -268,10 +315,8 @@ export default function Assistant() {
         createdAt: new Date()
           .toISOString(),
       };
-      setMessages((previous) => [
-        ...previous,
-        assistantMessage,
-      ]);
+      freshMessageIds.current.add(assistantMessage.id);
+      setMessages((previous) => [...previous, assistantMessage]);
     }
     catch (requestError) {
       setError(extractError(requestError));
@@ -284,17 +329,6 @@ export default function Assistant() {
     <div className="ai-header mb-4 flex shrink-0 flex-col justify-between gap-4 lg:flex-row lg:items-center">
       <div>
         <div className="flex items-center gap-3">
-          <div className="ai-header__symbol flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white">
-            <RiSparkling2Line size={22} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              {i18nT("pages.assistant.assistant.assistant.9d43787")}
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {i18nT("pages.assistant.assistant.assistant.ab53863")}
-            </p>
-          </div>
         </div>
       </div>
     </div>
@@ -306,25 +340,31 @@ export default function Assistant() {
         <div ref={scrollRef} className="ai-scroll-holder min-h-0 flex-1">
           <ScrollArea axis="y" className="ai-messages">
             {historyQuery.isLoading && messages.length === 0 ? (
-              <div className="ai-welcome flex h-full items-center justify-center">
-                <RiLoader4Line size={28} className="animate-spin text-blue-600" />
-              </div>
+              <HistorySkeleton />
             ) : empty ? (
               <Welcome onSend={send} />
             ) : (
-              <div className="ai-conversation mx-auto max-w-[1060px]">
+              <div className={`ai-conversation mx-auto max-w-[1060px] ${threadVisible ? 'ai-conversation--visible' : 'ai-conversation--waiting'}`}>
                 {messages.map((message, index) => (
                   <Message
                     key={message.id}
                     message={message}
                     navigate={navigate}
+                    isFresh={freshMessageIds.current.has(message.id)}
                     hasFollowing={index < messages.length - 1 || chatMutation.isPending}
                   />
                 ))}
-                {chatMutation.isPending && <Typing />}
+                <AnimatePresence initial={false}>
+                  {chatMutation.isPending && (
+                    <motion.div key="ai-typing" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+                      <Typing />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </ScrollArea>
+          {messages.length > 0 && !threadVisible && <div className="ai-history-overlay"><HistorySkeleton /></div>}
         </div>
         {/* ERROR */}
         {error && (<div className="mx-5 mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 lg:mx-8">
@@ -422,7 +462,7 @@ function Welcome({ onSend, }) {
   </div>);
 }
 // MARK: Message
-function Message({ message, navigate, hasFollowing = false }) {
+function Message({ message, navigate, hasFollowing = false, isFresh = false }) {
   const assistant = message.role === "assistant";
   const [view, setView] = useState("original");
   const [copied, setCopied] = useState(false);
@@ -490,7 +530,7 @@ function Message({ message, navigate, hasFollowing = false }) {
   return (
     <div
       ref={messageRef}
-      className={`ai-message flex ${assistant ? "justify-start ai-message--assistant" : "justify-end ai-message--user"}`}
+      className={`ai-message flex ${assistant ? "justify-start ai-message--assistant" : "justify-end ai-message--user"}${isFresh ? " ai-message--enter" : ""}`}
     >
       <div className={assistant ? "w-full max-w-[980px]" : "max-w-[720px]"}>
         <div className={`flex items-start gap-3 ${assistant ? "" : "flex-row-reverse"}`}>
@@ -773,6 +813,7 @@ function smoothPath(points) {
 function ForecastResult({ data, navigate }) {
   useI18n();
   const [activeIndex, setActiveIndex] = useState(null);
+  const [showAllEquipment, setShowAllEquipment] = useState(false);
   const items = useMemo(() => {
     return asArray(data)
       .filter((item) => item && Number.isFinite(Number(item.probability)))
@@ -824,6 +865,34 @@ function ForecastResult({ data, navigate }) {
   const selected = activeIndex != null && items[activeIndex]
     ? activeIndex
     : null;
+  const renderEquipmentRow = (item, index) => {
+    const active = selected === index;
+    const navigable = item.equipmentId != null;
+    return (<button
+      key={`${item.equipmentId ?? item.originalIndex}-${index}`}
+      type="button"
+      disabled={!navigable}
+      onMouseEnter={() => setActiveIndex(index)}
+      onMouseLeave={() => setActiveIndex(null)}
+      onFocus={() => setActiveIndex(index)}
+      onBlur={() => setActiveIndex(null)}
+      onClick={() => navigate(`/equipment/${item.equipmentId}`)}
+      className={`flex w-full items-center gap-3 px-3 py-3.5 text-left transition-colors sm:px-3 ${index > 0 ? "border-t border-slate-100" : ""} ${active ? "bg-blue-50/70" : "hover:bg-slate-50"} disabled:cursor-default`}
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-medium text-slate-800">
+          {item.title}
+        </span>
+        <span className="mt-0.5 block text-[11px] text-slate-400">
+          Отказов: {item.recentFailures ?? 0}
+        </span>
+      </span>
+      <span className={`shrink-0 text-sm font-semibold tabular-nums ${item.risk >= 90 ? "text-rose-600" : "text-slate-700"}`}>
+        {formatPercent(item.probability)}
+      </span>
+      {navigable && <RiArrowRightLine className="hidden shrink-0 text-slate-300 sm:block" />}
+    </button>);
+  };
   return (<section className="ai-rich-forecast mt-4 border-t border-slate-100 pt-4">
     <div className="ai-forecast-panel overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 px-5 py-5 sm:px-6">
@@ -890,9 +959,6 @@ function ForecastResult({ data, navigate }) {
                     navigate(`/equipment/${items[index].equipmentId}`);
                   }
                 }} className="cursor-pointer outline-none" />
-                <text x={point.x} y="237" fill={active ? "#1d4ed8" : "#94a3b8"} fontWeight={active ? "600" : "400"} fontSize="11" textAnchor="middle">
-                  {String(index + 1).padStart(2, "0")}
-                </text>
               </g>);
             })}
           </svg>
@@ -920,60 +986,64 @@ function ForecastResult({ data, navigate }) {
           <p className="text-[11px] text-slate-400">Вероятность</p>
         </div>
         <div className="px-2 pb-2 sm:px-3">
-          {items.map((item, index) => {
-            const active = selected === index;
-            const navigable = item.equipmentId != null;
-            return (<button
-              key={`${item.equipmentId ?? item.originalIndex}-${index}`}
-              type="button"
-              disabled={!navigable}
-              onMouseEnter={() => setActiveIndex(index)}
-              onMouseLeave={() => setActiveIndex(null)}
-              onFocus={() => setActiveIndex(index)}
-              onBlur={() => setActiveIndex(null)}
-              onClick={() => navigate(`/equipment/${item.equipmentId}`)}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors sm:px-3 ${active ? "bg-blue-50/70" : "hover:bg-slate-50"} disabled:cursor-default`}
-            >
-              <span className="w-5 shrink-0 text-xs tabular-nums text-slate-400">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium text-slate-800">
-                  {item.title}
-                </span>
-                <span className="mt-0.5 block text-[11px] text-slate-400">
-                  Отказов: {item.recentFailures ?? 0}
-                </span>
-              </span>
-              <span className={`shrink-0 text-sm font-semibold tabular-nums ${item.risk >= 90 ? "text-rose-600" : "text-slate-700"}`}>
-                {formatPercent(item.probability)}
-              </span>
-              {navigable && <RiArrowRightLine className="hidden shrink-0 text-slate-300 sm:block" />}
-            </button>);
-          })}
+          {items.slice(0, 2).map(renderEquipmentRow)}
+          <AnimatePresence initial={false}>
+            {showAllEquipment && (
+              <motion.div
+                key="extra-equipment"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                {items.slice(2).map((item, index) => renderEquipmentRow(item, index + 2))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+        {items.length > 2 && (
+          <button
+            type="button"
+            aria-expanded={showAllEquipment}
+            onClick={() => setShowAllEquipment((current) => !current)}
+            className="flex w-full items-center justify-center gap-2 border-t border-slate-100 px-5 py-3 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+          >
+            <span>{showAllEquipment ? "Свернуть" : "Показать все"}</span>
+            {!showAllEquipment && <span className="font-normal text-slate-400">({items.length})</span>}
+            <RiArrowDownSLine className={`h-4 w-4 transition-transform duration-200 ${showAllEquipment ? "rotate-180" : ""}`} />
+          </button>
+        )}
       </div>
     </div>
   </section>);
 }
-// MARK: Typing
+// MARK: Loading states
+function HistorySkeleton() {
+  return (
+    <div className="ai-history-skeleton" role="status" aria-label="Загрузка переписки">
+      {[0, 1, 2].map((item) => (
+        <div className={`ai-history-skeleton__row ${item === 1 ? 'ai-history-skeleton__row--user' : ''}`} key={item} aria-hidden="true">
+          <span className="ai-history-skeleton__avatar ai-shimmer" />
+          <div className="ai-history-skeleton__bubble">
+            <span className="ai-shimmer ai-history-skeleton__line" />
+            <span className="ai-shimmer ai-history-skeleton__line ai-history-skeleton__line--short" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 function Typing() {
   useI18n();
-  return (<div className="flex justify-start">
-    <div className="flex items-start gap-3">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-        <RiSparkling2Line />
-      </div>
-      <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3">
-        <div className="flex items-center gap-1">
-          <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.2s]" />
-          <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.1s]" />
-          <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
-        </div>
-        <p className="mt-2 text-xs text-gray-400">
-          {i18nT("pages.assistant.assistant.assistant.40cbbfd")}
-        </p>
+  return (
+    <div className="ai-typing" role="status" aria-live="polite">
+      <span className="ai-typing__avatar"><RiSparkling2Line size={18} /></span>
+      <div className="ai-typing__bubble">
+        <span className="ai-shimmer ai-typing__line" />
+        <span className="ai-shimmer ai-typing__line ai-typing__line--short" />
+        <span className="ai-typing__label"><i />{i18nT("pages.assistant.assistant.assistant.40cbbfd")}</span>
       </div>
     </div>
-  </div>);
+  );
 }

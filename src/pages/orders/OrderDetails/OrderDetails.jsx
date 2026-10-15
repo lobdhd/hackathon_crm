@@ -103,6 +103,12 @@ const STATUS_LABELS = {
     CANCELLED: "Отменён",
 };
 
+// Русские названия типов нарядов; коды API не меняем.
+const ORDER_TYPE_LABELS = {
+    EMERGENCY: "Аварийный",
+    PLANNED: "Плановый",
+};
+
 const ACTION_LABELS = {
     ACCEPT: "Принять",
     QUEUE: "В очередь",
@@ -1143,7 +1149,7 @@ export default function OrderDetails() {
                                     <InfoItem
                                         label={i18nT("pages.admin.admin.admin.345805b")}
                                         value={
-                                            order.type
+                                            ORDER_TYPE_LABELS[order.type] || order.type || "—"
                                         }
                                     />
 

@@ -333,17 +333,6 @@ export default function Dashboard() {
                     <p>{tr("pages.dashboard.dashboard.08fe3eb", "Оперативная информация по производству")}</p>
                 </div>
                 <div className="dash-heading__actions">
-                    <button
-                        type="button"
-                        className="dash-button dash-button--outline"
-                        onClick={refreshAll}
-                        aria-label="Обновить показатели"
-                        title="Обновить показатели"
-                        disabled={dashboardQuery.isFetching}
-                    >
-                        <RiRefreshLine size={17} className={dashboardQuery.isFetching ? "dash-spin" : ""} />
-                        <span>Обновить</span>
-                    </button>
                     <button type="button" className="dash-button dash-button--primary" onClick={() => navigate("/orders")}>
                         {tr("pages.dashboard.dashboard.1181a18", "Все наряды")}
                         <RiArrowRightLine size={18} />
@@ -382,8 +371,13 @@ export default function Dashboard() {
                         title={tr("dashboard.activeOrders", "Активные наряды")}
                         description="Открытые работы и текущие статусы"
                         icon={RiToolsLine}
+                        hideIcon
                         action={
-                            <button type="button" className="dash-link" onClick={() => navigate("/orders")}>
+                            <button
+                                type="button"
+                                className="dash-link"
+                                onClick={() => navigate("/orders")}
+                            >
                                 Все наряды <RiArrowRightLine size={16} />
                             </button>
                         }
