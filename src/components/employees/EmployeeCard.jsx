@@ -80,7 +80,7 @@ export default function EmployeeCard({
 
                                 <span className="truncate">
                                     {employee.specialty ||
-                                        "Специальность не указана"}
+                                        i18nT("components.employees.employeecard.2a2d667")}
 
                                     {employee.grade
                                         ? ` • ${employee.grade} ${i18nT(
@@ -113,7 +113,7 @@ export default function EmployeeCard({
 
                 <div className="mt-5 grid grid-cols-2 gap-2">
                     <MiniStat
-                        label="Назначено"
+                        label={i18nT("components.employees.employeecard.f49250a")}
                         value={
                             assignedOrders
                         }

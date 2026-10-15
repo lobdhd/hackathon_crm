@@ -11,7 +11,7 @@ const SRC = path.join(ROOT, 'src');
 const I18N = path.join(SRC, 'i18n', 'index.js');
 const RU_PATH = path.join(SRC, 'locales', 'ru.json');
 const KK_PATH = path.join(SRC, 'locales', 'kk.json');
-const SEARCH_DIRS = ['components', 'pages'].map((dir) => path.join(SRC, dir));
+const SEARCH_DIRS = ['components', 'pages', 'react-components'].map((dir) => path.join(SRC, dir));
 const EXT = new Set(['.js', '.jsx', '.ts', '.tsx']);
 const APPLY = process.argv.includes('--write');
 const ONLY_ARG = process.argv.find((arg) => arg.startsWith('--only='));
@@ -268,6 +268,18 @@ for (const file of files) {
             updated = `${line}\n${updated}`;
         }
     }
+    // Validate the result before touching source files.
+    try {
+        parse(updated, {
+            sourceType: 'unambiguous',
+            plugins: ['jsx', 'typescript', 'classProperties', 'decorators-legacy'],
+        });
+    } catch (error) {
+        console.error(`❌ ${relative}: некорректный результат замены: ${error.message}`);
+        issues++;
+        continue;
+    }
+
     changedFiles++;
     totalEdits += edits.length;
     console.log(`${APPLY ? '✅' : '🔎'} ${relative}: ${edits.length} замен`);

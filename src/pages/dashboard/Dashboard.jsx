@@ -54,12 +54,12 @@ const STATUS_TONES = {
 const PRIORITY_TONES = {
     EMERGENCY: "red", HIGH: "orange", NORMAL: "blue", PLANNED: "slate",
 };
-const EXECUTOR_STATUS = {
-    AVAILABLE: { label: "Свободен", tone: "green" },
-    BUSY: { label: "В работе", tone: "orange" },
-    QUEUED: { label: "Есть очередь", tone: "blue" },
-    OFF_SHIFT: { label: "Не на смене", tone: "slate" },
-};
+const EXECUTOR_STATUS = () => ({
+    AVAILABLE: { label: i18nT("pages.dashboard.dashboard.0d91f1e"), tone: "green" },
+    BUSY: { label: i18nT("status.inProgress"), tone: "orange" },
+    QUEUED: { label: i18nT("pages.dashboard.dashboard.1b9a9fa"), tone: "blue" },
+    OFF_SHIFT: { label: i18nT("pages.dashboard.dashboard.02aef69"), tone: "slate" },
+});
 const SEVERITY_COLORS = ["#20b36b", "#a2ca57", "#e5b940", "#f48035", "#e94553"];
 const SEVERITY_LABELS = ["Низкая", "Умеренная", "Средняя", "Высокая", "Критическая"];
 // Сплошной цвет по проценту риска: зелёный → жёлтый → оранжевый → красный (как в аналитике).
@@ -158,6 +158,7 @@ function anomalyTypeLabel(type) {
 
 // MARK: Page
 export default function Dashboard() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
     useI18n();
     const localeToken = i18nT("sidebar.home");
     const navigate = useNavigate();
@@ -189,16 +190,16 @@ export default function Dashboard() {
             const bFree = b.employeeStatus === "AVAILABLE" ? 0 : 1;
             return aFree - bFree || String(a.fullName || "").localeCompare(String(b.fullName || ""), "ru");
         }).slice(0, 6)
-    ), [executors]);
+    ), [executors, __i18nLocaleToken]);
     const sortedForecasts = useMemo(() => (
         [...forecasts].sort((a, b) => formatRisk(b.probability) - formatRisk(a.probability)).slice(0, 5)
-    ), [forecasts]);
+    ), [forecasts, __i18nLocaleToken]);
     const importantAnomaly = useMemo(() => (
         [...anomalies].sort((a, b) => num(b.severity) - num(a.severity))[0] || null
-    ), [anomalies]);
+    ), [anomalies, __i18nLocaleToken]);
     const severityCounts = useMemo(() => (
         [1, 2, 3, 4, 5].map((level) => anomalies.filter((item) => Math.round(num(item.severity)) === level).length)
-    ), [anomalies]);
+    ), [anomalies, __i18nLocaleToken]);
     const statusCounts = useMemo(() => {
         const map = new Map();
         orders.forEach((order) => map.set(order.status, (map.get(order.status) || 0) + 1));
@@ -210,7 +211,7 @@ export default function Dashboard() {
                 color: STATUS_COLORS[status] || "#94a3b8",
             }))
             .sort((a, b) => b.value - a.value);
-    }, [orders]);
+    }, [orders, __i18nLocaleToken]);
     const ordersTotal = num(ordersQuery.data?.total) || orders.length;
 
     const orderColumns = useMemo(() => [
@@ -222,7 +223,7 @@ export default function Dashboard() {
                 <div className="dash-table-order">
                     <span className="dash-table-order__number">{order.number || `#${order.id}`}</span>
                     <span className="dash-table-order__description" title={order.description || ""}>
-                        {order.description || "Без описания"}
+                        {order.description || i18nT("pages.dashboard.dashboard.c6b09af")}
                     </span>
                 </div>
             ),
@@ -250,7 +251,7 @@ export default function Dashboard() {
             minWidth: 194,
             sortField: "assigneeName",
             sortValue: (order) => order.assignee?.fullName || "",
-            render: (order) => <span className="dash-table-person">{order.assignee?.fullName || order.brigade?.name || "Не назначен"}</span>,
+            render: (order) => <span className="dash-table-person">{order.assignee?.fullName || order.brigade?.name || i18nT("pages.dashboard.dashboard.a02ddac")}</span>,
         },
         {
             field: "priority",
@@ -272,7 +273,7 @@ export default function Dashboard() {
                 </ToneBadge>
             ),
         },
-    ], [localeToken]);
+    ], [localeToken, __i18nLocaleToken]);
 
     async function refreshAll() {
         await Promise.allSettled([
@@ -282,10 +283,10 @@ export default function Dashboard() {
     }
 
     if (dashboardQuery.isLoading && !dashboardQuery.data) {
-        return <PageState loading title="Загружаем главную страницу" />;
+        return <PageState loading title={i18nT("pages.dashboard.dashboard.4f11a26")} />;
     }
     if (dashboardQuery.isError && !dashboardQuery.data) {
-        return <PageState title="Не удалось загрузить главную" description={errorMessage(dashboardQuery.error)} onRetry={refreshAll} />;
+        return <PageState title={i18nT("pages.dashboard.dashboard.22e8503")} description={errorMessage(dashboardQuery.error)} onRetry={refreshAll} />;
     }
 
     const stats = [
@@ -344,12 +345,12 @@ export default function Dashboard() {
             <div className="dash-top-grid">
                 <div className="dash-hero">
                     <div className="dash-hero__top">
-                        <span>Загрузка смены</span>
+                        <span>{i18nT("pages.analytics.analytics.f9f5658")}</span>
                         <span className="dash-hero__icon"><RiTeamLine size={19} /></span>
                     </div>
                     <div className="dash-hero__summary">
                         <strong>{busyCount}</strong>
-                        <span>из {onShiftCount} исполнителей заняты · {freeCount} свободных</span>
+                        <span>{i18nT("pages.analytics.analytics.b98ccbc")} {onShiftCount} {i18nT("pages.dashboard.dashboard.6637b9e")} {freeCount} {i18nT("pages.dashboard.dashboard.1789585")}</span>
                     </div>
                     {executorsQuery.isError && !executorsQuery.data ? (
                         <InlineError error={executorsQuery.error} onRetry={executorsQuery.refetch} />
@@ -369,7 +370,7 @@ export default function Dashboard() {
                 <section className="dash-panel dash-panel--orders">
                     <PanelHeader
                         title={tr("dashboard.activeOrders", "Активные наряды")}
-                        description="Открытые работы и текущие статусы"
+                        description={i18nT("pages.dashboard.dashboard.8ae17a2")}
                         icon={RiToolsLine}
                         hideIcon
                         action={
@@ -378,13 +379,13 @@ export default function Dashboard() {
                                 className="dash-link"
                                 onClick={() => navigate("/orders")}
                             >
-                                Все наряды <RiArrowRightLine size={16} />
+                                {i18nT("orderDetails.allOrders")} <RiArrowRightLine size={16} />
                             </button>
                         }
                     />
                     <div className="dash-orders__meta">
                         <span className="dash-indicator" />
-                        <span>{ordersQuery.data?.total ?? orders.length} в работе</span>
+                        <span>{ordersQuery.data?.total ?? orders.length} {i18nT("pages.dashboard.dashboard.de76e1f")}</span>
                         {ordersQuery.isFetching && <RiLoader4Line size={14} className="dash-spin" />}
                     </div>
                     <div className="dash-orders__table">
@@ -406,7 +407,7 @@ export default function Dashboard() {
                                 rowClassName={() => "cursor-pointer"}
                                 onRowClick={(order) => navigate(`/orders/${order.id}`)}
                                 emptyText={tr("employeeDetails.noActiveOrders", "Активных нарядов нет")}
-                                emptyDescription="На текущий момент открытых работ нет"
+                                emptyDescription={i18nT("pages.dashboard.dashboard.4a23888")}
                             />
                         )}
                     </div>
@@ -446,7 +447,7 @@ export default function Dashboard() {
                 <section className="dash-panel dash-panel--forecast">
                     <PanelHeader
                         title={tr("pages.analytics.analytics.b89121c", "Прогноз отказов")}
-                        description="Риск по оборудованию на 30 дней"
+                        description={i18nT("pages.dashboard.dashboard.5436807")}
                         icon={RiFlashlightLine}
                     />
                     <div className="dash-panel__content">
@@ -469,7 +470,7 @@ export default function Dashboard() {
 
                 <section className="dash-panel dash-panel--statuses">
                     <PanelHeader
-                        title="Структура нарядов"
+                        title={i18nT("pages.dashboard.dashboard.bb46b5e")}
                         description={ordersTotal > orders.length
                             ? `Выборка ${orders.length} из ${ordersTotal}`
                             : "Активные наряды по статусам"}
@@ -478,17 +479,17 @@ export default function Dashboard() {
                     <div className="dash-panel__content">
                         {ordersQuery.isLoading && !ordersQuery.data ? <PanelLoading /> : statusCounts.length ? (
                             <StatusDonut counts={statusCounts} total={orders.length} />
-                        ) : <EmptyBlock text="Активных нарядов нет" />}
+                        ) : <EmptyBlock text={i18nT("employeeDetails.noActiveOrders")} />}
                     </div>
                 </section>
 
                 <section className="dash-panel dash-panel--anomaly">
                     <PanelHeader
                         title={tr("pages.dashboard.dashboard.33cd729", "Аномалии")}
-                        description="Приоритетные события, требующие внимания"
+                        description={i18nT("pages.dashboard.dashboard.231461f")}
                         icon={RiSparkling2Line}
                         hideIcon
-                        action={<button type="button" className="dash-link" onClick={() => navigate("/analytics")}>Аналитика <RiArrowRightLine size={16} /></button>}
+                        action={<button type="button" className="dash-link" onClick={() => navigate("/analytics")}>{i18nT("sidebar.analytics")} <RiArrowRightLine size={16} /></button>}
                     />
                     <div className="dash-panel__content dash-anomaly-content">
                         {anomaliesQuery.isLoading ? <PanelLoading /> : anomaliesQuery.isError && !anomaliesQuery.data ? (
@@ -512,14 +513,14 @@ export default function Dashboard() {
 
             <div className="dash-subsection-title">
                 <div>
-                    <h2>Сводка за 30 дней</h2>
-                    <p>Оборудование, участки и исполнители</p>
+                    <h2>{i18nT("pages.dashboard.dashboard.4aa3ceb")}</h2>
+                    <p>{i18nT("pages.dashboard.dashboard.8bf7939")}</p>
                 </div>
             </div>
             <div className="dash-ranking-grid">
                 <RankingPanel
                     title={tr("pages.analytics.analytics.101358d", "Проблемное оборудование")}
-                    subtitle="Количество аварийных нарядов"
+                    subtitle={i18nT("pages.dashboard.dashboard.c1042fd")}
                     icon={RiToolsLine}
                 >
                     <RankingList
@@ -533,7 +534,7 @@ export default function Dashboard() {
                 </RankingPanel>
                 <RankingPanel
                     title={tr("ratingTable.areas", "Участки")}
-                    subtitle="Аварийность на единицу оборудования"
+                    subtitle={i18nT("pages.analytics.analytics.fe27183")}
                     icon={RiMapPinLine}
                 >
                     {topAreas.length >= 3 ? (
@@ -550,7 +551,7 @@ export default function Dashboard() {
                 </RankingPanel>
                 <RankingPanel
                     title={tr("pages.dashboard.dashboard.64823bc", "Лучшие исполнители")}
-                    subtitle="Средняя оценка за 30 дней"
+                    subtitle={i18nT("pages.dashboard.dashboard.1587cc1")}
                     icon={RiUserLine}
                 >
                     <RankingList
@@ -607,6 +608,7 @@ function ToneBadge({ tone = "slate", children }) {
 
 // MARK: Gauge (SVG полукруг загрузки смены)
 function LoadGauge({ percent, empty }) {
+    useI18n();
     const [shown, setShown] = useState(0);
     useEffect(() => {
         const id = requestAnimationFrame(() => setShown(clampPercent(percent)));
@@ -636,7 +638,7 @@ function LoadGauge({ percent, empty }) {
             </svg>
             <div className="dash-gauge__metric" aria-hidden="true">
                 <strong>{empty ? "—" : `${Math.round(clampPercent(percent))}%`}</strong>
-                <span>загрузка смены</span>
+                <span>{i18nT("pages.dashboard.dashboard.930cbea")}</span>
             </div>
         </div>
     );
@@ -644,7 +646,8 @@ function LoadGauge({ percent, empty }) {
 
 // MARK: Executors
 function ExecutorRow({ employee, onClick }) {
-    const status = EXECUTOR_STATUS[employee.employeeStatus] || EXECUTOR_STATUS.OFF_SHIFT;
+    useI18n();
+    const status = EXECUTOR_STATUS()[employee.employeeStatus] || EXECUTOR_STATUS().OFF_SHIFT;
     /* statusText с сервера может прийти кодом на английском — тогда берём русскую подпись */
     const statusText = employee.statusText && !/^[A-Za-z_\s]+$/.test(employee.statusText)
         ? employee.statusText
@@ -655,7 +658,7 @@ function ExecutorRow({ employee, onClick }) {
             <span className="dash-executor__identity">
                 <span className="dash-executor__name" title={employee.fullName}>{employee.fullName}</span>
                 <span className="dash-executor__specialty">
-                    {employee.specialty || "Специальность не указана"}
+                    {employee.specialty || i18nT("components.employees.employeecard.2a2d667")}
                     {employee.grade ? ` · ${employee.grade} разряд` : ""}
                 </span>
             </span>
@@ -666,6 +669,7 @@ function ExecutorRow({ employee, onClick }) {
 
 // MARK: Forecast — концентрические кольца риска (свой SVG: точный центр и надёжное наведение)
 const ForecastRings = memo(function ForecastRings({ items }) {
+    useI18n();
     const [hovered, setHovered] = useState(null);
     const values = items.map((item) => Math.round(formatRisk(item.probability)));
     const names = items.map((item) => equipmentName(item));
@@ -684,7 +688,7 @@ const ForecastRings = memo(function ForecastRings({ items }) {
                     className="dash-rings__svg"
                     viewBox="0 0 300 262"
                     role="img"
-                    aria-label="Вероятность отказа по оборудованию"
+                    aria-label={i18nT("pages.dashboard.dashboard.a347116")}
                     onMouseLeave={() => setHovered(null)}
                 >
                     {items.map((item, i) => {
@@ -724,12 +728,13 @@ const ForecastRings = memo(function ForecastRings({ items }) {
 });
 
 function ForecastRow({ item, onClick }) {
+    useI18n();
     const risk = Math.round(formatRisk(item.probability));
     return (
         <button type="button" className="dash-risk-row" onClick={onClick} disabled={item.equipmentId == null}>
             <span className="dash-risk-row__dot" style={{ backgroundColor: riskColor(risk) }} />
             <span className="dash-risk-row__name" title={equipmentName(item)}>{equipmentName(item)}</span>
-            <span className="dash-risk-row__failures">Отказов: {num(item.recentFailures)}</span>
+            <span className="dash-risk-row__failures">{i18nT("pages.assistant.assistant.assistant.fec291d")} {num(item.recentFailures)}</span>
             <span className="dash-risk-row__value">{risk}%</span>
             {item.equipmentId != null && <RiArrowRightLine size={15} className="dash-risk-row__arrow" />}
         </button>
@@ -738,6 +743,8 @@ function ForecastRow({ item, onClick }) {
 
 // MARK: Statuses — бублик
 const StatusDonut = memo(function StatusDonut({ counts, total }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const signature = counts.map((item) => `${item.status}:${item.value}`).join("|");
     const options = useMemo(() => ({
         chart: {
@@ -762,7 +769,7 @@ const StatusDonut = memo(function StatusDonut({ counts, total }) {
                         total: {
                             show: true,
                             showAlways: true,
-                            label: "Всего",
+                            label: i18nT("analytics.status.total"),
                             fontSize: "11px",
                             fontWeight: 600,
                             color: "#7f97b2",
@@ -784,9 +791,9 @@ const StatusDonut = memo(function StatusDonut({ counts, total }) {
         states: { hover: { filter: { type: "none" } }, active: { filter: { type: "none" } } },
         tooltip: { y: { formatter: (value) => `${value} нар.` } },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), [signature, total]);
+    }), [signature, total, __i18nLocaleToken]);
     return (
-        <div className="dash-donut" aria-label="Распределение активных нарядов по статусам">
+        <div className="dash-donut" aria-label={i18nT("pages.dashboard.dashboard.4d87256")}>
             <Chart type="donut" options={options} series={counts.map((item) => item.value)} height={330} width="100%" />
         </div>
     );
@@ -794,6 +801,7 @@ const StatusDonut = memo(function StatusDonut({ counts, total }) {
 
 // MARK: Anomaly
 function AnomalyCard({ anomaly, counts, onOpen }) {
+    useI18n();
     const severity = num(anomaly.severity);
     const tone = severity >= 4 ? "red" : severity >= 3 ? "orange" : "blue";
     const location = [anomaly.area?.name, anomaly.equipment?.name].filter(Boolean).join(" · ");
@@ -801,19 +809,19 @@ function AnomalyCard({ anomaly, counts, onOpen }) {
     return (
         <div className="dash-anomaly">
             <div className="dash-anomaly__top">
-                <ToneBadge tone={tone}>Важность {severity}/5</ToneBadge>
+                <ToneBadge tone={tone}>{i18nT("pages.dashboard.dashboard.e9ce0a4")} {severity}/5</ToneBadge>
                 {anomaly.type && <span className="dash-anomaly__type">{anomalyTypeLabel(anomaly.type)}</span>}
             </div>
-            <h3>{anomaly.title || "Обнаружена аномалия"}</h3>
-            <p className="dash-anomaly__description">{anomaly.description || "Необычное событие в производственных данных"}</p>
+            <h3>{anomaly.title || i18nT("pages.dashboard.dashboard.4caa834")}</h3>
+            <p className="dash-anomaly__description">{anomaly.description || i18nT("pages.dashboard.dashboard.9a59a2d")}</p>
             {anomaly.recommendation && (
                 <div className="dash-anomaly__recommendation">
-                    <span><RiSparkling2Line size={16} /> Рекомендация</span>
+                    <span><RiSparkling2Line size={16} /> {i18nT("pages.dashboard.dashboard.0e742e9")}</span>
                     <p>{anomaly.recommendation}</p>
                 </div>
             )}
             {total > 1 && (
-                <div className="dash-spectrum" aria-label="Распределение аномалий по важности">
+                <div className="dash-spectrum" aria-label={i18nT("pages.dashboard.dashboard.e98c47f")}>
                     <div className="dash-spectrum__bar">
                         {counts.map((count, index) => count > 0 && (
                             <span
@@ -835,8 +843,8 @@ function AnomalyCard({ anomaly, counts, onOpen }) {
                 </div>
             )}
             <div className="dash-anomaly__bottom">
-                <span className="dash-anomaly__location" title={location}>{location || "Производство"}</span>
-                <button type="button" className="dash-link" onClick={onOpen}>Подробнее <RiArrowRightLine size={16} /></button>
+                <span className="dash-anomaly__location" title={location}>{location || i18nT("pages.dashboard.dashboard.96c6369")}</span>
+                <button type="button" className="dash-link" onClick={onOpen}>{i18nT("pages.dashboard.dashboard.db5f55c")} <RiArrowRightLine size={16} /></button>
             </div>
         </div>
     );
@@ -894,6 +902,8 @@ function RankingList({ items, getTitle, getValue, formatValue, onRowClick, color
 
 // Радар по участкам: аварийность на единицу оборудования
 const AreasRadar = memo(function AreasRadar({ items }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const names = items.map((item) => shorten(item.name || `Участок #${item.areaId}`, 15));
     const values = items.map((item) => Number(num(item.emergenciesPerUnit).toFixed(2)));
     const signature = `${names.join(",")}|${values.join(",")}`;
@@ -926,9 +936,9 @@ const AreasRadar = memo(function AreasRadar({ items }) {
         legend: { show: false },
         tooltip: { y: { formatter: (value) => `${Number(value).toFixed(2)} / ед.` } },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), [signature]);
+    }), [signature, __i18nLocaleToken]);
     return (
-        <div className="dash-radar" aria-label="Аварийность на единицу оборудования по участкам">
+        <div className="dash-radar" aria-label={i18nT("pages.dashboard.dashboard.3de85c1")}>
             <Chart type="radar" options={options} series={[{ name: "Аварийность", data: values }]} height={300} width="100%" />
         </div>
     );
@@ -939,25 +949,28 @@ function EmptyBlock({ text }) {
     return <div className="dash-empty">{text}</div>;
 }
 function PanelLoading() {
-    return <div className="dash-panel-loading"><RiLoader4Line size={24} className="dash-spin" /> Загрузка...</div>;
+    useI18n();
+    return <div className="dash-panel-loading"><RiLoader4Line size={24} className="dash-spin" /> {i18nT("pages.employees.employeedetails.employeedetails.43e40d4")}</div>;
 }
 function InlineError({ error, onRetry }) {
+    useI18n();
     return (
         <div className="dash-inline-error">
             <RiAlarmWarningLine size={19} />
             <span>{errorMessage(error)}</span>
-            <button type="button" onClick={onRetry}>Повторить</button>
+            <button type="button" onClick={onRetry}>{i18nT("components.layout.appnavbar.b914bbb")}</button>
         </div>
     );
 }
 function PageState({ loading, title, description, onRetry }) {
+    useI18n();
     return (
         <div className="dash-page mx-auto w-full max-w-[1800px] p-7">
             <div className="dash-page-state">
                 {loading ? <RiLoader4Line size={32} className="dash-spin" /> : <RiAlarmWarningLine size={32} />}
                 <h2>{title}</h2>
                 {description && <p>{description}</p>}
-                {onRetry && <button type="button" className="dash-button dash-button--primary" onClick={onRetry}><RiRefreshLine /> Повторить</button>}
+                {onRetry && <button type="button" className="dash-button dash-button--primary" onClick={onRetry}><RiRefreshLine /> {i18nT("components.layout.appnavbar.b914bbb")}</button>}
             </div>
         </div>
     );

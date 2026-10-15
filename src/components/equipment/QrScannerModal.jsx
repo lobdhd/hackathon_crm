@@ -15,6 +15,7 @@ import {
 import { getEquipmentByQr } from "../../api/equipment.api.js";
 
 import { t, useI18n } from "../../i18n/index.js";
+import { t as i18nT } from "../../i18n/index.js";
 
 
 // QR on equipment: the sticker holds a link ".../equipment/<qrToken>".
@@ -89,6 +90,7 @@ function decodeWithJsQr(source, canvas) {
 // MARK: Modal
 
 export default function QrScannerModal({ onClose, onDetected, title }) {
+    const __i18nLocaleToken = t("sidebar.home");
     useI18n();
 
     const videoRef = useRef(null);
@@ -105,7 +107,7 @@ export default function QrScannerModal({ onClose, onDetected, title }) {
     const stopCamera = useCallback(() => {
         streamRef.current?.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
-    }, []);
+    }, [ __i18nLocaleToken]);
 
     const resolve = useCallback(async (raw) => {
         if (busyRef.current) return;
@@ -124,7 +126,7 @@ export default function QrScannerModal({ onClose, onDetected, title }) {
             // Give the user a moment to move the camera off the wrong code.
             setTimeout(() => { busyRef.current = false; }, 1200);
         }
-    }, [onDetected, stopCamera]);
+    }, [onDetected, stopCamera, __i18nLocaleToken]);
 
     // MARK: Camera
 
@@ -243,7 +245,7 @@ export default function QrScannerModal({ onClose, onDetected, title }) {
                     type="button"
                     onClick={onClose}
                     className="rounded-xl p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
-                    aria-label="Закрыть"
+                    aria-label={i18nT("components.equipment.qrscannermodal.dd9463b")}
                 >
                     <RiCloseLine size={24} />
                 </button>

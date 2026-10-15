@@ -1215,7 +1215,7 @@ function NotificationItem({
                             }
                         `}
                     >
-                        {notification.title || "Уведомление"}
+                        {notification.title || i18nT("components.layout.appnavbar.e39acab")}
                     </p>
 
                     {/* MARK: Time and unread indicator */}

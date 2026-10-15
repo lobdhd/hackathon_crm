@@ -587,7 +587,7 @@ function UserModal({
                     <label className="admin-field admin-field--full">
                         <span>
                             {isEdit
-                                ? "Новый пароль"
+                                ? i18nT("pages.admin.admin.admin.56786d1")
                                 : i18nT("login.password")}
                         </span>
 
@@ -719,7 +719,7 @@ function UserModal({
                         }
                     >
                         {mutation.isPending
-                            ? "Сохранение..."
+                            ? i18nT("pages.admin.admin.admin.c15f152")
                             : isEdit
                                 ? i18nT("pages.admin.admin.admin.74ea58b")
                                 : i18nT("pages.admin.admin.admin.b059f7e")}
@@ -1408,7 +1408,7 @@ function NormativeModal({
     return (
         <Modal
             title={i18nT("pages.admin.admin.admin.93cc454")}
-            subtitle="Норматив выполнения и расход материалов"
+            subtitle={i18nT("pages.admin.admin.admin.867a5f1")}
             onClose={onClose}
             width="760px"
         >
@@ -1727,8 +1727,8 @@ function DeleteModal({
                     disabled={loading}
                 >
                     {loading
-                        ? "Удаление..."
-                        : "Удалить"}
+                        ? i18nT("pages.admin.admin.admin.bfef851")
+                        : i18nT("pages.admin.admin.admin.ed2bbfb")}
                 </button>
             </div>
         </Modal>
@@ -2878,7 +2878,7 @@ export default function Admin() {
                     <div className="admin-summary-card__top"><span>{i18nT("pages.admin.admin.admin.958b816")}</span><span className="admin-summary-card__icon"><RiTimeLine /></span></div>
                     <strong>{usersQuery.isLoading ? "—" : onShiftCount}</strong>
                     <small>{i18nT("pages.admin.admin.admin.53b4b26")}</small>
-                    <div className="admin-summary-card__bar" role="progressbar" aria-valuenow={onShiftCount} aria-valuemin={0} aria-valuemax={Math.max(executors.length, 1)} aria-label="Исполнители на смене">
+                    <div className="admin-summary-card__bar" role="progressbar" aria-valuenow={onShiftCount} aria-valuemin={0} aria-valuemax={Math.max(executors.length, 1)} aria-label={i18nT("pages.admin.admin.admin.35e746b")}>
                         <span style={{ width: `${executors.length ? (onShiftCount / executors.length) * 100 : 0}%` }} />
                     </div>
                 </div>
@@ -2890,8 +2890,8 @@ export default function Admin() {
             </div>
 
             <div className="admin-workspace">
-                <aside className="admin-tabs" aria-label="Разделы администрирования">
-                    <div className="admin-tabs__heading">Разделы <span>{TABS().length}</span></div>
+                <aside className="admin-tabs" aria-label={i18nT("pages.admin.admin.admin.caba4a3")}>
+                    <div className="admin-tabs__heading">{i18nT("pages.admin.admin.admin.ec65a75")} <span>{TABS().length}</span></div>
                     {TABS().map(
                         (tab) => {
                             const Icon =
@@ -2941,7 +2941,7 @@ export default function Admin() {
                         </div>
 
                         <div className="admin-content__actions">
-                            <button type="button" className="admin-button admin-button--refresh" title="Обновить данные" onClick={refreshActive} aria-label="Обновить данные"><RiRefreshLine /></button>
+                            <button type="button" className="admin-button admin-button--refresh" title={i18nT("pages.admin.admin.admin.7c89b60")} onClick={refreshActive} aria-label={i18nT("pages.admin.admin.admin.7c89b60")}><RiRefreshLine /></button>
                             {![
                                 "shifts",
                             ].includes(

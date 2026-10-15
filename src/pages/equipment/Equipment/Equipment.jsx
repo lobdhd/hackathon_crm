@@ -52,24 +52,25 @@ function StatCard({ icon: Icon, label, value, description, tone = "blue", progre
 }
 
 function EquipmentCard({ item, area }) {
+    useI18n();
   return (
     <Link to={`/equipment/${item.id}`} className="eq-item">
       <div className="eq-item__head">
         <div className="eq-item__identity">
           <div className="eq-item__name">
-            <strong title={item.name}>{item.name || "Оборудование без названия"}</strong>
-            <span>{item.inventoryNumber || "Без инвентарного номера"}</span>
+            <strong title={item.name}>{item.name || i18nT("pages.equipment.equipment.equipment.028dc34")}</strong>
+            <span>{item.inventoryNumber || i18nT("pages.equipment.equipment.equipment.8927f2c")}</span>
           </div>
         </div>
         <RiArrowRightUpLine className="eq-item__arrow" size={20} />
       </div>
       <div className="eq-item__meta">
-        <div><small>Тип оборудования</small><b title={item.type}>{item.type || "—"}</b></div>
-        <div><small>Участок</small><b title={area?.name}>{area?.name || "Не указан"}</b></div>
+        <div><small>{i18nT("pages.admin.admin.admin.b21456e")}</small><b title={item.type}>{item.type || "—"}</b></div>
+        <div><small>{i18nT("ordersTable.area")}</small><b title={area?.name}>{area?.name || i18nT("components.employees.createemployeemodal.cdded47")}</b></div>
       </div>
       <div className="eq-item__foot">
         <CriticalityBadge value={item.criticality} />
-        <span className="eq-item__open">Подробнее</span>
+        <span className="eq-item__open">{i18nT("pages.dashboard.dashboard.db5f55c")}</span>
       </div>
     </Link>
   );
@@ -118,10 +119,10 @@ function CreateEquipmentModal({ areas, onClose }) {
         <div className="eq-modal__head">
           <span className="eq-modal__icon"><RiToolsLine size={21} /></span>
           <div>
-            <h2 id="eq-create-title">Добавить оборудование</h2>
-            <p>Создание новой записи в справочнике оборудования</p>
+            <h2 id="eq-create-title">{i18nT("pages.equipment.equipment.equipment.77e0765")}</h2>
+            <p>{i18nT("pages.equipment.equipment.equipment.766f866")}</p>
           </div>
-          <button type="button" className="eq-icon-button" aria-label="Закрыть" onClick={onClose}>
+          <button type="button" className="eq-icon-button" aria-label={i18nT("components.equipment.qrscannermodal.dd9463b")} onClick={onClose}>
             <RiCloseLine size={20} />
           </button>
         </div>
@@ -129,19 +130,19 @@ function CreateEquipmentModal({ areas, onClose }) {
           {error && <div className="eq-form-error"><RiAlarmWarningLine size={18} />{error}</div>}
           <div className="eq-form-grid">
             <label className="eq-field eq-field--full">
-              <span>Название оборудования</span>
-              <input value={form.name} onChange={(event) => setField("name", event.target.value)} placeholder="Например, Дробилка КСД-2200" required minLength={2} />
+              <span>{i18nT("pages.equipment.equipment.equipment.5bb3bf5")}</span>
+              <input value={form.name} onChange={(event) => setField("name", event.target.value)} placeholder={i18nT("pages.equipment.equipment.equipment.52eace0")} required minLength={2} />
             </label>
             <label className="eq-field">
-              <span>Инвентарный номер</span>
-              <input value={form.inventoryNumber} onChange={(event) => setField("inventoryNumber", event.target.value)} placeholder="Например, Д-3" required />
+              <span>{i18nT("pages.admin.admin.admin.ad8aabf")}</span>
+              <input value={form.inventoryNumber} onChange={(event) => setField("inventoryNumber", event.target.value)} placeholder={i18nT("pages.equipment.equipment.equipment.dab09be")} required />
             </label>
             <label className="eq-field">
-              <span>Тип оборудования</span>
-              <input value={form.type} onChange={(event) => setField("type", event.target.value)} placeholder="Например, Дробильное" required />
+              <span>{i18nT("pages.admin.admin.admin.b21456e")}</span>
+              <input value={form.type} onChange={(event) => setField("type", event.target.value)} placeholder={i18nT("pages.equipment.equipment.equipment.950ae9a")} required />
             </label>
             <div className="eq-field">
-              <span>Критичность</span>
+              <span>{i18nT("equipmentModal.criticality")}</span>
               <GlideSelect
                 className="glide-select--field"
                 options={Object.entries(CRITICALITY).map(([value, label]) => ({ value, label: `${value} — ${label}` }))}
@@ -152,10 +153,10 @@ function CreateEquipmentModal({ areas, onClose }) {
               />
             </div>
             <div className="eq-field">
-              <span>Участок <b>*</b></span>
+              <span>{i18nT("ordersTable.area")} <b>*</b></span>
               <GlideSelect
                 className="glide-select--field"
-                options={[{ value: "", label: "Выберите участок" }, ...areas.map((area) => ({ value: String(area.id), label: area.name }))]}
+                options={[{ value: "", label: i18nT("orderModal.selectArea") }, ...areas.map((area) => ({ value: String(area.id), label: area.name }))]}
                 value={form.areaId}
                 onChange={(value) => setField("areaId", value)}
                 searchable
@@ -165,10 +166,10 @@ function CreateEquipmentModal({ areas, onClose }) {
             </div>
           </div>
           <div className="eq-modal__footer">
-            <button type="button" className="eq-button eq-button--outline" onClick={onClose} disabled={mutation.isPending}>Отмена</button>
+            <button type="button" className="eq-button eq-button--outline" onClick={onClose} disabled={mutation.isPending}>{i18nT("employeeModal.cancel")}</button>
             <button type="submit" className="eq-button eq-button--primary" disabled={mutation.isPending}>
               {mutation.isPending ? <RiLoader4Line className="eq-spin" size={17} /> : <RiAddLine size={17} />}
-              {mutation.isPending ? "Создание..." : "Создать оборудование"}
+              {mutation.isPending ? i18nT("components.employees.createemployeemodal.32f23b2") : i18nT("pages.equipment.equipment.equipment.97198e9")}
             </button>
           </div>
         </form>
@@ -179,6 +180,7 @@ function CreateEquipmentModal({ areas, onClose }) {
 }
 
 export default function Equipment() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -193,8 +195,8 @@ export default function Equipment() {
   const canCreate = user?.role === "ADMIN";
   const updateFilter = (key, value) => setFilters((previous) => ({ ...previous, [key]: value }));
   const resetFilters = () => setFilters({ search: "", areaId: "", criticality: "", type: "" });
-  const areasById = useMemo(() => new Map(areas.map((area) => [String(area.id), area])), [areas]);
-  const types = useMemo(() => [...new Set(equipment.map((item) => item.type).filter(Boolean))].sort(), [equipment]);
+  const areasById = useMemo(() => new Map(areas.map((area) => [String(area.id), area])), [areas, __i18nLocaleToken]);
+  const types = useMemo(() => [...new Set(equipment.map((item) => item.type).filter(Boolean))].sort(), [equipment, __i18nLocaleToken]);
   const filteredEquipment = useMemo(() => {
     const search = filters.search.trim().toLowerCase();
     return equipment.filter((item) => {
@@ -205,31 +207,31 @@ export default function Equipment() {
         && (!filters.type || item.type === filters.type)
         && (!filters.criticality || String(item.criticality) === filters.criticality);
     });
-  }, [equipment, areasById, filters]);
+  }, [equipment, areasById, filters, __i18nLocaleToken]);
   const stats = useMemo(() => {
     const high = equipment.filter((item) => Number(item.criticality) >= 4).length;
     const critical = equipment.filter((item) => Number(item.criticality) === 5).length;
     const knownAreas = new Set(equipment.map((item) => item.areaId).filter((value) => value != null && value !== ""));
     return { total: equipment.length, high, critical, areas: knownAreas.size };
-  }, [equipment]);
+  }, [equipment, __i18nLocaleToken]);
   const activeFilters = [filters.areaId, filters.criticality, filters.type, filters.search].filter(Boolean).length;
-  const areaOptions = [{ value: "", label: "Все участки" }, ...areas.map((area) => ({ value: String(area.id), label: area.name }))];
-  const typeOptions = [{ value: "", label: "Все типы" }, ...types.map((type) => ({ value: type, label: type }))];
-  const criticalityOptions = [{ value: "", label: "Любая критичность" }, ...Object.entries(CRITICALITY).map(([value, label]) => ({ value, label: `${value} — ${label}` }))];
+  const areaOptions = [{ value: "", label: i18nT("reportModal.allAreas") }, ...areas.map((area) => ({ value: String(area.id), label: area.name }))];
+  const typeOptions = [{ value: "", label: i18nT("pages.equipment.equipment.equipment.729d3f6") }, ...types.map((type) => ({ value: type, label: type }))];
+  const criticalityOptions = [{ value: "", label: i18nT("pages.equipment.equipment.equipment.daaa627") }, ...Object.entries(CRITICALITY).map(([value, label]) => ({ value, label: `${value} — ${label}` }))];
   const columns = [
     {
-      field: "name", header: "Оборудование", minWidth: 260,
-      render: (item) => <div className="eq-table-name"><span className="eq-item__icon"><RiToolsLine size={18} /></span><div><strong>{item.name}</strong><small>{item.inventoryNumber || "Без номера"}</small></div></div>,
+      field: "name", header: i18nT("quickOrder.equipment"), minWidth: 260,
+      render: (item) => <div className="eq-table-name"><span className="eq-item__icon"><RiToolsLine size={18} /></span><div><strong>{item.name}</strong><small>{item.inventoryNumber || i18nT("pages.equipment.equipment.equipment.94b82a1")}</small></div></div>,
     },
-    { field: "inventoryNumber", header: "Инвентарный №", minWidth: 155 },
-    { field: "type", header: "Тип", minWidth: 180 },
+    { field: "inventoryNumber", header: i18nT("pages.equipment.equipment.equipment.026a326"), minWidth: 155 },
+    { field: "type", header: i18nT("pages.admin.admin.admin.345805b"), minWidth: 180 },
     {
-      key: "area", header: "Участок", minWidth: 190, sortField: "areaName",
+      key: "area", header: i18nT("ordersTable.area"), minWidth: 190, sortField: "areaName",
       sortValue: (item) => areasById.get(String(item.areaId))?.name || "",
       render: (item) => <span className="eq-table-area"><RiMapPinLine size={15} />{areasById.get(String(item.areaId))?.name || "—"}</span>,
     },
     {
-      field: "criticality", header: "Критичность", minWidth: 170,
+      field: "criticality", header: i18nT("equipmentModal.criticality"), minWidth: 170,
       sortValue: (item) => Number(item.criticality),
       render: (item) => <CriticalityBadge value={item.criticality} />,
     },
@@ -240,43 +242,43 @@ export default function Equipment() {
       <header className="eq-header">
         <div>
           <h1>{i18nT("sidebar.equipment")}</h1>
-          <p className="eq-header__subtitle">Контроль оборудования, критичности и распределения по участкам</p>
+          <p className="eq-header__subtitle">{i18nT("pages.equipment.equipment.equipment.fd6ddbb")}</p>
         </div>
         <div className="eq-header__actions">
-          <button type="button" className="eq-button eq-button--outline" onClick={() => setScanOpen(true)}><RiQrScan2Line size={18} /> Сканировать QR</button>
-          {canCreate && <button type="button" className="eq-button eq-button--primary" onClick={() => setCreateOpen(true)}><RiAddLine size={18} /> Добавить оборудование</button>}
+          <button type="button" className="eq-button eq-button--outline" onClick={() => setScanOpen(true)}><RiQrScan2Line size={18} /> {i18nT("qrScanner.scan")}</button>
+          {canCreate && <button type="button" className="eq-button eq-button--primary" onClick={() => setCreateOpen(true)}><RiAddLine size={18} /> {i18nT("pages.equipment.equipment.equipment.77e0765")}</button>}
         </div>
       </header>
       {equipmentQuery.isError && (
-        <div className="eq-alert"><RiAlarmWarningLine size={20} /><span>{getErrorMessage(equipmentQuery.error)}</span><button type="button" onClick={() => equipmentQuery.refetch()}><RiRefreshLine /> Повторить</button></div>
+        <div className="eq-alert"><RiAlarmWarningLine size={20} /><span>{getErrorMessage(equipmentQuery.error)}</span><button type="button" onClick={() => equipmentQuery.refetch()}><RiRefreshLine /> {i18nT("components.layout.appnavbar.b914bbb")}</button></div>
       )}
       <div className="eq-stats">
-        <StatCard icon={RiToolsLine} label="Всего оборудования" value={isLoading ? "—" : stats.total} description="В справочнике" />
-        <StatCard icon={RiAlarmWarningLine} label="Высокая критичность" value={isLoading ? "—" : stats.high} description="Уровень 4 и 5" tone="amber" progress={stats.total ? stats.high / stats.total * 100 : 0} />
-        <StatCard icon={RiShieldCheckLine} label="Критическая" value={isLoading ? "—" : stats.critical} description="Уровень 5" tone="red" progress={stats.total ? stats.critical / stats.total * 100 : 0} />
-        <StatCard icon={RiBuilding2Line} label="Задействовано участков" value={isLoading ? "—" : stats.areas} description="По текущим записям" tone="sky" />
+        <StatCard icon={RiToolsLine} label={i18nT("pages.equipment.equipment.equipment.ca09aae")} value={isLoading ? "—" : stats.total} description={i18nT("pages.equipment.equipment.equipment.93637be")} />
+        <StatCard icon={RiAlarmWarningLine} label={i18nT("pages.equipment.equipment.equipment.dda846a")} value={isLoading ? "—" : stats.high} description={i18nT("pages.equipment.equipment.equipment.2e3d3ab")} tone="amber" progress={stats.total ? stats.high / stats.total * 100 : 0} />
+        <StatCard icon={RiShieldCheckLine} label={i18nT("pages.equipment.equipment.equipment.3cbfed4")} value={isLoading ? "—" : stats.critical} description={i18nT("pages.equipment.equipment.equipment.aace193")} tone="red" progress={stats.total ? stats.critical / stats.total * 100 : 0} />
+        <StatCard icon={RiBuilding2Line} label={i18nT("pages.equipment.equipment.equipment.9d75070")} value={isLoading ? "—" : stats.areas} description={i18nT("pages.equipment.equipment.equipment.515dbc4")} tone="sky" />
       </div>
       <section className="eq-panel eq-catalog">
         <div className="eq-panel__head">
           <span className="eq-section-icon"><RiFilter3Line size={20} /></span>
-          <div><h2>Каталог оборудования</h2><p>Поиск и фильтрация по справочнику</p></div>
-          <span className="eq-count">{filteredEquipment.length} записей</span>
+          <div><h2>{i18nT("pages.equipment.equipment.equipment.1fa8044")}</h2><p>{i18nT("pages.equipment.equipment.equipment.8a5b87a")}</p></div>
+          <span className="eq-count">{filteredEquipment.length} {i18nT("pages.equipment.equipment.equipment.9a79d3f")}</span>
         </div>
         <div className="eq-filters">
           <label className="eq-search">
             <RiSearchLine size={19} />
-            <input value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder="Поиск по названию, номеру, типу..." aria-label="Поиск оборудования" />
-            {filters.search && <button type="button" aria-label="Очистить поиск" onClick={() => updateFilter("search", "")}><RiCloseLine size={16} /></button>}
+            <input value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder={i18nT("pages.equipment.equipment.equipment.967ae1d")} aria-label={i18nT("pages.equipment.equipment.equipment.160a258")} />
+            {filters.search && <button type="button" aria-label={i18nT("pages.employees.employees.employees.30e2d49")} onClick={() => updateFilter("search", "")}><RiCloseLine size={16} /></button>}
           </label>
           <div className="eq-filter-select"><GlideSelect className="glide-select--field" options={areaOptions} value={filters.areaId} onChange={(value) => updateFilter("areaId", value)} searchable portal menuWidth={280} ariaLabel="Участок" /></div>
           <div className="eq-filter-select"><GlideSelect className="glide-select--field" options={typeOptions} value={filters.type} onChange={(value) => updateFilter("type", value)} searchable portal menuWidth={260} ariaLabel="Тип" /></div>
           <div className="eq-filter-select"><GlideSelect className="glide-select--field" options={criticalityOptions} value={filters.criticality} onChange={(value) => updateFilter("criticality", value)} portal menuWidth={245} ariaLabel="Критичность" /></div>
         </div>
         <div className="eq-toolbar">
-          <div className="eq-toolbar__meta"><RiFilter3Line size={17} /> Найдено: <strong>{filteredEquipment.length}</strong>{activeFilters > 0 && <button type="button" onClick={resetFilters}><RiCloseLine size={15} /> Сбросить фильтры</button>}</div>
+          <div className="eq-toolbar__meta"><RiFilter3Line size={17} /> {i18nT("employeesPage.found")} <strong>{filteredEquipment.length}</strong>{activeFilters > 0 && <button type="button" onClick={resetFilters}><RiCloseLine size={15} /> {i18nT("ordersPage.resetFilters")}</button>}</div>
           <div className="eq-view-switch">
             <RubberSegment
-              items={[{ value: "cards", label: "Карточки" }, { value: "table", label: "Таблица" }]}
+              items={[{ value: "cards", label: i18nT("pages.employees.employees.employees.152beb3") }, { value: "table", label: i18nT("ordersPage.table") }]}
               value={view}
               onChange={setView}
               trackColor="#ffffff"
@@ -288,7 +290,7 @@ export default function Equipment() {
               inset={3}
               equalSlots
               draggable
-              aria-label="Режим отображения"
+              aria-label={i18nT("pages.equipment.equipment.equipment.6d11110")}
             />
           </div>
         </div>
@@ -299,7 +301,7 @@ export default function Equipment() {
             {filteredEquipment.length ? (
               <div className="eq-grid">{filteredEquipment.map((item) => <EquipmentCard key={item.id} item={item} area={areasById.get(String(item.areaId))} />)}</div>
             ) : (
-              <div className="eq-empty"><RiToolsLine size={34} /><strong>Оборудование не найдено</strong><span>Измените параметры поиска или сбросьте фильтры</span></div>
+              <div className="eq-empty"><RiToolsLine size={34} /><strong>{i18nT("pages.equipment.equipment.equipment.11a8e6f")}</strong><span>{i18nT("pages.equipment.equipment.equipment.d3dfefe")}</span></div>
             )}
           </div>
         ) : (
@@ -320,8 +322,8 @@ export default function Equipment() {
                 if (event?.target?.closest?.("button, a, input, select, textarea")) return;
                 navigate(`/equipment/${item.id}`);
               }}
-              emptyText="Оборудование не найдено"
-              emptyDescription="Попробуйте сбросить фильтры"
+              emptyText={i18nT("pages.equipment.equipment.equipment.11a8e6f")}
+              emptyDescription={i18nT("pages.equipment.equipment.equipment.3d1bf6e")}
             />
           </div>
         )}

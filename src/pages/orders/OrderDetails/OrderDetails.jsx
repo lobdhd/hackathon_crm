@@ -750,7 +750,7 @@ export default function OrderDetails() {
                 <h1 className="mt-4 text-2xl font-bold text-gray-900">
                     {status === 404
                         ? i18nT("orderDetails.notFound")
-                        : "Не удалось загрузить наряд"}
+                        : i18nT("pages.orders.orderdetails.orderdetails.c106eb1")}
                 </h1>
 
                 <p className="mt-2 text-sm text-gray-500">
@@ -891,17 +891,17 @@ export default function OrderDetails() {
                         <div>
                             <p className="font-semibold">
                                 {offlineQueue.syncing
-                                    ? "Синхронизация offline-действий"
+                                    ? i18nT("pages.orders.orderdetails.orderdetails.099bcf3")
                                     : !offlineQueue.online
-                                      ? "Нет сети"
-                                      : "Есть действия, ожидающие отправки"}
+                                      ? i18nT("pages.orders.orderdetails.orderdetails.9ab77b6")
+                                      : i18nT("pages.orders.orderdetails.orderdetails.85d80f6")}
                             </p>
 
                             <p className="mt-1 text-xs opacity-80">
                                 {offlineQueue.count > 0
                                     ? `В очереди: ${offlineQueue.count}`
                                     : offlineQueue.lastMessage ||
-                                      "Проверяем очередь"}
+                                      i18nT("pages.orders.orderdetails.orderdetails.cf4f844")}
                             </p>
                         </div>
                     </div>
@@ -955,14 +955,14 @@ export default function OrderDetails() {
                                         <RiToolsLine />
                                         {order.equipment
                                             ?.name ||
-                                            "Без оборудования"}
+                                            i18nT("pages.orders.orderdetails.orderdetails.697fdde")}
                                     </span>
 
                                     <span className="inline-flex items-center gap-1.5">
                                         <RiUserLine />
                                         {order.assignee
                                             ?.fullName ||
-                                            "Без исполнителя"}
+                                            i18nT("pages.orders.orderdetails.orderdetails.a058478")}
                                     </span>
 
                                     {order.brigade && (
@@ -1046,7 +1046,7 @@ export default function OrderDetails() {
                                             .photoComment ||
                                             order.aiAssessment
                                                 .explanation ||
-                                            "AI не уверен в результате проверки."}
+                                            i18nT("pages.orders.orderdetails.orderdetails.236fa27")}
                                     </p>
                                 </div>
                             </div>
@@ -1108,7 +1108,7 @@ export default function OrderDetails() {
                             size="md"
                             radius={11}
                             inset={3}
-                            aria-label="Раздел карточки наряда"
+                            aria-label={i18nT("pages.orders.orderdetails.orderdetails.67025cd")}
                         />
                     </div>
                 </div>
@@ -1227,7 +1227,7 @@ export default function OrderDetails() {
 
                                 <p className="mt-2 text-sm leading-6 text-gray-700">
                                     {order.completionText ||
-                                        "Отчёт ещё не заполнен"}
+                                        i18nT("pages.orders.orderdetails.orderdetails.1aab3a9")}
                                 </p>
                             </Section>
 
@@ -1314,14 +1314,14 @@ export default function OrderDetails() {
                                     />
 
                                     <DateItem
-                                        label="Начат"
+                                        label={i18nT("pages.orders.orderdetails.orderdetails.fd870d2")}
                                         value={
                                             order.startedAt
                                         }
                                     />
 
                                     <DateItem
-                                        label="Выполнен"
+                                        label={i18nT("pages.orders.orderdetails.orderdetails.ab3dd69")}
                                         value={
                                             order.completedAt
                                         }
@@ -1373,7 +1373,7 @@ export default function OrderDetails() {
                                                 {order
                                                     .assignee
                                                     .specialty ||
-                                                    "Специальность не указана"}
+                                                    i18nT("components.employees.employeecard.2a2d667")}
                                             </p>
                                         </div>
                                     </div>
@@ -1402,7 +1402,7 @@ export default function OrderDetails() {
                                 }
                             >
                                 <InfoItem
-                                    label="Создал наряд"
+                                    label={i18nT("pages.orders.orderdetails.orderdetails.485f383")}
                                     value={
                                         order.creator
                                             ?.fullName ||
@@ -1615,7 +1615,7 @@ function CommentsSection({
                     className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                 >
                     {mutation.isPending
-                        ? "Отправляем..."
+                        ? i18nT("pages.orders.orderdetails.orderdetails.cebac99")
                         : i18nT("pages.admin.admin.admin.5eba283")}
                 </button>
             </form>
@@ -1636,7 +1636,7 @@ function CommentsSection({
                                         <p className="text-xs font-semibold text-gray-700">
                                             {event.actor
                                                 ?.fullName ||
-                                                "Система"}
+                                                i18nT("history.system")}
                                         </p>
 
                                         <span className="text-[11px] text-gray-400">
@@ -1785,7 +1785,7 @@ function EvaluationReport({
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                         <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-4">
                             <ScoreBox
-                                label="Итог"
+                                label={i18nT("pages.orders.orderdetails.orderdetails.d0660d2")}
                                 value={
                                     report.finalScore ??
                                     assessment.masterScore ??
@@ -1810,7 +1810,7 @@ function EvaluationReport({
                             />
 
                             <ScoreBox
-                                label="Аудитория"
+                                label={i18nT("pages.orders.orderdetails.orderdetails.b14e2a6")}
                                 value={
                                     report.audience ||
                                     "—"
@@ -1853,7 +1853,7 @@ function EvaluationReport({
                         <p className="mt-2 text-sm leading-6 text-gray-600">
                             {report.explanation ||
                                 assessment.explanation ||
-                                "Пояснение отсутствует"}
+                                i18nT("pages.orders.orderdetails.orderdetails.0810059")}
                         </p>
                     </div>
 
@@ -1890,7 +1890,7 @@ function EvaluationReport({
                     >
                         <div className="space-y-4">
                             <InfoItem
-                                label="Комментарий мастера"
+                                label={i18nT("pages.orders.orderdetails.orderdetails.2cf19f0")}
                                 value={
                                     report.masterComment ??
                                     assessment.masterComment ??
@@ -1899,7 +1899,7 @@ function EvaluationReport({
                             />
 
                             <InfoItem
-                                label="Комментарий по фото"
+                                label={i18nT("pages.orders.orderdetails.orderdetails.cf64e2a")}
                                 value={
                                     report.photoComment ??
                                     assessment.photoComment ??
@@ -1953,6 +1953,7 @@ function EvaluationReport({
 function ReportChronology({
     items,
 }) {
+    __useI18nReactive();
     return (
         <div className="space-y-3">
             {asArray(items).map(
@@ -1978,7 +1979,7 @@ function ReportChronology({
                                 ? item.actor
                                 : item.actor
                                     ?.fullName ||
-                                  "Система"}
+                                  i18nT("history.system")}
                         </p>
 
                         {(item.from ||
@@ -2521,7 +2522,7 @@ function ActionModal({
                 {action ===
                     "CLOSE" && (
                     <>
-                        <Field label="Оценка мастера">
+                        <Field label={i18nT("pages.orders.orderdetails.orderdetails.4a86b00")}>
                             <FieldSelect
                                 value={
                                     masterScore
@@ -2536,7 +2537,7 @@ function ActionModal({
                             />
                         </Field>
 
-                        <Field label="Фактический простой, мин.">
+                        <Field label={i18nT("pages.orders.orderdetails.orderdetails.fd8c8f6")}>
                             <input
                                 type="number"
                                 min="0"
@@ -2561,7 +2562,7 @@ function ActionModal({
                 <Field
                     label={
                         requiredComment
-                            ? "Причина"
+                            ? i18nT("pages.reports.reports.d88300c")
                             : i18nT("orderModal.comment")
                     }
                 >
@@ -2862,7 +2863,7 @@ function CompleteModal({
                     </div>
                 )}
 
-                <Field label="Что выполнено и как проверено">
+                <Field label={i18nT("pages.orders.orderdetails.orderdetails.1de8efa")}>
                     <div className="relative">
                         <textarea
                             value={
@@ -2942,7 +2943,7 @@ function CompleteModal({
                     />
                 </Field>
 
-                <Field label="Фото после выполнения">
+                <Field label={i18nT("pages.orders.orderdetails.orderdetails.5c6a0aa")}>
                     <input
                         type="file"
                         accept="image/*"
@@ -3242,14 +3243,14 @@ function TimingCard({
                     />
 
                     <TimingRow
-                        label="Фактически"
+                        label={i18nT("pages.orders.orderdetails.orderdetails.f8f8be5")}
                         value={formatHours(
                             timing.actualHours,
                         )}
                     />
 
                     <TimingRow
-                        label="К нормативу"
+                        label={i18nT("pages.orders.orderdetails.orderdetails.a319492")}
                         value={
                             timing.vsNormativePercent !=
                             null
@@ -3268,7 +3269,7 @@ function TimingCard({
                     />
 
                     <TimingRow
-                        label="Срок соблюдён"
+                        label={i18nT("pages.orders.orderdetails.orderdetails.c0f03fa")}
                         value={
                             timing.deadlineMet ===
                             null ||
@@ -3286,7 +3287,7 @@ function TimingCard({
                     />
 
                     <TimingRow
-                        label="Просрочка"
+                        label={i18nT("pages.orders.orderdetails.orderdetails.ce87be4")}
                         value={formatMinutes(
                             timing.overdueMinutes,
                         )}
@@ -3357,7 +3358,7 @@ function AiAssessmentCompact({
                 />
 
                 <ScoreBox
-                    label="Фото"
+                    label={i18nT("pages.orders.orderdetails.orderdetails.5a34e54")}
                     value={
                         assessment.photoScore
                     }
@@ -3371,7 +3372,7 @@ function AiAssessmentCompact({
                 />
 
                 <ScoreBox
-                    label="Уверенность"
+                    label={i18nT("pages.orders.orderdetails.orderdetails.25927e9")}
                     value={
                         assessment.confidence !=
                         null
@@ -3792,6 +3793,7 @@ function ActionButton({
 }
 
 function Modal({ title, onClose, children, width = "640px" }) {
+    __useI18nReactive();
     return createPortal(
         <div className="od-modal-backdrop" onMouseDown={onClose}>
             <div
@@ -3801,7 +3803,7 @@ function Modal({ title, onClose, children, width = "640px" }) {
             >
                 <div className="od-modal-head">
                     <h2>{title}</h2>
-                    <button type="button" aria-label="Закрыть окно" onClick={onClose}>
+                    <button type="button" aria-label={i18nT("pages.orders.orderdetails.orderdetails.e9f5a3f")} onClick={onClose}>
                         <RiCloseLine size={20} />
                     </button>
                 </div>
@@ -3834,7 +3836,7 @@ function ModalFooter({
                 className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
             >
                 {pending
-                    ? "Выполняется..."
+                    ? i18nT("pages.orders.orderdetails.orderdetails.3e13295")
                     : text}
             </button>
         </div>

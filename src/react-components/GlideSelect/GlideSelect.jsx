@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDown01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import './GlideSelect.css';
+import { t as i18nT } from "../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../i18n/index.js";
 const VIEWPORT_GAP = 10;
 const MENU_GAP = 6;
 const SIZE_CONFIG = {
@@ -42,6 +44,8 @@ export default function GlideSelect({
   searchable = false,
   searchPlaceholder = 'Поиск...',
 }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const id = useId();
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
@@ -55,7 +59,7 @@ export default function GlideSelect({
   const [active, setActive] = useState(-1);
   const [menuPosition, setMenuPosition] = useState(null);
   const [side, setSide] = useState(placement);
-  const items = useMemo(() => options.map(normalizeOption), [options]);
+  const items = useMemo(() => options.map(normalizeOption), [options, __i18nLocaleToken]);
   const current = value !== undefined ? value : innerValue;
   const selectedIndex = items.findIndex((item) => String(item.value) === String(current));
   const selected = selectedIndex >= 0 ? items[selectedIndex] : null;
@@ -63,7 +67,7 @@ export default function GlideSelect({
     const term = query.trim().toLocaleLowerCase();
     if (!term || !searchable) return items;
     return items.filter((item) => `${item.label ?? ''} ${item.tag ?? ''}`.toLocaleLowerCase().includes(term));
-  }, [items, query, searchable]);
+  }, [items, query, searchable, __i18nLocaleToken]);
   const sizes = SIZE_CONFIG[size] ?? SIZE_CONFIG.md;
   const cssVars = {
     '--gs-accent': accentColor,
@@ -272,7 +276,7 @@ export default function GlideSelect({
             </button>
           );
         })}
-        {visible.length === 0 && <div className="glide-select__empty">Ничего не найдено</div>}
+        {visible.length === 0 && <div className="glide-select__empty">{i18nT("quickOrder.equipmentEmpty")}</div>}
       </div>
     </div>
   );

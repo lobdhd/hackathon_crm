@@ -71,7 +71,7 @@ function PeriodControl({ value, onChange }) {
         inset={3}
         equalSlots
         draggable
-        aria-label="Период рейтинга"
+        aria-label={i18nT("pages.rating.rating.3c00456")}
       />
     </div>
   );
@@ -95,16 +95,17 @@ function ScoreBadge({ value }) {
 }
 
 function LeaderCard({ item, rank, isBrigade, onClick }) {
+    useI18n();
   const Icon = isBrigade ? RiTeamLine : RiUser3Line;
   const subtitle = isBrigade
     ? `${i18nT("pages.rating.rating.6cef7a4")} ${Array.isArray(item.members) ? item.members.length : item.members ?? "—"}`
     : item.specialty || "Специальность не указана";
   return (
     <button type="button" className={`rt-leader rt-leader--${rank}`} onClick={onClick} disabled={!onClick}>
-      <div className="rt-leader__top"><span className="rt-leader__place"><RiMedalLine size={17} /> ТОП {rank}</span><span className="rt-leader__avatar">{isBrigade ? <Icon size={21} /> : initials(item.fullName)}</span></div>
+      <div className="rt-leader__top"><span className="rt-leader__place"><RiMedalLine size={17} /> {i18nT("pages.rating.rating.0a7f305")} {rank}</span><span className="rt-leader__avatar">{isBrigade ? <Icon size={21} /> : initials(item.fullName)}</span></div>
       <strong className="rt-leader__name">{isBrigade ? item.name : item.fullName}</strong>
       <span className="rt-leader__subtitle">{subtitle}</span>
-      <div className="rt-leader__footer"><span><b>{scoreValue(item.score)}</b> / 100</span><span>{item.closed ?? 0} закрыто {onClick && <RiArrowRightUpLine size={16} />}</span></div>
+      <div className="rt-leader__footer"><span><b>{scoreValue(item.score)}</b> / 100</span><span>{item.closed ?? 0} {i18nT("pages.rating.rating.04aadcb")} {onClick && <RiArrowRightUpLine size={16} />}</span></div>
       <div className="rt-leader__progress"><span style={{ width: `${Math.max(0, Math.min(100, Number(item.score) || 0))}%` }} /></div>
     </button>
   );
@@ -116,7 +117,7 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
   const criteria = [
     {
       key: "quality",
-      title: "Качество работ",
+      title: i18nT("pages.equipment.equipmentdetails.equipmentdetails.235ca37"),
       maximum: 45,
       note: finite(rating.quality)
         ? `Средняя оценка ${numberValue(rating.quality, 2)} из 5`
@@ -124,25 +125,25 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
     },
     {
       key: "onTime",
-      title: "Соблюдение сроков",
+      title: i18nT("ratingPage.onTime"),
       maximum: 25,
       note: `Выполнено в срок: ${percent(rating.onTimeRate)}`,
     },
     {
       key: "noReturns",
-      title: "Без возвратов",
+      title: i18nT("pages.rating.rating.a09c947"),
       maximum: 15,
       note: `Доработки: ${percent(rating.reworkRate)} · Повторные поломки: ${percent(rating.repeatFailureRate)}`,
     },
     {
       key: "volume",
-      title: "Объём работ",
+      title: i18nT("pages.rating.rating.83c9a27"),
       maximum: 10,
       note: `Закрыто нарядов: ${rating.closed ?? "—"}`,
     },
     {
       key: "complexity",
-      title: "Сложность нарядов",
+      title: i18nT("pages.rating.rating.871414e"),
       maximum: 5,
       note: finite(rating.complexityBonus)
         ? `Бонус за сложность: ${numberValue(rating.complexityBonus)}`
@@ -183,24 +184,24 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
       <div className="rt-panel__head rt-breakdown__header">
         <span className="rt-section-icon"><RiShieldCheckLine size={20} /></span>
         <div className="rt-breakdown__heading">
-          <h3>Разбор рейтинга</h3>
-          <p>{personal ? "Расчёт вашего результата за выбранный период" : subtitle}</p>
+          <h3>{i18nT("pages.rating.rating.938f99a")}</h3>
+          <p>{personal ? i18nT("pages.rating.rating.f3dc477") : subtitle}</p>
         </div>
-        <span className="rt-breakdown__source-tag">Данные из отчёта</span>
+        <span className="rt-breakdown__source-tag">{i18nT("pages.rating.rating.09ab85c")}</span>
       </div>
       <div className="rt-breakdown__body">
         <div className="rt-breakdown__total">
           <div className="rt-breakdown__total-heading">
             <div>
-              <span className="rt-breakdown__eyebrow">Итоговая оценка</span>
+              <span className="rt-breakdown__eyebrow">{i18nT("pages.orders.orderdetails.orderdetails.8a9901b")}</span>
               <strong>{total === null ? "—" : scoreValue(total)}<small> /100</small></strong>
             </div>
-            <p>Итог рассчитывается на сервере с учётом составляющих оценки и корректировок.</p>
+            <p>{i18nT("pages.rating.rating.43a5679")}</p>
           </div>
           <div
             className="rt-breakdown__total-track"
             role="progressbar"
-            aria-label="Итоговый рейтинг"
+            aria-label={i18nT("pages.rating.rating.47fcdf7")}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={total ?? 0}
@@ -209,8 +210,8 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
           </div>
         </div>
         <div className="rt-breakdown__subheading">
-          <h4>Составляющие оценки</h4>
-          <span>Набрано из возможных баллов</span>
+          <h4>{i18nT("pages.rating.rating.6edf2fc")}</h4>
+          <span>{i18nT("pages.rating.rating.15b36f1")}</span>
         </div>
         <div className="rt-breakdown__criteria">
           {criteria.map((criterion) => (
@@ -242,9 +243,9 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
               <div className="rt-breakdown__insight">
                 <RiTrophyLine size={19} />
                 <div>
-                  <span>Сильная сторона</span>
+                  <span>{i18nT("pages.rating.rating.adc6125")}</span>
                   <strong>{strongest.title}</strong>
-                  <small>{Math.round(strongest.share)}% от максимума критерия</small>
+                  <small>{Math.round(strongest.share)}{i18nT("pages.rating.rating.25e763b")}</small>
                 </div>
               </div>
             )}
@@ -252,9 +253,9 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
               <div className="rt-breakdown__insight rt-breakdown__insight--growth">
                 <RiArrowRightUpLine size={19} />
                 <div>
-                  <span>Можно улучшить</span>
+                  <span>{i18nT("pages.rating.rating.c43aade")}</span>
                   <strong>{growth.title}</strong>
-                  <small>{Math.round(growth.share)}% от максимума критерия</small>
+                  <small>{Math.round(growth.share)}{i18nT("pages.rating.rating.25e763b")}</small>
                 </div>
               </div>
             )}
@@ -262,10 +263,10 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
               <div className="rt-breakdown__insight rt-breakdown__insight--penalty">
                 <RiInformationLine size={19} />
                 <div>
-                  <span>Отказы и корректировки</span>
-                  {penalty !== null && penalty !== 0 && <strong>{numberValue(penalty)} балла</strong>}
+                  <span>{i18nT("pages.rating.rating.6b843ab")}</span>
+                  {penalty !== null && penalty !== 0 && <strong>{numberValue(penalty)} {i18nT("pages.rating.rating.ac80cfd")}</strong>}
                   {rejects !== null && rejects > 0 && (
-                    <small>Необоснованных отказов: {numberValue(rejects, 0)}</small>
+                    <small>{i18nT("pages.rating.rating.307fcc1")} {numberValue(rejects, 0)}</small>
                   )}
                 </div>
               </div>
@@ -276,19 +277,19 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
           <div className="rt-breakdown__advice">
             <RiSparkling2Line size={19} />
             <div>
-              <strong>Как улучшить результат</strong>
+              <strong>{i18nT("pages.rating.rating.7c70c3b")}</strong>
               <p>{shortAdvice}</p>
             </div>
           </div>
         )}
         {(rating.explanation || rating.formula) && (
           <details className="rt-breakdown__details">
-            <summary><RiInformationLine size={17} /> Полное объяснение и формула расчёта</summary>
+            <summary><RiInformationLine size={17} /> {i18nT("pages.rating.rating.35f4ff4")}</summary>
             <div className="rt-breakdown__details-content">
               {rating.explanation && <p>{rating.explanation}</p>}
               {rating.formula && (
                 <div>
-                  <strong>Формула расчёта</strong>
+                  <strong>{i18nT("pages.rating.rating.a4eb114")}</strong>
                   <p>{rating.formula}</p>
                 </div>
               )}
@@ -301,13 +302,14 @@ function RatingBreakdown({ rating, subtitle, personal = false }) {
 }
 
 function ErrorBox({ text, onRetry }) {
+    useI18n();
   return (
     <div className="rt-alert" role="alert">
       <RiInformationLine size={19} />
       <span>{text}</span>
       {onRetry && (
         <button type="button" onClick={onRetry}>
-          <RiRefreshLine size={15} /> Повторить
+          <RiRefreshLine size={15} /> {i18nT("components.layout.appnavbar.b914bbb")}
         </button>
       )}
     </div>
@@ -341,6 +343,7 @@ function RatingSkeleton() {
 }
 
 export default function Rating() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const localeToken = i18nT("sidebar.home");
   const navigate = useNavigate();
@@ -350,7 +353,7 @@ export default function Rating() {
   const [mode, setMode] = useState("executors");
   const [filters, setFilters] = useState({ search: "", areaId: "", specialty: "", period: "month" });
   const updateFilter = (field, value) => setFilters(prev => ({ ...prev, [field]: value }));
-  const params = useMemo(() => ({ period: filters.period, ...(filters.areaId ? { areaId: Number(filters.areaId) } : {}) }), [filters.period, filters.areaId]);
+  const params = useMemo(() => ({ period: filters.period, ...(filters.areaId ? { areaId: Number(filters.areaId) } : {}) }), [filters.period, filters.areaId, __i18nLocaleToken]);
   const ratingsQuery = useRatings(params, { enabled: !isExecutor });
   const brigadesQuery = useBrigadeRatings(params, { enabled: !isExecutor });
   const myRatingQuery = useMyRating({ period: filters.period }, { enabled: isExecutor });
@@ -358,15 +361,15 @@ export default function Rating() {
   const employees = asArray(ratingsQuery.data);
   const brigades = asArray(brigadesQuery.data);
   const areas = asArray(areasQuery.data);
-  const specialties = useMemo(() => [...new Set(employees.map(item => item.specialty).filter(Boolean))].sort(), [employees]);
-  const areaOptions = useMemo(() => [{ value: "", label: i18nT("reportModal.allAreas") }, ...areas.map(item => ({ value: String(item.id), label: item.name }))], [areas, localeToken]);
-  const specialtyOptions = useMemo(() => [{ value: "", label: i18nT("employeesPage.allSpecialties") }, ...specialties.map(item => ({ value: item, label: item }))], [specialties, localeToken]);
+  const specialties = useMemo(() => [...new Set(employees.map(item => item.specialty).filter(Boolean))].sort(), [employees, __i18nLocaleToken]);
+  const areaOptions = useMemo(() => [{ value: "", label: i18nT("reportModal.allAreas") }, ...areas.map(item => ({ value: String(item.id), label: item.name }))], [areas, localeToken, __i18nLocaleToken]);
+  const specialtyOptions = useMemo(() => [{ value: "", label: i18nT("employeesPage.allSpecialties") }, ...specialties.map(item => ({ value: item, label: item }))], [specialties, localeToken, __i18nLocaleToken]);
   const search = filters.search.trim().toLowerCase();
   const filteredEmployees = useMemo(() => employees.filter(item => {
     const matchesText = !search || [item.fullName, item.specialty].some(v => String(v || "").toLowerCase().includes(search));
     return matchesText && (!filters.specialty || item.specialty === filters.specialty);
-  }).sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)), [employees, search, filters.specialty]);
-  const filteredBrigades = useMemo(() => brigades.filter(item => !search || String(item.name || "").toLowerCase().includes(search)).sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)), [brigades, search]);
+  }).sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)), [employees, search, filters.specialty, __i18nLocaleToken]);
+  const filteredBrigades = useMemo(() => brigades.filter(item => !search || String(item.name || "").toLowerCase().includes(search)).sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)), [brigades, search, __i18nLocaleToken]);
   const isBrigades = mode === "brigades";
   const rows = isBrigades ? filteredBrigades : filteredEmployees;
   const scoredRows = rows.filter(row => finite(row.score));
@@ -378,14 +381,14 @@ export default function Rating() {
   const activeFiltersCount = [filters.areaId, !isBrigades && filters.specialty].filter(Boolean).length;
   const employeeColumns = [
     { key: "place", header: "№", minWidth: 62, sortable: false, render: (_, index) => <span className="rt-table-rank">{index + 1}</span> },
-    { field: "fullName", header: i18nT("ordersTable.assignee"), minWidth: 235, render: item => <div className="rt-person"><span className="rt-person__avatar">{initials(item.fullName)}</span><div><strong>{item.fullName}</strong><small>{item.specialty || "Специальность не указана"}</small></div></div> },
+    { field: "fullName", header: i18nT("ordersTable.assignee"), minWidth: 235, render: item => <div className="rt-person"><span className="rt-person__avatar">{initials(item.fullName)}</span><div><strong>{item.fullName}</strong><small>{item.specialty || i18nT("components.employees.employeecard.2a2d667")}</small></div></div> },
     { field: "score", header: i18nT("pages.rating.rating.304ce2c"), minWidth: 105, sortValue: row => Number(row.score), render: row => <ScoreBadge value={row.score} /> },
     { field: "quality", header: i18nT("pages.rating.rating.cfedc14"), minWidth: 100, render: row => numberValue(row.quality) },
     { field: "onTimeRate", header: i18nT("pages.rating.rating.a67436e"), minWidth: 115, render: row => <span className="rt-table-rate">{percent(row.onTimeRate)}</span> },
     { field: "reworkRate", header: i18nT("pages.rating.rating.399f7c5"), minWidth: 110, render: row => percent(row.reworkRate) },
     { field: "repeatFailureRate", header: i18nT("pages.rating.rating.0a7f61c"), minWidth: 140, render: row => percent(row.repeatFailureRate) },
     { field: "productivity", header: i18nT("pages.rating.rating.a12969d"), minWidth: 135, render: row => numberValue(row.productivity) },
-    { field: "closed", header: "Закрыто нарядов", minWidth: 105 },
+    { field: "closed", header: i18nT("pages.rating.rating.54a16b9"), minWidth: 105 },
   ];
   const brigadeColumns = [
     { field: "name", header: i18nT("employeeModal.team"), minWidth: 270, render: item => <div className="rt-person"><span className="rt-person__avatar"><RiTeamLine size={17} /></span><div><strong>{item.name}</strong><small>{i18nT("pages.rating.rating.6cef7a4")} {Array.isArray(item.members) ? item.members.length : item.members ?? "—"}</small></div></div> },
@@ -393,7 +396,7 @@ export default function Rating() {
     { field: "quality", header: i18nT("pages.rating.rating.cfedc14"), minWidth: 110, render: row => numberValue(row.quality) },
     { field: "onTimeRate", header: i18nT("pages.rating.rating.a67436e"), minWidth: 125, render: row => percent(row.onTimeRate) },
     { field: "repeatFailureRate", header: i18nT("pages.rating.rating.0a7f61c"), minWidth: 145, render: row => percent(row.repeatFailureRate) },
-    { field: "closed", header: "Закрыто нарядов", minWidth: 110 },
+    { field: "closed", header: i18nT("pages.rating.rating.54a16b9"), minWidth: 110 },
   ];
 
   if (isExecutor) return <MyRatingView period={filters.period} onPeriodChange={value => updateFilter("period", value)} query={myRatingQuery} />;
@@ -415,7 +418,7 @@ export default function Rating() {
       {loading ? <RatingSkeleton /> : <>
         <div className="rt-stats">
           <MetricCard
-            title="Лучший рейтинг"
+            title={i18nT("pages.rating.rating.d3ad6a2")}
             value={best ? scoreValue(best.score) : "—"}
             note={best ? (isBrigades ? best.name : best.fullName) : "Нет данных"}
             icon={RiTrophyLine}
@@ -423,7 +426,7 @@ export default function Rating() {
             progress={best && finite(best.score) ? Number(best.score) : null}
           />
           <MetricCard
-            title="Средний рейтинг"
+            title={i18nT("pages.rating.rating.d077e25")}
             value={averageRating == null ? "—" : numberValue(averageRating)}
             note={isBrigades ? "Среди бригад" : "Среди исполнителей"}
             icon={RiStarFill}
@@ -431,7 +434,7 @@ export default function Rating() {
             progress={averageRating}
           />
           <MetricCard
-            title="Выполнено в срок"
+            title={i18nT("pages.rating.rating.3aff70d")}
             value={averageOnTime == null ? "—" : `${Math.round(averageOnTime)}%`}
             note="Средний показатель"
             icon={RiCheckboxCircleLine}
@@ -453,10 +456,10 @@ export default function Rating() {
                 <span className="rt-section-icon"><RiMedalLine size={20} /></span>
                 <div>
                   <h2>{i18nT("pages.rating.rating.6fe16c2")}</h2>
-                  <p>{isBrigades ? "Бригады с наивысшими оценками" : i18nT("pages.rating.rating.73799f5")}</p>
+                  <p>{isBrigades ? i18nT("pages.rating.rating.0136acf") : i18nT("pages.rating.rating.73799f5")}</p>
                 </div>
               </div>
-              <span className="rt-head-meta">ТОП {Math.min(scoredRows.length, 3)}</span>
+              <span className="rt-head-meta">{i18nT("pages.rating.rating.0a7f305")} {Math.min(scoredRows.length, 3)}</span>
             </div>
             <div className="rt-leaders-grid">
               {scoredRows.slice(0, 3).map((item, index) => (
@@ -477,8 +480,8 @@ export default function Rating() {
           <div className="rt-panel__head-main">
             <span className="rt-section-icon"><RiFilter3Line size={20} /></span>
             <div>
-              <h2>{isBrigades ? "Рейтинг бригад" : "Рейтинг исполнителей"}</h2>
-              <p>Данные и оценки за выбранный период</p>
+              <h2>{isBrigades ? i18nT("pages.reports.reports.1d0130f") : i18nT("ratingPage.title")}</h2>
+              <p>{i18nT("pages.rating.rating.347239a")}</p>
             </div>
           </div>
           <div className="rt-mode">
@@ -495,7 +498,7 @@ export default function Rating() {
               inset={3}
               equalSlots
               draggable
-              aria-label="Вид рейтинга"
+              aria-label={i18nT("pages.rating.rating.2517404")}
             />
           </div>
         </div>
@@ -506,10 +509,10 @@ export default function Rating() {
               value={filters.search}
               onChange={(event) => updateFilter("search", event.target.value)}
               placeholder={isBrigades ? "Поиск бригады..." : "Поиск исполнителя..."}
-              aria-label="Поиск по рейтингу"
+              aria-label={i18nT("pages.rating.rating.61c38ae")}
             />
             {filters.search && (
-              <button type="button" aria-label="Очистить поиск" onClick={() => updateFilter("search", "")}>
+              <button type="button" aria-label={i18nT("pages.employees.employees.employees.30e2d49")} onClick={() => updateFilter("search", "")}>
                 <RiCloseLine />
               </button>
             )}
@@ -541,7 +544,7 @@ export default function Rating() {
             </div>
           )}
         </div>
-        <div className="rt-list-meta"><div><RiFilter3Line size={15} /><span>Найдено: <strong>{rows.length}</strong></span>{activeFiltersCount > 0 && <button type="button" onClick={() => setFilters(prev => ({ ...prev, areaId: "", specialty: "", search: "" }))}><RiCloseLine size={15} /> Сбросить</button>}</div>{currentQuery.isFetching && !loading && <span className="rt-updating"><RiRefreshLine size={14} /> Обновление данных</span>}</div>
+        <div className="rt-list-meta"><div><RiFilter3Line size={15} /><span>{i18nT("employeesPage.found")} <strong>{rows.length}</strong></span>{activeFiltersCount > 0 && <button type="button" onClick={() => setFilters(prev => ({ ...prev, areaId: "", specialty: "", search: "" }))}><RiCloseLine size={15} /> {i18nT("employeesPage.reset")}</button>}</div>{currentQuery.isFetching && !loading && <span className="rt-updating"><RiRefreshLine size={14} /> {i18nT("pages.rating.rating.ac69b22")}</span>}</div>
         <div className="rt-table-wrap">
           {loading ? <RatingSkeleton /> : (
             <SmartTable
@@ -559,7 +562,7 @@ export default function Rating() {
               rowClassName={isBrigades ? undefined : () => "cursor-pointer"}
               onRowClick={isBrigades ? undefined : (employee) => navigate(`/employees/${employee.id}`)}
               emptyText={isBrigades ? "Рейтинг бригад пуст" : "Рейтинг исполнителей пуст"}
-              emptyDescription="За выбранный период нет данных"
+              emptyDescription={i18nT("pages.rating.rating.6f73dab")}
             />
           )}
         </div>
@@ -572,6 +575,7 @@ export default function Rating() {
 }
 
 function MyRatingView({ period, onPeriodChange, query }) {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const rating = asObject(query.data);
   const validScore = finite(rating?.score);
@@ -604,7 +608,7 @@ function MyRatingView({ period, onPeriodChange, query }) {
       },
     },
     tooltip: { enabled: false },
-  }), [score, validScore]);
+  }), [score, validScore, __i18nLocaleToken]);
   const metrics = rating ? [
     { label: i18nT("pages.rating.rating.cfedc14"), value: numberValue(rating.quality), icon: RiStarFill, tone: "sky" },
     { label: i18nT("pages.rating.rating.a67436e"), value: percent(rating.onTimeRate), icon: RiCheckboxCircleLine, tone: "green" },
@@ -619,7 +623,7 @@ function MyRatingView({ period, onPeriodChange, query }) {
     <div className="rt mx-auto max-w-[1800px] p-7">
       <header className="rt-header">
         <div>
-          <div className="rt-eyebrow"><RiTrophyLine size={15} /> ЛИЧНЫЕ ПОКАЗАТЕЛИ</div>
+          <div className="rt-eyebrow"><RiTrophyLine size={15} /> {i18nT("pages.rating.rating.2af2058")}</div>
           <h1>{i18nT("pages.rating.rating.34bfde9")}</h1>
           <p>{i18nT("pages.rating.rating.df8f838")}</p>
         </div>
@@ -652,7 +656,7 @@ function MyRatingView({ period, onPeriodChange, query }) {
                 <span>{i18nT("pages.rating.rating.0791eff")}</span>
               </div>
               <div className="rt-personal__identity">
-                <strong>{rating.fullName || "Ваш результат"}</strong>
+                <strong>{rating.fullName || i18nT("pages.rating.rating.0c03d60")}</strong>
                 <small>{rating.specialty || i18nT("ordersTable.assignee")}</small>
               </div>
             </div>

@@ -40,14 +40,14 @@ export default function OrderCard({
                 <div className="flex items-start gap-2 text-xs text-gray-500">
                     <RiMapPinLine size={15} className="mt-0.5 shrink-0" />
 
-                    <span>{area?.name ?? "Участок не указан"}</span>
+                    <span>{area?.name ?? i18nT("components.equipment.equipmentcard.21c6437")}</span>
                 </div>
 
                 <div className="flex items-start gap-2 text-xs text-gray-500">
                     <RiToolsLine size={15} className="mt-0.5 shrink-0" />
 
                     <span className="line-clamp-1">
-                        {equipment?.name ?? "Оборудование не указано"}
+                        {equipment?.name ?? i18nT("components.orders.ordercard.30684a9")}
                     </span>
                 </div>
 

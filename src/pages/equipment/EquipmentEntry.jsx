@@ -9,6 +9,7 @@ import { extractEquipmentQrToken } from "../../api/equipment.api.js";
 import { useEquipmentByQr } from "../../hooks/useEquipment.js";
 import { useI18n } from "../../i18n/index.js";
 import "./EquipmentEntry.css";
+import { t as i18nT } from "../../i18n/index.js";
 
 function getErrorMessage(error) {
   if (error?.response?.status === 404) return "Оборудование с таким QR-кодом не найдено";
@@ -29,6 +30,7 @@ function EntryState({ icon: Icon, title, description, tone = "blue", children })
   );
 }
 export default function EquipmentEntry() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -36,7 +38,7 @@ export default function EquipmentEntry() {
   const isNumericId = /^\d+$/.test(routeValue);
   const qrToken = useMemo(
     () => isNumericId ? "" : extractEquipmentQrToken(routeValue),
-    [isNumericId, routeValue],
+    [isNumericId, routeValue, __i18nLocaleToken],
   );
   const qrQuery = useEquipmentByQr(qrToken, { enabled: !isNumericId && Boolean(qrToken) });
   useEffect(() => {
@@ -49,28 +51,28 @@ export default function EquipmentEntry() {
   if (isNumericId) return <EquipmentDetails />;
   if (!qrToken) {
     return (
-      <EntryState icon={RiAlarmWarningLine} tone="red" title="Некорректный QR-код" description="В ссылке отсутствует корректный код оборудования. Проверьте QR и попробуйте ещё раз.">
-        <button type="button" className="eq-entry__primary" onClick={() => navigate("/equipment")}><RiArrowLeftLine size={17} /> К списку оборудования</button>
+      <EntryState icon={RiAlarmWarningLine} tone="red" title={i18nT("pages.equipment.equipmententry.7b2ec75")} description={i18nT("pages.equipment.equipmententry.f8aa6b7")}>
+        <button type="button" className="eq-entry__primary" onClick={() => navigate("/equipment")}><RiArrowLeftLine size={17} /> {i18nT("pages.equipment.equipmentdetails.equipmentdetails.78af5e1")}</button>
       </EntryState>
     );
   }
   if (qrQuery.isLoading || (qrQuery.isFetching && !qrQuery.data)) {
     return (
-      <EntryState icon={RiQrCodeLine} title="Проверяем QR-код" description="Определяем оборудование и открываем его карточку">
+      <EntryState icon={RiQrCodeLine} title={i18nT("pages.equipment.equipmententry.811a6d8")} description={i18nT("pages.equipment.equipmententry.50028c8")}>
         <RiLoader4Line className="eq-entry__spinner" size={25} />
       </EntryState>
     );
   }
   if (qrQuery.isError && !qrQuery.data) {
     return (
-      <EntryState icon={RiAlarmWarningLine} tone="red" title="Оборудование не найдено" description={getErrorMessage(qrQuery.error)}>
+      <EntryState icon={RiAlarmWarningLine} tone="red" title={i18nT("equipmentPage.empty")} description={getErrorMessage(qrQuery.error)}>
         <div className="eq-entry__token"><small>QR token</small><code>{qrToken}</code></div>
         <div className="eq-entry__actions">
-          <button type="button" className="eq-entry__secondary" onClick={() => qrQuery.refetch()}><RiRefreshLine size={17} /> Повторить</button>
-          <button type="button" className="eq-entry__primary" onClick={() => navigate("/equipment")}><RiArrowLeftLine size={17} /> К оборудованию</button>
+          <button type="button" className="eq-entry__secondary" onClick={() => qrQuery.refetch()}><RiRefreshLine size={17} /> {i18nT("components.layout.appnavbar.b914bbb")}</button>
+          <button type="button" className="eq-entry__primary" onClick={() => navigate("/equipment")}><RiArrowLeftLine size={17} /> {i18nT("pages.equipment.equipmententry.5c7d798")}</button>
         </div>
       </EntryState>
     );
   }
-  return <EntryState icon={RiToolsLine} title="Открываем оборудование" description="QR-код найден. Перенаправляем в карточку..."><RiLoader4Line className="eq-entry__spinner" size={25} /></EntryState>;
+  return <EntryState icon={RiToolsLine} title={i18nT("pages.equipment.equipmententry.b7fa70b")} description={i18nT("pages.equipment.equipmententry.29820e4")}><RiLoader4Line className="eq-entry__spinner" size={25} /></EntryState>;
 }

@@ -623,7 +623,7 @@ export default function Reports() {
       order.assignee?.fullName,
       order.status,
     ].filter(Boolean).some((part) => String(part).toLocaleLowerCase().includes(term))).slice(0, 8);
-  }, [workOrders, orderPdfSearch]);
+  }, [workOrders, orderPdfSearch, __i18nLocaleToken]);
 
   function selectOrderSuggestion(order) {
     setOrderReportId(String(order.id));
@@ -1246,7 +1246,7 @@ export default function Reports() {
               inset={3}
               equalSlots
               draggable
-              aria-label="Период отчёта"
+              aria-label={i18nT("pages.reports.reports.aefee26")}
             />
           </div>
         </div>
@@ -1256,7 +1256,7 @@ export default function Reports() {
             <RangeDatePicker
               value={dateRange}
               onChange={handleDateRangeChange}
-              placeholder="Выберите даты"
+              placeholder={i18nT("pages.reports.reports.ea249cc")}
               ariaLabel="Диапазон дат отчёта"
             />
           </FilterField>
@@ -1305,7 +1305,7 @@ export default function Reports() {
             />
           </FilterField>
           {selectedType === "materials" && (
-            <FilterField label="Группировка">
+            <FilterField label={i18nT("pages.reports.reports.b336e92")}>
               <GlideSelect
                 className="glide-select--field"
                 value={filters.groupBy}
@@ -1343,7 +1343,7 @@ export default function Reports() {
             <div className="rp-panel-head__icon"><CurrentReportIcon size={20} /></div>
             <div>
               <h2>{currentType.title}</h2>
-              <p>{currentType.preview ? "Предпросмотр данных с backend" : "Этот отчёт доступен через экспорт"}</p>
+              <p>{currentType.preview ? i18nT("pages.reports.reports.d861662") : i18nT("pages.reports.reports.10d78d1")}</p>
             </div>
           </div>
           {currentType.preview && (
@@ -1438,7 +1438,7 @@ export default function Reports() {
                 placeholder={i18nT("pages.reports.reports.74c0c32")}
               />
               {orderSuggestionsOpen && Boolean(orderPdfSearch.trim()) && (
-                <div className="rp-order-suggestions" id="rp-order-search-suggestions" role="listbox" aria-label="Подсказки по нарядам">
+                <div className="rp-order-suggestions" id="rp-order-search-suggestions" role="listbox" aria-label={i18nT("pages.reports.reports.435a07d")}>
                   {orderSearchMatches.length ? orderSearchMatches.map((order, index) => (
                     <button
                       type="button"
@@ -1450,10 +1450,10 @@ export default function Reports() {
                       onClick={() => selectOrderSuggestion(order)}
                     >
                       <span className="rp-order-suggestion__number">{order.number || `#${order.id}`}</span>
-                      <span className="rp-order-suggestion__details">{[order.equipment?.name, order.description].filter(Boolean).join(" — ") || "Наряд"}</span>
+                      <span className="rp-order-suggestion__details">{[order.equipment?.name, order.description].filter(Boolean).join(" — ") || i18nT("ordersTable.order")}</span>
                     </button>
                   )) : (
-                    <div className="rp-order-suggestions__empty">Наряды не найдены</div>
+                    <div className="rp-order-suggestions__empty">{i18nT("ordersTable.empty")}</div>
                   )}
                 </div>
               )}
@@ -1462,7 +1462,7 @@ export default function Reports() {
               options={orderReportOptions}
               value={orderReportId}
               onChange={(next) => { setOrderReportId(next); setOrderPdfError(""); }}
-              placeholder={workOrdersQuery.isLoading ? "Загрузка нарядов..." : i18nT("pages.reports.reports.18b12b9")}
+              placeholder={workOrdersQuery.isLoading ? i18nT("pages.employees.employeedetails.employeedetails.c63dba0") : i18nT("pages.reports.reports.18b12b9")}
               className="glide-select--field"
               menuWidth={560}
               menuMaxHeight={290}
@@ -1521,7 +1521,7 @@ function SelectedOrderPdfPreview({
 
           <p className="mt-2 line-clamp-2 text-sm font-semibold text-gray-900">
             {order.description ||
-              "Описание не указано"}
+              i18nT("pages.reports.reports.2cdff54")}
           </p>
         </div>
 
@@ -1558,7 +1558,7 @@ function SelectedOrderPdfPreview({
             <span className="font-medium text-gray-700">
               {order.assignee
                 ?.fullName ||
-                "Не назначен"}
+                i18nT("pages.dashboard.dashboard.a02ddac")}
             </span>
           </p>
         </div>
@@ -1639,7 +1639,7 @@ function ShiftReport({
             "assigned",
 
           header:
-            "Назначено",
+            i18nT("components.employees.employeecard.f49250a"),
 
           minWidth:
             110,
@@ -1661,7 +1661,7 @@ function ShiftReport({
             "activeNow",
 
           header:
-            "Активно",
+            i18nT("pages.reports.reports.87a4286"),
 
           minWidth:
             100,
@@ -1784,7 +1784,7 @@ function ShiftReport({
           850
         }
         scrollHeight="420px"
-        emptyText="Нет данных по исполнителям"
+        emptyText={i18nT("pages.reports.reports.01bf9cf")}
       />
     </>
   );
@@ -1858,6 +1858,7 @@ function SummaryBar({ title, value, total, tone }) {
 }
 
 function ShiftAISummary({ summary, data }) {
+    useI18n();
   const metrics = summaryMetrics(summary, data);
   const { issued, closed, overdue, rejected, downtimeMinutes, downtimeNow, onShift, busy } = metrics;
   const closurePercent = safePercent(closed, issued);
@@ -1888,12 +1889,12 @@ function ShiftAISummary({ summary, data }) {
   }
 
   return (
-    <section className="rp-insights" aria-label="Сводка по выбранному периоду">
+    <section className="rp-insights" aria-label={i18nT("pages.reports.reports.0f72c3f")}>
       <div className="rp-insights__heading">
         <span className="rp-insights__heading-icon"><RiSparkling2Line size={17} /></span>
         <div>
-          <h3>Сводка за период</h3>
-          <p>Ключевые показатели и рекомендации</p>
+          <h3>{i18nT("pages.reports.reports.a81fe62")}</h3>
+          <p>{i18nT("pages.reports.reports.de032bb")}</p>
         </div>
       </div>
 
@@ -1902,17 +1903,17 @@ function ShiftAISummary({ summary, data }) {
           <article className="rp-insight-card rp-insight-card--orders">
             <div className="rp-insight-card__heading">
               <span className="rp-insight-card__symbol"><RiFileList3Line size={19} /></span>
-              <span>Наряды за период</span>
-              {closurePercent !== null && <strong className="rp-insight-card__chip">{closurePercent.toFixed(1).replace(".", ",")}% закрыто</strong>}
+              <span>{i18nT("pages.reports.reports.0f5d2c6")}</span>
+              {closurePercent !== null && <strong className="rp-insight-card__chip">{closurePercent.toFixed(1).replace(".", ",")}{i18nT("pages.reports.reports.35ffd64")}</strong>}
             </div>
             <div className="rp-insight-card__main">
               <strong>{issued !== null ? issued.toLocaleString("ru-RU") : "—"}</strong>
-              <span>выдано всего</span>
+              <span>{i18nT("pages.reports.reports.72b0b28")}</span>
             </div>
             <div className="rp-insight-card__bars">
-              <SummaryBar title="Закрыто" value={closed} total={issued} tone="success" />
-              <SummaryBar title="Просрочено" value={overdue} total={issued} tone="warning" />
-              <SummaryBar title="Отклонено" value={rejected} total={issued} tone="danger" />
+              <SummaryBar title={i18nT("pages.assistant.assistant.assistant.8280957")} value={closed} total={issued} tone="success" />
+              <SummaryBar title={i18nT("kanban.overdue")} value={overdue} total={issued} tone="warning" />
+              <SummaryBar title={i18nT("pages.reports.reports.22c9a6f")} value={rejected} total={issued} tone="danger" />
             </div>
           </article>
         )}
@@ -1921,15 +1922,15 @@ function ShiftAISummary({ summary, data }) {
           <article className="rp-insight-card rp-insight-card--downtime">
             <div className="rp-insight-card__heading">
               <span className="rp-insight-card__symbol"><RiTimeLine size={19} /></span>
-              <span>Простой оборудования</span>
+              <span>{i18nT("analytics.downtime.title")}</span>
             </div>
             <div className="rp-insight-card__main">
               <strong className="rp-insight-card__time">{downtimeMinutes !== null ? formatMinutes(downtimeMinutes) : "—"}</strong>
-              <span>суммарный простой</span>
+              <span>{i18nT("pages.reports.reports.985074d")}</span>
             </div>
             {downtimeNow !== null && (
               <div className="rp-insight-downtime">
-                <span>В простое сейчас {downtimeNow}</span>               
+                <span>{i18nT("pages.reports.reports.ff5ee9d")} {downtimeNow}</span>               
               </div>
             )}
           </article>
@@ -1939,16 +1940,16 @@ function ShiftAISummary({ summary, data }) {
           <article className="rp-insight-card rp-insight-card--team">
             <div className="rp-insight-card__heading">
               <span className="rp-insight-card__symbol"><RiTeamLine size={19} /></span>
-              <span>Исполнители на смене</span>
+              <span>{i18nT("pages.admin.admin.admin.35e746b")}</span>
             </div>
             <div className="rp-insight-team">
               <div className="rp-insight-team__ring" style={{ "--rp-fill": `${busyPercent ?? 0}%` }} role="img" aria-label={busyPercent !== null ? `Заняты ${busyPercent.toFixed(0)} процентов исполнителей` : "Нет данных о загруженности"}>
-                <div><strong>{busyPercent !== null ? `${Math.round(busyPercent)}%` : "—"}</strong><span>заняты</span></div>
+                <div><strong>{busyPercent !== null ? `${Math.round(busyPercent)}%` : "—"}</strong><span>{i18nT("pages.reports.reports.ca829e4")}</span></div>
               </div>
               <div className="rp-insight-team__stats">
-                {onShift !== null && <div><i className="rp-insight-team__dot rp-insight-team__dot--all" />На смене <strong>{onShift}</strong></div>}
-                {busy !== null && <div><i className="rp-insight-team__dot rp-insight-team__dot--busy" />Заняты <strong>{busy}</strong></div>}
-                {free !== null && <div><i className="rp-insight-team__dot rp-insight-team__dot--free" />Свободны <strong>{free}</strong></div>}
+                {onShift !== null && <div><i className="rp-insight-team__dot rp-insight-team__dot--all" />{i18nT("pages.admin.admin.admin.958b816")} <strong>{onShift}</strong></div>}
+                {busy !== null && <div><i className="rp-insight-team__dot rp-insight-team__dot--busy" />{i18nT("pages.analytics.analytics.90fc82e")} <strong>{busy}</strong></div>}
+                {free !== null && <div><i className="rp-insight-team__dot rp-insight-team__dot--free" />{i18nT("pages.analytics.analytics.f3fd6df")} <strong>{free}</strong></div>}
               </div>
             </div>
           </article>
@@ -1957,14 +1958,14 @@ function ShiftAISummary({ summary, data }) {
 
       {actionItems.length > 0 && (
         <div className="rp-insight-actions">
-          <div className="rp-insight-actions__title"><RiAlarmWarningLine size={17} /> Обратить внимание</div>
+          <div className="rp-insight-actions__title"><RiAlarmWarningLine size={17} /> {i18nT("pages.reports.reports.113872b")}</div>
           <div className="rp-insight-actions__list">
             {actionItems.map((item, index) => <span key={`${index}-${item}`}>{item}</span>)}
           </div>
         </div>
       )}
       <details className="rp-insights__original">
-        <summary>Полный текст сводки</summary>
+        <summary>{i18nT("pages.reports.reports.d2016a5")}</summary>
         <p>{summary}</p>
       </details>
     </section>
@@ -2086,7 +2087,7 @@ function RatingsReport({
             "repeatFailureRate",
 
           header:
-            "Повторные",
+            i18nT("pages.reports.reports.3ece20a"),
 
           minWidth:
             120,
@@ -2146,14 +2147,14 @@ function RatingsReport({
     <>
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
         <MiniKpi
-          label="Исполнителей"
+          label={i18nT("pages.reports.reports.5e43a82")}
           value={
             data.length
           }
         />
 
         <MiniKpi
-          label="Средний рейтинг"
+          label={i18nT("pages.rating.rating.d077e25")}
           value={
             data.length
               ? average.toFixed(
@@ -2164,7 +2165,7 @@ function RatingsReport({
         />
 
         <MiniKpi
-          label="Лучший"
+          label={i18nT("pages.reports.reports.6cbee7e")}
           value={
             data[0]
               ?.score ??
@@ -2189,7 +2190,7 @@ function RatingsReport({
           1150
         }
         scrollHeight="430px"
-        emptyText="Рейтинг пуст"
+        emptyText={i18nT("pages.reports.reports.8879791")}
       />
     </>
   );
@@ -2344,7 +2345,7 @@ function BrigadesReport({
         850
       }
       scrollHeight="430px"
-      emptyText="Нет данных по бригадам"
+      emptyText={i18nT("pages.reports.reports.46ee654")}
     />
   );
 }
@@ -2384,7 +2385,7 @@ function MaterialsReport({
             "group",
 
           header:
-            "Группа",
+            i18nT("pages.reports.reports.99d9901"),
 
           minWidth:
             220,
@@ -2467,7 +2468,7 @@ function MaterialsReport({
                   {getMaterialUnit(
                     item,
                   ) ||
-                    "Ед. измерения не указана"}
+                    i18nT("pages.reports.reports.013e3e1")}
                 </p>
               </div>
             ),
@@ -2478,7 +2479,7 @@ function MaterialsReport({
             "quantity",
 
           header:
-            "Расход",
+            i18nT("pages.reports.reports.6068400"),
 
           minWidth:
             120,
@@ -2543,7 +2544,7 @@ function MaterialsReport({
             "deviationPercent",
 
           header:
-            "Отклонение",
+            i18nT("pages.reports.reports.25ccf33"),
 
           minWidth:
             125,
@@ -2604,7 +2605,7 @@ function MaterialsReport({
             "count",
 
           header:
-            "Использований",
+            i18nT("pages.reports.reports.26f4dc4"),
 
           minWidth:
             125,
@@ -2630,7 +2631,7 @@ function MaterialsReport({
             "overNormCount",
 
           header:
-            "Перерасход",
+            i18nT("pages.reports.reports.1a87078"),
 
           minWidth:
             115,
@@ -2704,21 +2705,21 @@ function MaterialsReport({
     <>
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
         <MiniKpi
-          label="Позиций"
+          label={i18nT("pages.reports.reports.7366e17")}
           value={
             data.length
           }
         />
 
         <MiniKpi
-          label="Общий расход"
+          label={i18nT("pages.reports.reports.57504dd")}
           value={formatNumber(
             totalQuantity,
           )}
         />
 
         <MiniKpi
-          label="Случаев перерасхода"
+          label={i18nT("pages.reports.reports.718e546")}
           value={
             totalOver
           }
@@ -2745,8 +2746,8 @@ function MaterialsReport({
           1050
         }
         scrollHeight="430px"
-        emptyText="Расход материалов отсутствует"
-        emptyDescription="За выбранный период материалы не использовались"
+        emptyText={i18nT("pages.reports.reports.3dc84dd")}
+        emptyDescription={i18nT("pages.reports.reports.f612bb0")}
       />
     </>
   );
@@ -2836,7 +2837,7 @@ function DowntimeReport({
             "reason",
 
           header:
-            "Причина",
+            i18nT("pages.reports.reports.d88300c"),
 
           minWidth:
             220,
@@ -2923,7 +2924,7 @@ function DowntimeReport({
         />
 
         <MiniKpi
-          label="Активных простоев"
+          label={i18nT("pages.reports.reports.c605d65")}
           value={
             data.totals
               ?.ongoing ??
@@ -2948,7 +2949,7 @@ function DowntimeReport({
           1000
         }
         scrollHeight="430px"
-        emptyText="Простоев нет"
+        emptyText={i18nT("pages.analytics.analytics.d96fa3b")}
       />
     </>
   );
@@ -3150,8 +3151,9 @@ function EmployeeStatus({
 }
 
 function PreviewLoader() {
+    useI18n();
   return (
-    <div className="rp-skeleton" role="status" aria-label="Загрузка отчёта">
+    <div className="rp-skeleton" role="status" aria-label={i18nT("pages.reports.reports.f3483e1")}>
       <div className="rp-skeleton__kpis">
         {Array.from({ length: 4 }, (_, index) => (
           <div key={index} className="rp-skeleton__kpi"><i /><i /></div>

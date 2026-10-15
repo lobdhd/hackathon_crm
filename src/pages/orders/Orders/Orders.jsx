@@ -566,7 +566,7 @@ export default function Orders() {
                         </div>
                         <div className="orders-view-switch">
                             <RubberSegment
-                                items={[{ value: "kanban", label: "Kanban" }, { value: "table", label: "Таблица" }]}
+                                items={[{ value: "kanban", label: "Kanban" }, { value: "table", label: i18nT("ordersPage.table") }]}
                                 value={view}
                                 onChange={setView}
                                 trackColor="#ffffff"
@@ -577,7 +577,7 @@ export default function Orders() {
                                 radius={10}
                                 inset={3}
                                 equalSlots
-                                aria-label="Вид отображения нарядов"
+                                aria-label={i18nT("pages.orders.orders.orders.6711f74")}
                             />
                         </div>
                     </div>
@@ -621,9 +621,11 @@ export default function Orders() {
 }
 // MARK: Single table view (independent of Kanban lane layout)
 function OrdersTable({ data, columns, canCreate, navigate }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const [sort, setSort] = useState({ key: null, direction: "asc" });
     const viewportRef = useRef(null);
-    const collator = useMemo(() => new Intl.Collator("ru", { numeric: true, sensitivity: "base" }), []);
+    const collator = useMemo(() => new Intl.Collator("ru", { numeric: true, sensitivity: "base" }), [ __i18nLocaleToken]);
     const sorted = useMemo(() => {
         if (!sort.key) return data;
         const column = columns.find((item) => (item.key || item.field) === sort.key);
@@ -641,7 +643,7 @@ function OrdersTable({ data, columns, canCreate, navigate }) {
                 : collator.compare(String(first), String(second));
             return sort.direction === "asc" ? comparison : -comparison;
         });
-    }, [data, columns, sort, collator]);
+    }, [data, columns, sort, collator, __i18nLocaleToken]);
 
     function toggleSort(key) {
         setSort((previous) => {
@@ -672,15 +674,15 @@ function OrdersTable({ data, columns, canCreate, navigate }) {
     }, []);
 
     return (
-        <section className="orders-table-wrap" aria-label="Таблица нарядов">
+        <section className="orders-table-wrap" aria-label={i18nT("pages.orders.orders.orders.1809077")}>
             <div className="orders-table-toolbar">
                 <div>
-                    <h2 className="orders-table-toolbar__title">Список нарядов</h2>
-                    <p className="orders-table-toolbar__subtitle">Все найденные наряды в одной таблице</p>
+                    <h2 className="orders-table-toolbar__title">{i18nT("pages.orders.orders.orders.cef1513")}</h2>
+                    <p className="orders-table-toolbar__subtitle">{i18nT("pages.orders.orders.orders.a0f8c8e")}</p>
                 </div>
-                <span className="orders-table-toolbar__count">{data.length} нарядов</span>
+                <span className="orders-table-toolbar__count">{data.length} {i18nT("pages.orders.orders.orders.917509f")}</span>
             </div>
-            <div className="orders-table-viewport" ref={viewportRef} style={{ height: LIST_HEIGHT }} tabIndex={0} role="region" aria-label="Таблица с вертикальной и горизонтальной прокруткой">
+            <div className="orders-table-viewport" ref={viewportRef} style={{ height: LIST_HEIGHT }} tabIndex={0} role="region" aria-label={i18nT("pages.orders.orders.orders.eb981d9")}>
                 <table className="orders-data-table">
                     <colgroup>
                         {columns.map((column) => (
@@ -729,14 +731,14 @@ function OrdersTable({ data, columns, canCreate, navigate }) {
                             <tr>
                                 <td className="orders-data-table__empty" colSpan={columns.length}>
                                     <strong>{i18nT("ordersTable.empty")}</strong>
-                                    <span>{canCreate ? "Измените фильтры или создайте новый наряд" : "Измените фильтры"}</span>
+                                    <span>{canCreate ? i18nT("pages.orders.orders.orders.4fea4b8") : i18nT("pages.orders.orders.orders.8b15cac")}</span>
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
-            <div className="orders-table-footer">Прокрутка по вертикали — колесом · по горизонтали — Shift + колесо или трекпадом</div>
+            <div className="orders-table-footer">{i18nT("pages.orders.orders.orders.b059804")}</div>
         </section>
     );
 }
@@ -945,8 +947,8 @@ function Kanban({ board, search, status, user, onChanged }) {
             )}
             <div className="orders-kanban-root" onDragOverCapture={autoScrollDuringDrag}>
                 {boardScroll.max > 2 && (
-                    <nav className="orders-kanban-nav" aria-label="Прокрутка Kanban-доски">
-                        <span className="orders-kanban-nav__hint">Навигация по колонкам</span>
+                    <nav className="orders-kanban-nav" aria-label={i18nT("pages.orders.orders.orders.df14e2e")}>
+                        <span className="orders-kanban-nav__hint">{i18nT("pages.orders.orders.orders.94edafa")}</span>
                         <div
                             className="orders-kanban-nav__controls"
                             onPointerDownCapture={(event) => {
@@ -979,7 +981,7 @@ function Kanban({ board, search, status, user, onChanged }) {
                                 ariaLabel="Положение Kanban-доски"
                             />
                         </div>
-                        <span className="orders-kanban-nav__tip">Колесо — по колонке · Shift + колесо — по доске</span>
+                        <span className="orders-kanban-nav__tip">{i18nT("pages.orders.orders.orders.e4901ec")}</span>
                     </nav>
                 )}
                 <div
@@ -987,7 +989,7 @@ function Kanban({ board, search, status, user, onChanged }) {
                     className="orders-kanban-scroll w-full min-w-0 max-w-full rounded-xl"
                     style={{ height: LIST_HEIGHT, maxWidth: "100%" }}
                     role="region"
-                    aria-label="Kanban-доска — горизонтальная прокрутка"
+                    aria-label={i18nT("pages.orders.orders.orders.828f0bd")}
                     tabIndex={0}
                 >
                     <div
@@ -1030,7 +1032,7 @@ function Kanban({ board, search, status, user, onChanged }) {
                                     <div className="orders-kanban-lane__body min-h-0 flex-1 p-2.5" tabIndex={0} aria-label={`Наряды: ${column.title}`} role="region">
                                         {items.length === 0 ? (
                                             <div className="flex h-full min-h-[180px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white px-3 text-center text-xs text-gray-400">
-                                                {droppable ? "Отпустите здесь" : i18nT("kanban.empty")}
+                                                {droppable ? i18nT("pages.orders.orders.orders.a8d06fe") : i18nT("kanban.empty")}
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
@@ -1064,7 +1066,7 @@ function Kanban({ board, search, status, user, onChanged }) {
             {reasonFor && (
                 <ReasonModal
                     title={i18nT("pages.orders.orders.orders.95f5bda")}
-                    label="Что нужно исправить"
+                    label={i18nT("pages.orders.orders.orders.0736d0e")}
                     submitText="Вернуть"
                     busy={pendingId === reasonFor.order.id}
                     onClose={() => setReasonFor(null)}
@@ -1117,7 +1119,7 @@ function ReasonModal({ title, label, submitText, busy, onClose, onSubmit }) {
                         disabled={!valid || busy}
                         className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                     >
-                        {busy ? "Отправка..." : submitText}
+                        {busy ? i18nT("pages.orders.orders.orders.0bff9fe") : submitText}
                     </button>
                 </div>
             </form>
@@ -1177,13 +1179,13 @@ function OrderCard({
                     <div className="flex items-center gap-2">
                         <RiToolsLine />
                         <span className="truncate">
-                            {order.equipment?.name || "Без оборудования"}
+                            {order.equipment?.name || i18nT("pages.orders.orderdetails.orderdetails.697fdde")}
                         </span>
                     </div>
                     <div className="truncate">
                         {order.assignee?.fullName ||
                             order.brigade?.name ||
-                            "Исполнитель не указан"}
+                            i18nT("pages.orders.orders.orders.beca15a")}
                     </div>
                 </div>
                 <div className={`mt-4 border-t border-gray-100 pt-3 text-[11px] ${overdue ? "font-semibold text-rose-600" : "text-gray-400"}`}>
@@ -1239,12 +1241,13 @@ function PriorityBadge({ priority }) {
     );
 }
 function Modal({ title, onClose, children, width = "680px" }) {
+    __useI18nReactive();
     return createPortal(
         <div className="orders-modal-backdrop" onMouseDown={onClose}>
             <div className="orders-modal-dialog" style={{ maxWidth: width }} onMouseDown={(event) => event.stopPropagation()}>
                 <div className="orders-modal-head">
                     <h2>{title}</h2>
-                    <button type="button" aria-label="Закрыть" onClick={onClose}><RiCloseLine size={20} /></button>
+                    <button type="button" aria-label={i18nT("components.equipment.qrscannermodal.dd9463b")} onClick={onClose}><RiCloseLine size={20} /></button>
                 </div>
                 <div className="orders-modal-content">{children}</div>
             </div>

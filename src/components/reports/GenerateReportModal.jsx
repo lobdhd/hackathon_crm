@@ -226,9 +226,9 @@ export default function GenerateReportModal({
                       grid-cols-2
                       gap-3
                     ">
-                                        <FormatButton active={form.format === "PDF"} onClick={() => updateField("format", "PDF")} icon={RiFilePdf2Line} title="PDF" description="Для печати и просмотра" tone="red" />
+                                        <FormatButton active={form.format === "PDF"} onClick={() => updateField("format", "PDF")} icon={RiFilePdf2Line} title="PDF" description={i18nT("components.reports.generatereportmodal.09664ab")} tone="red" />
 
-                                        <FormatButton active={form.format === "XLSX"} onClick={() => updateField("format", "XLSX")} icon={RiFileExcel2Line} title="Excel" description="Для работы с данными" tone="green" />
+                                        <FormatButton active={form.format === "XLSX"} onClick={() => updateField("format", "XLSX")} icon={RiFileExcel2Line} title="Excel" description={i18nT("components.reports.generatereportmodal.6a9f9be")} tone="green" />
                                     </div>
                                 </div>
 

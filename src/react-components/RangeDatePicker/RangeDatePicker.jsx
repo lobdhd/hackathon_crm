@@ -9,6 +9,8 @@ import {
 } from 'react-icons/ri';
 
 import './RangeDatePicker.css';
+import { t as i18nT } from "../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../i18n/index.js";
 
 const MONTHS = [
   'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
@@ -38,6 +40,8 @@ export default function RangeDatePicker({
   minDate,
   maxDate,
 }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const id = useId();
   const rootRef = useRef(null);
   const buttonRef = useRef(null);
@@ -208,7 +212,7 @@ export default function RangeDatePicker({
     return Array.from({ length: 42 }, (_, index) => new Date(
       view.getFullYear(), view.getMonth(), index - offset + 1,
     ));
-  }, [view]);
+  }, [view, __i18nLocaleToken]);
 
   const isDisabledDate = (date) => (minimum && dayNumber(date) < dayNumber(minimum))
     || (maximum && dayNumber(date) > dayNumber(maximum));
@@ -254,25 +258,25 @@ export default function RangeDatePicker({
       data-side={placement}
       role="dialog"
       aria-modal="false"
-      aria-label="Выбор диапазона дат"
+      aria-label={i18nT("reactcomponents.rangedatepicker.rangedatepicker.5188dca")}
       onPointerLeave={() => setHovered(null)}
       style={{ left: popupLeft, maxHeight: popupMaxHeight ? `${popupMaxHeight}px` : undefined }}
     >
       <div className="range-date-picker__calendar-header">
-        <button type="button" className="range-date-picker__nav" aria-label="Предыдущий месяц" onClick={() => shiftMonth(-1)}>
+        <button type="button" className="range-date-picker__nav" aria-label={i18nT("reactcomponents.rangedatepicker.rangedatepicker.fbc394b")} onClick={() => shiftMonth(-1)}>
           <RiArrowLeftSLine size={20}/>
         </button>
         <div className="range-date-picker__heading">
-          <select aria-label="Месяц" value={view.getMonth()}
+          <select aria-label={i18nT("ratingPage.month")} value={view.getMonth()}
             onChange={(event) => setView(new Date(view.getFullYear(), Number(event.target.value), 1))}>
             {MONTHS.map((name, index) => <option key={name} value={index}>{name}</option>)}
           </select>
-          <select aria-label="Год" value={view.getFullYear()}
+          <select aria-label={i18nT("reactcomponents.rangedatepicker.rangedatepicker.2d0847a")} value={view.getFullYear()}
             onChange={(event) => setView(new Date(Number(event.target.value), view.getMonth(), 1))}>
             {years.map((year) => <option key={year} value={year}>{year}</option>)}
           </select>
         </div>
-        <button type="button" className="range-date-picker__nav" aria-label="Следующий месяц" onClick={() => shiftMonth(1)}>
+        <button type="button" className="range-date-picker__nav" aria-label={i18nT("reactcomponents.rangedatepicker.rangedatepicker.e66645e")} onClick={() => shiftMonth(1)}>
           <RiArrowRightSLine size={20}/>
         </button>
       </div>
@@ -323,10 +327,10 @@ export default function RangeDatePicker({
         })}
       </div>
       <div className="range-date-picker__footer">
-        <span>{start && !end ? 'Выберите конечную дату' : 'Выберите начало и конец периода'}</span>
+        <span>{start && !end ? i18nT("reactcomponents.rangedatepicker.rangedatepicker.8f13299") : i18nT("reactcomponents.rangedatepicker.rangedatepicker.3e38732")}</span>
         {(start || end) && (
           <button type="button" onClick={() => { onChange?.([null, null]); setHovered(null); }}>
-            Сбросить
+            {i18nT("employeesPage.reset")}
           </button>
         )}
       </div>
@@ -351,7 +355,7 @@ export default function RangeDatePicker({
         {!start && <RiArrowRightSLine size={16} className="range-date-picker__chevron" aria-hidden="true" />}
       </button>
       {start && !disabled && (
-        <button type="button" className="range-date-picker__clear" aria-label="Сбросить диапазон дат"
+        <button type="button" className="range-date-picker__clear" aria-label={i18nT("reactcomponents.rangedatepicker.rangedatepicker.365d3ad")}
           onClick={() => { onChange?.([null, null]); setOpen(false); setHovered(null); }}>
           <RiCloseLine size={16}/>
         </button>

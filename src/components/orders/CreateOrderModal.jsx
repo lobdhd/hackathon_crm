@@ -42,6 +42,7 @@ import { useVoiceInput } from "../../hooks/useVoiceInput.js";
 import QrScannerModal from "../equipment/QrScannerModal.jsx";
 
 import { t, useI18n } from "../../i18n/index.js";
+import { t as i18nT } from "../../i18n/index.js";
 
 
 // Quick order form. The case asks for "issue an order from a phone in a minute, in at most 6 taps":
@@ -170,6 +171,7 @@ function useDebouncedValue(value, delay) {
 // MARK: Modal
 
 export default function CreateOrderModal({ onClose, onCreated, initialEquipmentId = null }) {
+    const __i18nLocaleToken = t("sidebar.home");
     useI18n();
 
     const [equipmentId, setEquipmentId] = useState(initialEquipmentId ? String(initialEquipmentId) : "");
@@ -249,7 +251,7 @@ export default function CreateOrderModal({ onClose, onCreated, initialEquipmentI
 
         return list.slice(0, 60);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [allEquipment, equipmentSearch, areas]);
+    }, [allEquipment, equipmentSearch, areas, __i18nLocaleToken]);
 
     const brigade = brigades.find((item) => String(item.id) === brigadeId) ?? null;
     const brigadeMemberIds = new Set(asArray(brigade?.members).map((member) => String(member.id)));
@@ -422,7 +424,7 @@ export default function CreateOrderModal({ onClose, onCreated, initialEquipmentI
                             onClick={onClose}
                             disabled={submitting}
                             className="-mr-2 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                            aria-label="Закрыть"
+                            aria-label={i18nT("components.equipment.qrscannermodal.dd9463b")}
                         >
                             <RiCloseLine size={22} />
                         </button>
@@ -671,7 +673,7 @@ export default function CreateOrderModal({ onClose, onCreated, initialEquipmentI
                                         <option value="">{label("quickOrder.noBrigade", "Без бригады")}</option>
                                         {brigades.map((item) => (
                                             <option key={item.id} value={item.id}>
-                                                {item.name} · {asArray(item.members).length} чел.
+                                                {item.name} · {asArray(item.members).length} {i18nT("components.orders.createordermodal.23d6ab7")}
                                             </option>
                                         ))}
                                     </select>
@@ -809,6 +811,7 @@ function WorkSuggestion({
     onFaultCode,
     onNormative,
 }) {
+    useI18n();
     const done = ready && !loading && (faultCode || normative);
     const explanation = suggestion?.explanation;
 
@@ -946,7 +949,7 @@ function WorkSuggestion({
                         <select value={normativeId} onChange={(event) => onNormative(event.target.value)} className={CONTROL}>
                             <option value="">{label("quickOrder.notSelected", "Не выбран")}</option>
                             {normatives.map((item) => (
-                                <option key={item.id} value={item.id}>{item.name} · {Number(item.hours)} ч</option>
+                                <option key={item.id} value={item.id}>{item.name} · {Number(item.hours)} {i18nT("components.orders.createordermodal.0bccac4")}</option>
                             ))}
                         </select>
                     </Field>
@@ -974,6 +977,7 @@ function SuggestionTile({ title, pending, children }) {
 // MARK: Executor option
 
 export function ExecutorOption({ executor, recommended = false, selected, onSelect }) {
+    useI18n();
     const offShift = executor.isOnShift === false;
     const [pill, dot] = statusTone(executor);
     const chips = reasonChips(executor);
@@ -1043,6 +1047,7 @@ export function ExecutorOption({ executor, recommended = false, selected, onSele
 }
 
 export function ShowAllButton({ open, count, onClick }) {
+    useI18n();
     return (
         <button
             type="button"

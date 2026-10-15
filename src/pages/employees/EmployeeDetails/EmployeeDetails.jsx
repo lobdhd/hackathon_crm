@@ -53,6 +53,7 @@ function Panel({ title, description, icon: Icon, children }) {
   );
 }
 function OrderRow({ order }) {
+    useI18n();
   const navigate = useNavigate();
   return (
     <button type="button" className="ed-order" onClick={() => navigate(`/orders/${order.id}`)}>
@@ -62,11 +63,11 @@ function OrderRow({ order }) {
           <PriorityBadge priority={order.priority} />
           <StatusBadge status={order.status} />
         </div>
-        <p title={order.description || ""}>{order.description || "Без описания"}</p>
-        <small>{order.area?.name || "Участок не указан"} · {order.equipment?.name || "Оборудование не указано"}</small>
+        <p title={order.description || ""}>{order.description || i18nT("pages.dashboard.dashboard.c6b09af")}</p>
+        <small>{order.area?.name || i18nT("components.equipment.equipmentcard.21c6437")} · {order.equipment?.name || i18nT("components.orders.ordercard.30684a9")}</small>
       </div>
       <span className={isOverdue(order) ? "ed-order__date ed-order__date--overdue" : "ed-order__date"}>
-        {isOverdue(order) ? "Просрочен" : `Срок: ${formatDate(order.deadline)}`}
+        {isOverdue(order) ? i18nT("pages.assistant.assistant.assistant.0a04820") : `Срок: ${formatDate(order.deadline)}`}
       </span>
     </button>
   );
@@ -75,38 +76,39 @@ function InfoRow({ label, children }) {
   return <div className="ed-info-row"><span>{label}</span><strong>{children ?? "—"}</strong></div>;
 }
 function HistoryTable({ orders }) {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const localeToken = i18nT("sidebar.home");
   const navigate = useNavigate();
   const columns = useMemo(() => [
     {
-      field: "number", header: "Наряд", minWidth: 195,
+      field: "number", header: i18nT("pages.employees.employeedetails.employeedetails.5072957"), minWidth: 195,
       render: order => (
         <div className="ed-table-order">
           <Link to={`/orders/${order.id}`}>{order.number || `#${order.id}`}</Link>
-          <small title={order.description || ""}>{order.description || "Без описания"}</small>
+          <small title={order.description || ""}>{order.description || i18nT("pages.dashboard.dashboard.c6b09af")}</small>
         </div>
       ),
     },
     {
-      key: "equipment", header: "Оборудование", minWidth: 185,
+      key: "equipment", header: i18nT("quickOrder.equipment"), minWidth: 185,
       sortField: "equipmentName", sortValue: order => order.equipment?.name || "",
       render: order => (
         <div className="ed-table-order"><strong>{order.equipment?.name || "—"}</strong><small>{order.equipment?.inventoryNumber || ""}</small></div>
       ),
     },
     {
-      field: "priority", header: "Приоритет", minWidth: 135,
+      field: "priority", header: i18nT("pages.employees.employeedetails.employeedetails.a0f9f1a"), minWidth: 135,
       sortValue: order => ({ EMERGENCY: 4, HIGH: 3, NORMAL: 2, PLANNED: 1 })[order.priority] ?? 0,
       render: order => <PriorityBadge priority={order.priority} />,
     },
-    { field: "status", header: "Статус", minWidth: 150, render: order => <StatusBadge status={order.status} /> },
+    { field: "status", header: i18nT("employeeModal.status"), minWidth: 150, render: order => <StatusBadge status={order.status} /> },
     {
-      field: "deadline", header: "Срок", minWidth: 150,
+      field: "deadline", header: i18nT("pages.employees.employeedetails.employeedetails.bae913f"), minWidth: 150,
       sortValue: order => order.deadline ? new Date(order.deadline).getTime() : null,
-      render: order => <span className={isOverdue(order) ? "ed-table-overdue" : ""}>{isOverdue(order) ? "Просрочен" : formatDate(order.deadline)}</span>,
+      render: order => <span className={isOverdue(order) ? "ed-table-overdue" : ""}>{isOverdue(order) ? i18nT("pages.assistant.assistant.assistant.0a04820") : formatDate(order.deadline)}</span>,
     },
-  ], [localeToken]);
+  ], [localeToken, __i18nLocaleToken]);
   return (
     <div className="ed-table-wrap">
       <SmartTable
@@ -124,7 +126,7 @@ function HistoryTable({ orders }) {
           if (event?.target?.closest?.("a, button, input")) return;
           navigate(`/orders/${order.id}`);
         }}
-        emptyText="История нарядов пуста"
+        emptyText={i18nT("pages.employees.employeedetails.employeedetails.3ad3a72")}
       />
     </div>
   );
@@ -143,6 +145,7 @@ function PageState({ icon: Icon, title, text, action, spin }) {
 }
 
 export default function EmployeeDetails() {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -156,72 +159,72 @@ export default function EmployeeDetails() {
   const employees = Array.isArray(executorsQuery.data) ? executorsQuery.data : [];
   const employee = employees.find(item => Number(item.id) === employeeId);
   const employeeOrders = Array.isArray(ordersQuery.data?.items) ? ordersQuery.data.items : [];
-  const activeOrders = useMemo(() => employeeOrders.filter(order => !TERMINAL_STATUSES.has(order.status)), [ordersQuery.data]);
-  const closedOrders = useMemo(() => employeeOrders.filter(order => order.status === "CLOSED"), [ordersQuery.data]);
-  const overdueOrders = useMemo(() => employeeOrders.filter(isOverdue), [ordersQuery.data]);
-  const aiReviewOrders = useMemo(() => employeeOrders.filter(order => order.status === "AI_REVIEW"), [ordersQuery.data]);
-  if (!validId) return <PageState icon={RiUserLine} title="Некорректный ID исполнителя" text="Проверьте ссылку на карточку" action={<button className="ed-btn ed-btn--primary" onClick={() => navigate("/employees")}>Вернуться к списку</button>} />;
-  if (executorsQuery.isLoading && !executorsQuery.data) return <PageState icon={RiLoader4Line} spin title="Загружаем исполнителя" text="Получаем актуальные данные" />;
-  if (executorsQuery.isError && !executorsQuery.data) return <PageState icon={RiUserLine} title="Не удалось загрузить сотрудника" text={executorsQuery.error?.message || "Попробуйте ещё раз"} action={<button className="ed-btn ed-btn--primary" onClick={() => executorsQuery.refetch()}><RiRefreshLine /> Повторить</button>} />;
-  if (!employee) return <PageState icon={RiUserLine} title="Исполнитель не найден" text="Возможно, сотрудник был удалён из справочника" action={<button className="ed-btn ed-btn--primary" onClick={() => navigate("/employees")}>К списку исполнителей</button>} />;
+  const activeOrders = useMemo(() => employeeOrders.filter(order => !TERMINAL_STATUSES.has(order.status)), [ordersQuery.data, __i18nLocaleToken]);
+  const closedOrders = useMemo(() => employeeOrders.filter(order => order.status === "CLOSED"), [ordersQuery.data, __i18nLocaleToken]);
+  const overdueOrders = useMemo(() => employeeOrders.filter(isOverdue), [ordersQuery.data, __i18nLocaleToken]);
+  const aiReviewOrders = useMemo(() => employeeOrders.filter(order => order.status === "AI_REVIEW"), [ordersQuery.data, __i18nLocaleToken]);
+  if (!validId) return <PageState icon={RiUserLine} title={i18nT("pages.employees.employeedetails.employeedetails.cf2e5f0")} text="Проверьте ссылку на карточку" action={<button className="ed-btn ed-btn--primary" onClick={() => navigate("/employees")}>{i18nT("pages.employees.employeedetails.employeedetails.ec41a8b")}</button>} />;
+  if (executorsQuery.isLoading && !executorsQuery.data) return <PageState icon={RiLoader4Line} spin title={i18nT("pages.employees.employeedetails.employeedetails.d9d691b")} text="Получаем актуальные данные" />;
+  if (executorsQuery.isError && !executorsQuery.data) return <PageState icon={RiUserLine} title={i18nT("pages.employees.employeedetails.employeedetails.723df7a")} text={executorsQuery.error?.message || "Попробуйте ещё раз"} action={<button className="ed-btn ed-btn--primary" onClick={() => executorsQuery.refetch()}><RiRefreshLine /> {i18nT("components.layout.appnavbar.b914bbb")}</button>} />;
+  if (!employee) return <PageState icon={RiUserLine} title={i18nT("pages.employees.employeedetails.employeedetails.fa43d7a")} text="Возможно, сотрудник был удалён из справочника" action={<button className="ed-btn ed-btn--primary" onClick={() => navigate("/employees")}>{i18nT("pages.employees.employeedetails.employeedetails.d38adcb")}</button>} />;
   return (
     <div className="ed-page mx-auto max-w-[1800px] p-7">
-      <Link className="ed-back" to="/employees"><RiArrowLeftLine size={17} /> Все исполнители</Link>
+      <Link className="ed-back" to="/employees"><RiArrowLeftLine size={17} /> {i18nT("employeeDetails.allEmployees")}</Link>
       <header className="ed-profile">
         <div className="ed-profile__identity">
           <div className="ed-profile__avatar">{initials(employee.fullName)}</div>
           <div className="ed-profile__name">
-            <div className="ed-profile__eyebrow">КАРТОЧКА ИСПОЛНИТЕЛЯ</div>
+            <div className="ed-profile__eyebrow">{i18nT("pages.employees.employeedetails.employeedetails.bbf3722")}</div>
             <div className="ed-profile__heading"><h1>{employee.fullName}</h1><EmployeeStatus status={employee.employeeStatus} /></div>
             <div className="ed-profile__sub">
-              <span><RiBriefcaseLine size={16} />{employee.specialty || "Специальность не указана"}</span>
-              {employee.grade != null && <span><RiMedalLine size={16} />{employee.grade} разряд</span>}
+              <span><RiBriefcaseLine size={16} />{employee.specialty || i18nT("components.employees.employeecard.2a2d667")}</span>
+              {employee.grade != null && <span><RiMedalLine size={16} />{employee.grade} {i18nT("pages.employees.employeedetails.employeedetails.a375226")}</span>}
             </div>
           </div>
         </div>
         <div className={employee.isOnShift ? "ed-duty ed-duty--on" : "ed-duty"}>
           <RiTimeLine size={20} />
-          <div><small>Текущая смена</small><strong>{employee.isOnShift ? "На смене" : "Не на смене"}</strong></div>
+          <div><small>{i18nT("pages.employees.employeedetails.employeedetails.f7cd4fa")}</small><strong>{employee.isOnShift ? i18nT("pages.admin.admin.admin.958b816") : i18nT("employeeModal.offShift")}</strong></div>
         </div>
       </header>
       <div className="ed-summary">
-        <SummaryCard label="Всего нарядов" value={employeeOrders.length} icon={RiFileList3Line} tone="blue" />
-        <SummaryCard label="Активные" value={activeOrders.length} icon={RiTimeLine} tone="orange" />
-        <SummaryCard label="Закрытые" value={closedOrders.length} icon={RiCalendarCheckLine} tone="green" />
-        <SummaryCard label="Просроченные" value={overdueOrders.length} icon={RiMedalLine} tone={overdueOrders.length ? "red" : "slate"} />
+        <SummaryCard label={i18nT("pages.employees.employeedetails.employeedetails.b348229")} value={employeeOrders.length} icon={RiFileList3Line} tone="blue" />
+        <SummaryCard label={i18nT("pages.employees.employeedetails.employeedetails.c83f7ab")} value={activeOrders.length} icon={RiTimeLine} tone="orange" />
+        <SummaryCard label={i18nT("pages.employees.employeedetails.employeedetails.da81bb8")} value={closedOrders.length} icon={RiCalendarCheckLine} tone="green" />
+        <SummaryCard label={i18nT("pages.orders.orders.orders.97a53e1")} value={overdueOrders.length} icon={RiMedalLine} tone={overdueOrders.length ? "red" : "slate"} />
       </div>
       <div className="ed-layout">
         <div className="ed-main">
-          <Panel title="Текущие наряды" description="Активные и ожидающие завершения работы" icon={RiToolsLine}>
+          <Panel title={i18nT("employeeDetails.currentOrders")} description={i18nT("pages.employees.employeedetails.employeedetails.70633c5")} icon={RiToolsLine}>
             {ordersQuery.isLoading && !ordersQuery.data ? (
-              <div className="ed-inline-loading"><RiLoader4Line className="ed-spin" /> Загрузка нарядов...</div>
+              <div className="ed-inline-loading"><RiLoader4Line className="ed-spin" /> {i18nT("pages.employees.employeedetails.employeedetails.c63dba0")}</div>
             ) : ordersQuery.isError && !ordersQuery.data ? (
-              <div className="ed-inline-error">{ordersQuery.error?.message || "Не удалось загрузить наряды"}<button onClick={() => ordersQuery.refetch()} type="button">Повторить</button></div>
+              <div className="ed-inline-error">{ordersQuery.error?.message || i18nT("pages.orders.orders.orders.ac0c6fb")}<button onClick={() => ordersQuery.refetch()} type="button">{i18nT("components.layout.appnavbar.b914bbb")}</button></div>
             ) : activeOrders.length ? (
               <div className="ed-active-orders">{activeOrders.map(order => <OrderRow key={order.id} order={order} />)}</div>
-            ) : <div className="ed-empty">Нет активных нарядов</div>}
+            ) : <div className="ed-empty">{i18nT("pages.employees.employeedetails.employeedetails.838faf7")}</div>}
           </Panel>
-          <Panel title="История работ" description="Все полученные наряды за доступный период" icon={RiHistoryLine}>
+          <Panel title={i18nT("employeeDetails.workHistory")} description={i18nT("pages.employees.employeedetails.employeedetails.e890fe5")} icon={RiHistoryLine}>
             {ordersQuery.isLoading && !ordersQuery.data ? (
-              <div className="ed-inline-loading"><RiLoader4Line className="ed-spin" /> Загрузка истории...</div>
+              <div className="ed-inline-loading"><RiLoader4Line className="ed-spin" /> {i18nT("pages.employees.employeedetails.employeedetails.3ad8855")}</div>
             ) : ordersQuery.isError && !ordersQuery.data ? (
-              <div className="ed-inline-error">{ordersQuery.error?.message || "Ошибка загрузки"}</div>
-            ) : employeeOrders.length ? <HistoryTable orders={employeeOrders} /> : <div className="ed-empty">История работ пока пуста</div>}
+              <div className="ed-inline-error">{ordersQuery.error?.message || i18nT("pages.integrations.onec.onec.e0e3af6")}</div>
+            ) : employeeOrders.length ? <HistoryTable orders={employeeOrders} /> : <div className="ed-empty">{i18nT("pages.employees.employeedetails.employeedetails.7ac2d7a")}</div>}
           </Panel>
         </div>
         <aside className="ed-aside">
-          <Panel title="Текущая нагрузка" description="Состояние работ исполнителя" icon={RiStackLine}>
-            <div className="ed-load-status"><span>Статус</span><EmployeeStatus status={employee.employeeStatus} /></div>
+          <Panel title={i18nT("pages.employees.employeedetails.employeedetails.be6315c")} description={i18nT("pages.employees.employeedetails.employeedetails.405e724")} icon={RiStackLine}>
+            <div className="ed-load-status"><span>{i18nT("employeeModal.status")}</span><EmployeeStatus status={employee.employeeStatus} /></div>
             <div className="ed-load-grid">
-              <div><span>Активных</span><strong>{activeOrders.length}</strong></div>
-              <div><span>На AI-проверке</span><strong>{aiReviewOrders.length}</strong></div>
+              <div><span>{i18nT("pages.employees.employeedetails.employeedetails.424b82c")}</span><strong>{activeOrders.length}</strong></div>
+              <div><span>{i18nT("pages.employees.employeedetails.employeedetails.2d63a75")}</span><strong>{aiReviewOrders.length}</strong></div>
             </div>
           </Panel>
-          <Panel title="Информация" description="Данные сотрудника" icon={RiUserLine}>
-            <InfoRow label="Специальность">{employee.specialty || "—"}</InfoRow>
-            <InfoRow label="Разряд">{employee.grade != null ? `${employee.grade} разряд` : "—"}</InfoRow>
-            <InfoRow label="Смена">{employee.isOnShift ? "На смене" : "Не на смене"}</InfoRow>
-            <InfoRow label="Статус">{STATUS_LABELS[employee.employeeStatus] || employee.employeeStatus || "—"}</InfoRow>
+          <Panel title={i18nT("pages.orders.orderdetails.orderdetails.a7fd9be")} description={i18nT("employeeDetails.data")} icon={RiUserLine}>
+            <InfoRow label={i18nT("components.employees.createemployeemodal.500aacb")}>{employee.specialty || "—"}</InfoRow>
+            <InfoRow label={i18nT("employeeModal.grade")}>{employee.grade != null ? `${employee.grade} разряд` : "—"}</InfoRow>
+            <InfoRow label={i18nT("reportModal.shift")}>{employee.isOnShift ? i18nT("pages.admin.admin.admin.958b816") : i18nT("employeeModal.offShift")}</InfoRow>
+            <InfoRow label={i18nT("employeeModal.status")}>{STATUS_LABELS[employee.employeeStatus] || employee.employeeStatus || "—"}</InfoRow>
           </Panel>
         </aside>
       </div>

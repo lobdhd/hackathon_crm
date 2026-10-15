@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import Chart from "react-apexcharts";
 import "./AssistantCharts.css";
+import { t as i18nT } from "../../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../../i18n/index.js";
 
 /**
  * Charts for the Assistant's EXISTING API intents.
@@ -278,7 +280,7 @@ export function getAssistantChartConfig(intent, data, answerText = "") {
     if (!orders.length && !people) return null;
     const primary = orders.length ? orders : [["Заняты", people.busy], ["Свободны", people.free]];
     return {
-      title: "Показатели смены",
+      title: i18nT("pages.assistant.assistant.assistantcharts.c887e6f"),
       description: orders.length ? "Фактические показатели смены. Статусы нарядов могут пересекаться." : "Распределение исполнителей на смене.",
       categories: primary.map(([name]) => name), values: primary.map(([, v]) => v), unit: "шт.",
       views: people && orders.length && orders.every(([, v]) => v === 0)
@@ -287,9 +289,9 @@ export function getAssistantChartConfig(intent, data, answerText = "") {
       people,
       rows: [
         ...orders.map(([name, v]) => ({ label: name, value: v, detail: "Наряды" })),
-        ...(people ? [{ label: "Заняты", value: people.busy, detail: "Исполнители" }, { label: "Свободны", value: people.free, detail: "Исполнители" }] : []),
+        ...(people ? [{ label: i18nT("pages.analytics.analytics.90fc82e"), value: people.busy, detail: "Исполнители" }, { label: i18nT("pages.analytics.analytics.f3fd6df"), value: people.free, detail: "Исполнители" }] : []),
         ...(fieldNumber(base, "downtime.minutes", "downtimeMinutes") !== undefined
-          ? [{ label: "Простой", value: `${formatNumber(fieldNumber(base, "downtime.minutes", "downtimeMinutes") / 60)} ч`, detail: "Суммарное время" }] : []),
+          ? [{ label: i18nT("analytics.downtime.label"), value: `${formatNumber(fieldNumber(base, "downtime.minutes", "downtimeMinutes") / 60)} ч`, detail: "Суммарное время" }] : []),
       ],
     };
   }
@@ -318,10 +320,10 @@ export function getAssistantChartConfig(intent, data, answerText = "") {
     sorted.forEach(({ p }) => { bands[p >= 80 ? 0 : p >= 50 ? 1 : 2][1] += 1; });
     const average = sorted.reduce((s, item) => s + item.p, 0) / sorted.length;
     const config = {
-      title: "Прогноз рисков", description: "Вероятность отказа по каждой единице оборудования. Это сравнение, не график по дням.",
+      title: i18nT("pages.assistant.assistant.assistant.a47a6c1"), description: i18nT("pages.assistant.assistant.assistantcharts.ba839ea"),
       categories: sorted.map(({ name }) => name), values: sorted.map(({ p }) => p), unit: "%", maxValue: 100,
       views: ["bar", ...(sorted.length >= 3 ? ["radar"] : []), "donut", "semi", "table"],
-      bands: bands.filter(([, count]) => count > 0), gauge: { label: "Средний риск", value: average },
+      bands: bands.filter(([, count]) => count > 0), gauge: { label: i18nT("pages.assistant.assistant.assistant.30e8156"), value: average },
       rows: sorted.map(({ name, p, item }) => ({
         label: name, value: `${formatNumber(p)}%`,
         detail: first(field(item, "failuresCount", "failureCount", "incidents"), field(item, "faultsCount")) !== undefined
@@ -338,10 +340,10 @@ export function getAssistantChartConfig(intent, data, answerText = "") {
       const entries = severity.map((item, i) => [labelValue(item, "title", "name", "equipment.name") || `Аномалия ${i + 1}`,
         Math.max(0, Math.min(5, num(field(item, "severity", "severityLevel"))))]);
       const config = {
-        title: "Серьёзность аномалий", description: "Оценка выраженности аномалий по шкале от 0 до 5.",
+        title: i18nT("pages.assistant.assistant.assistantcharts.898ba4f"), description: i18nT("pages.assistant.assistant.assistantcharts.ea2420c"),
         categories: entries.map(([k]) => k), values: entries.map(([, v]) => v), unit: "/5", maxValue: 5,
         views: ["bar", ...(entries.length >= 3 ? ["radar"] : []), "semi", "table"],
-        gauge: { label: "Средняя серьёзность", value: entries.reduce((sum, [, v]) => sum + v, 0) / entries.length / 5 * 100 },
+        gauge: { label: i18nT("pages.assistant.assistant.assistantcharts.bae9b62"), value: entries.reduce((sum, [, v]) => sum + v, 0) / entries.length / 5 * 100 },
         rows: rowsFor(items, (item, i) => ({ label: labelValue(item, "title", "name") || `Аномалия ${i + 1}`,
           value: validNum(item.severity) ? `${formatNumber(item.severity)}/5` : "—",
           detail: equipmentName(item, i), })),
@@ -363,10 +365,10 @@ export function getAssistantChartConfig(intent, data, answerText = "") {
       const ids = [...new Set([...source.matchAll(/(?:№|\b)[НHНN][-–]?\d{4,6}\b/giu)].map((m) => m[0]))];
       if (count) {
         return {
-          title: "Просроченные наряды", description: "Общее количество из ответа помощника; детализация недоступна без данных API.",
+          title: i18nT("pages.assistant.assistant.assistantcharts.795dd66"), description: i18nT("pages.assistant.assistant.assistantcharts.5e534ba"),
           categories: ["Просроченные наряды"], values: [Number(count[1])], unit: "шт.", views: ["bar", "table"],
           rows: ids.length ? ids.map((id) => ({ label: id, value: "Просрочен", detail: "Номер из ответа" }))
-            : [{ label: "Просроченные наряды", value: Number(count[1]), detail: "Всего" }],
+            : [{ label: i18nT("pages.assistant.assistant.assistantcharts.795dd66"), value: Number(count[1]), detail: "Всего" }],
         };
       }
     }
@@ -420,8 +422,9 @@ export function getAssistantChartConfig(intent, data, answerText = "") {
 const quantity = (value, unit) => `${formatNumber(value)}${unit === "%" || unit === "/5" ? unit : ` ${unit || ""}`}`;
 
 function DataTable({ rows }) {
+    __useI18nReactive();
   return <div className="ai-chart-table-wrap"><table className="ai-chart-table">
-    <thead><tr><th>Позиция</th><th>Показатель</th><th>Дополнительно</th></tr></thead>
+    <thead><tr><th>{i18nT("pages.assistant.assistant.assistantcharts.3b5f2ce")}</th><th>{i18nT("pages.assistant.assistant.assistantcharts.bce6874")}</th><th>{i18nT("quickOrder.more")}</th></tr></thead>
     <tbody>{rows.map((row, i) => <tr key={`${row.label}-${i}`}>
       <td>{row.label}</td><td>{typeof row.value === "number" ? formatNumber(row.value) : String(row.value ?? "—")}</td><td>{row.detail || "—"}</td>
     </tr>)}</tbody>
@@ -429,6 +432,8 @@ function DataTable({ rows }) {
 }
 
 export default function AssistantChart({ config, view: requestedView }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const [selectedView, setSelectedView] = useState(null);
   const effectiveView = requestedView === "charts"
     ? (config?.views?.includes(selectedView) ? selectedView : config?.views?.[0])
@@ -476,7 +481,7 @@ export default function AssistantChart({ config, view: requestedView }) {
     }
     if (view === "semi") {
       const gauge = config.people
-        ? { label: "Занятость", value: config.people.total > 0 ? config.people.busy / config.people.total * 100 : 0 }
+        ? { label: i18nT("pages.assistant.assistant.assistantcharts.836dc56"), value: config.people.total > 0 ? config.people.busy / config.people.total * 100 : 0 }
         : config.gauge;
       if (!gauge) return null;
       // ApexCharts uses radialBar internally to draw the HALF-circle gauge.
@@ -556,7 +561,7 @@ export default function AssistantChart({ config, view: requestedView }) {
         stroke: { width: view === "line" || view === "area" ? 2.7 : 0, curve: "smooth" },
         fill: { type: "solid", opacity: view === "area" ? 0.13 : 1 },
       } };
-  }, [config, effectiveView]);
+  }, [config, effectiveView, __i18nLocaleToken]);
 
   if (!config || !config.views?.includes(effectiveView)) return null;
   const view = effectiveView;
@@ -578,13 +583,13 @@ export default function AssistantChart({ config, view: requestedView }) {
         <h4>{config.title}</h4><p>{viewDescription}</p></div>
       <span className="ai-chart-v2__type">{viewLabel}</span>
     </div>
-    {config.views.length > 1 && <div className="ai-chart-v2__tabs" role="group" aria-label="Вид аналитики">
+    {config.views.length > 1 && <div className="ai-chart-v2__tabs" role="group" aria-label={i18nT("pages.assistant.assistant.assistantcharts.a846a9b")}>
       {config.views.map((key) => <button key={key} type="button"
         className={`ai-chart-v2__tab ${key === view ? "ai-chart-v2__tab--active" : ""}`} style={{ transition: "none" }}
         aria-pressed={key === view} onClick={() => setSelectedView(key)}>{VIEW_NAMES[key] || key}</button>)}
     </div>}
     {view === "table" ? <DataTable rows={config.rows?.length ? config.rows : config.categories.map((label, i) => ({ label, value: quantity(config.values[i], config.unit) }))} />
       : rendered && <div className="ai-chart-v2__plot"><Chart key={view} options={rendered.options} series={rendered.series} type={rendered.type} height={rendered.height} width="100%" /></div>}
-    <div className="ai-chart-v2__foot"><span>Источник: текущий ответ помощника</span><span>{config.categories.length} позиций</span></div>
+    <div className="ai-chart-v2__foot"><span>{i18nT("pages.assistant.assistant.assistantcharts.60b9e61")}</span><span>{config.categories.length} {i18nT("pages.assistant.assistant.assistantcharts.b7cee82")}</span></div>
   </section>;
 }

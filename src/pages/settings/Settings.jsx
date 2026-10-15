@@ -919,7 +919,7 @@ export default function Settings() {
                                     <RiSave3Line />
 
                                     {profileSaving
-                                        ? "Сохраняем..."
+                                        ? i18nT("pages.settings.settings.c77f3ab")
                                         : i18nT("pages.admin.admin.admin.74ea58b")}
                                 </button>
                             </div>
@@ -978,8 +978,8 @@ export default function Settings() {
 
                                     <p className="text-xs leading-5 text-gray-500">
                                         {isAdmin
-                                            ? "Вы можете изменить свои ФИО и телефон. Роль и логин 1С оставлены только для чтения."
-                                            : "Изменение ФИО, телефона, роли и рабочих данных выполняет администратор."}
+                                            ? i18nT("pages.settings.settings.125ec8d")
+                                            : i18nT("pages.settings.settings.5ddb0c8")}
                                     </p>
                                 </div>
                             </div>
@@ -1062,8 +1062,8 @@ export default function Settings() {
 
                             <p className="mt-4 text-xs leading-5 text-gray-400">
                                 {isAdmin
-                                    ? "Для администратора выбранный язык сохраняется и в профиле backend."
-                                    : "Для вашей роли backend не предоставляет self-update профиля, поэтому язык сохраняется локально в браузере."}
+                                    ? i18nT("pages.settings.settings.39a96d6")
+                                    : i18nT("pages.settings.settings.2b6ce0d")}
                             </p>
                         </div>
                     </section>
@@ -1118,7 +1118,7 @@ export default function Settings() {
 
                             <div className="grid grid-cols-1 gap-4">
                                 <PasswordField
-                                    label="Текущий пароль"
+                                    label={i18nT("pages.settings.settings.2d37727")}
                                     value={
                                         currentPassword
                                     }
@@ -1144,7 +1144,7 @@ export default function Settings() {
 
                                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                     <PasswordField
-                                        label="Новый пароль"
+                                        label={i18nT("pages.admin.admin.admin.56786d1")}
                                         value={
                                             newPassword
                                         }
@@ -1169,7 +1169,7 @@ export default function Settings() {
                                     />
 
                                     <PasswordField
-                                        label="Повторите новый пароль"
+                                        label={i18nT("pages.settings.settings.22a86f4")}
                                         value={
                                             confirmPassword
                                         }
@@ -1210,8 +1210,8 @@ export default function Settings() {
                                     className="inline-flex min-w-[170px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {passwordSaving
-                                        ? "Сохраняем..."
-                                        : "Изменить пароль"}
+                                        ? i18nT("pages.settings.settings.c77f3ab")
+                                        : i18nT("pages.settings.settings.66fe09f")}
                                 </button>
                             </div>
                         </form>

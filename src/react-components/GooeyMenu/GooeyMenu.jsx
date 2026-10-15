@@ -3,6 +3,8 @@ import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 
 import { createPortal } from "react-dom";
 import { RiCheckLine, RiMore2Fill } from "react-icons/ri";
 import "./GooeyMenu.css";
+import { t as i18nT } from "../../i18n/index.js";
+import { useI18n as __useI18nReactive } from "../../i18n/index.js";
 
 const TRIGGER_SIZE = 40;
 const PANEL_OFFSET = 47;
@@ -45,6 +47,8 @@ export default function GooeyMenu({
   disabled = false,
   className = "",
 }) {
+    __useI18nReactive();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const [expanded, setExpanded] = useState(false);
   const [present, setPresent] = useState(false);
   const [anchor, setAnchor] = useState(null);
@@ -92,7 +96,7 @@ export default function GooeyMenu({
         ? prev
         : next
     );
-  }, []);
+  }, [ __i18nLocaleToken]);
 
   const runSpring = useCallback((to, onDone) => {
     animationRef.current?.stop();
@@ -110,7 +114,7 @@ export default function GooeyMenu({
       progress.set(to);
       onDone?.();
     });
-  }, [progress, reducedMotion]);
+  }, [progress, reducedMotion, __i18nLocaleToken]);
 
   const close = useCallback((selectedItem = null) => {
     if (!targetOpenRef.current) return;
@@ -134,7 +138,7 @@ export default function GooeyMenu({
       selectionRef.current = null;
       if (selection) onSelect?.(selection);
     });
-  }, [onOpenChange, onSelect, runSpring]);
+  }, [onOpenChange, onSelect, runSpring, __i18nLocaleToken]);
 
   const show = useCallback(() => {
     if (disabled || !items.length || targetOpenRef.current) return;
@@ -148,7 +152,7 @@ export default function GooeyMenu({
       onOpenChange?.(true);
     }
     runSpring(1);
-  }, [disabled, items.length, measureAnchor, onOpenChange, runSpring]);
+  }, [disabled, items.length, measureAnchor, onOpenChange, runSpring, __i18nLocaleToken]);
 
   useLayoutEffect(() => {
     if (!present) return undefined;
@@ -275,7 +279,7 @@ export default function GooeyMenu({
           <button
             type="button"
             className="gooey-menu__floating-icon"
-            aria-label="Закрыть меню"
+            aria-label={i18nT("reactcomponents.gooeymenu.gooeymenu.5454466")}
             onClick={() => close()}
             tabIndex={expanded ? 0 : -1}
             disabled={!expanded}

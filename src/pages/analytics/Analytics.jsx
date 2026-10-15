@@ -145,7 +145,7 @@ export default function Analytics() {
     const currentPeriod = PERIODS().find((item) => item.value === period) ?? PERIODS()[2];
     const reportParams = useMemo(
         () => ({ period, ...(areaId ? { areaId: Number(areaId) } : {}) }),
-        [period, areaId],
+        [period, areaId, __i18nLocaleToken],
     );
     const shiftQuery = useShiftReport(reportParams);
     const downtimeQuery = useDowntimeReport(reportParams);
@@ -170,7 +170,7 @@ export default function Analytics() {
         [anomalies, __i18nLocaleToken],
     );
     const downtimeEquipment = asArray(downtime.byEquipment);
-    const topForecast = useMemo(() => sortedForecast.slice(0, 8), [sortedForecast]);
+    const topForecast = useMemo(() => sortedForecast.slice(0, 8), [sortedForecast, __i18nLocaleToken]);
     // Результат ручного AI-пересчёта не должен попадать в другой период/участок.
     const aiResult = analysisContext === `${period}:${areaId}` ? runMutation.data?.ai : null;
     const executors = Number(shift.workload?.executorsOnShift ?? 0);
@@ -195,10 +195,10 @@ export default function Analytics() {
                     </div>
                 ),
             },
-            { field: "count", header: "Событий", width: "10%", minWidth: 82, align: "center" },
+            { field: "count", header: i18nT("pages.analytics.analytics.fb7e9a2"), width: "10%", minWidth: 82, align: "center" },
             {
                 field: "minutes",
-                header: "Простой",
+                header: i18nT("analytics.downtime.label"),
                 width: "16%",
                 minWidth: 110,
                 sortValue: (row) => Number(row.minutes),
@@ -206,14 +206,14 @@ export default function Analytics() {
             },
             {
                 field: "plannedMinutes",
-                header: "Плановый",
+                header: i18nT("priority.planned"),
                 width: "13%",
                 minWidth: 96,
                 render: (row) => <span className="an-cell-time">{formatMinutes(row.plannedMinutes)}</span>,
             },
             {
                 field: "unplannedMinutes",
-                header: "Аварийный",
+                header: i18nT("priority.emergency"),
                 width: "17%",
                 minWidth: 112,
                 render: (row) => (
@@ -222,7 +222,7 @@ export default function Analytics() {
             },
             {
                 field: "ongoing",
-                header: "Сейчас",
+                header: i18nT("pages.dashboard.dashboard.2c2777e"),
                 width: "10%",
                 minWidth: 82,
                 align: "center",
@@ -283,7 +283,7 @@ export default function Analytics() {
                         ) : (
                             <RiSparkling2Line size={18} />
                         )}
-                        {runMutation.isPending ? "AI анализирует..." : "Пересчитать аномалии"}
+                        {runMutation.isPending ? i18nT("pages.analytics.analytics.6eef3d0") : i18nT("pages.analytics.analytics.00e08d0")}
                     </button>
                 </div>
             </div>
@@ -347,7 +347,7 @@ export default function Analytics() {
                         <>
                             <div className="an-hero__summary">
                                 <strong className="an-hero__value">{shiftQuery.isError && !shiftQuery.data ? "—" : closed}</strong>
-                                <span className="an-hero__sub">из {issued} выданных за период</span>
+                                <span className="an-hero__sub">{i18nT("pages.analytics.analytics.b98ccbc")} {issued} {i18nT("pages.analytics.analytics.e7be501")}</span>
                             </div>
                             {shiftQuery.isError && !shiftQuery.data ? (
                                 <SectionError onRetry={() => shiftQuery.refetch()} />
@@ -362,7 +362,7 @@ export default function Analytics() {
                         label={i18nT("status.inProgress")}
                         loading={shiftLoading}
                         value={shift.inProgress ?? 0}
-                        helper="Активные работы"
+                        helper={i18nT("pages.analytics.analytics.6078ad9")}
                         icon={RiToolsLine}
                         tone="indigo"
                     />
@@ -375,7 +375,7 @@ export default function Analytics() {
                         tone="rose"
                     />
                     <KpiCard
-                        label="Общий простой"
+                        label={i18nT("pages.analytics.analytics.deb5b8e")}
                         loading={downtimeLoading}
                         value={formatMinutes(downtime.totals?.minutes)}
                         helper={`${downtime.totals?.ongoing ?? 0} активных`}
@@ -419,7 +419,7 @@ export default function Analytics() {
                 <div className="an-stack">
                     <Card
                         title={i18nT("pages.analytics.analytics.f9f5658")}
-                        subtitle="Состояние исполнителей за выбранный период"
+                        subtitle={i18nT("pages.analytics.analytics.07e430b")}
                         icon={RiBarChartBoxLine}
                     >
                         {shiftLoading ? (
@@ -428,7 +428,7 @@ export default function Analytics() {
                             <SectionError onRetry={() => shiftQuery.refetch()} />
                         ) : (
                         <div className="an-load">
-                            <StableLoadRing label="Загрузка исполнителей" value={loadPercent} />
+                            <StableLoadRing label={i18nT("pages.analytics.analytics.ac491f6")} value={loadPercent} />
                             <div className="an-stats">
                                 <MiniStat
                                     title={i18nT("pages.admin.admin.admin.958b816")}
@@ -452,7 +452,7 @@ export default function Analytics() {
                     </Card>
                     <Card
                         title={i18nT("pages.analytics.analytics.e3c205a")}
-                        subtitle="Вывод сервера по периоду"
+                        subtitle={i18nT("pages.analytics.analytics.5467c87")}
                         icon={RiSparkling2Line}
                     >
                         {shiftLoading ? (
@@ -460,7 +460,7 @@ export default function Analytics() {
                         ) : (
                             <>
                                 <p className="an-ai__text">
-                                    {aiResult?.summary || shift.aiSummary || "AI-сводка пока отсутствует."}
+                                    {aiResult?.summary || shift.aiSummary || i18nT("pages.analytics.analytics.afa7e6c")}
                                 </p>
                                 {asArray(aiResult?.recommendations).map((item, index) => (
                                     <div key={`${item}-${index}`} className="an-rec">
@@ -500,7 +500,7 @@ export default function Analytics() {
                 </Card>
                 <Card
                     title={i18nT("analytics.downtime.title")}
-                    subtitle="Разбивка по оборудованию"
+                    subtitle={i18nT("pages.analytics.analytics.055384d")}
                     icon={RiTimeLine}
                 >
                     <div className="an-tablewrap">
@@ -520,8 +520,8 @@ export default function Analytics() {
                             className="an-downtime-table"
                             minWidth={940}
                             scrollHeight="clamp(440px, 56vh, 560px)"
-                            emptyText="Простоев нет"
-                            emptyDescription="За выбранный период простоев оборудования не зарегистрировано"
+                            emptyText={i18nT("pages.analytics.analytics.d96fa3b")}
+                            emptyDescription={i18nT("pages.analytics.analytics.6362cee")}
                         />
                         )}
                     </div>
@@ -531,7 +531,7 @@ export default function Analytics() {
             <div className="an-grid an-grid--two" style={{ marginBottom: 0 }}>
                 <Card
                     title={i18nT("pages.analytics.analytics.101358d")}
-                    subtitle="Аварийные наряды за 30 дней"
+                    subtitle={i18nT("pages.analytics.analytics.c27d601")}
                     icon={RiToolsLine}
                 >
                     <Ranking
@@ -543,7 +543,7 @@ export default function Analytics() {
                 </Card>
                 <Card
                     title={i18nT("pages.analytics.analytics.e536c9b")}
-                    subtitle="Аварийность на единицу оборудования"
+                    subtitle={i18nT("pages.analytics.analytics.fe27183")}
                     icon={RiMapPinLine}
                 >
                     <Ranking
@@ -567,10 +567,11 @@ function Skeleton({ width = "100%", height = 14, className = "" }) {
 }
 
 function SectionError({ onRetry }) {
+    useI18n();
     return (
         <div className="an-inline-error" role="alert">
-            <span>Не удалось загрузить данные</span>
-            <button type="button" onClick={onRetry}>Повторить</button>
+            <span>{i18nT("pages.admin.admin.admin.2502839")}</span>
+            <button type="button" onClick={onRetry}>{i18nT("components.layout.appnavbar.b914bbb")}</button>
         </div>
     );
 }
@@ -701,6 +702,8 @@ function MiniStat({ title, value }) {
 // Semi-Circle Gauge на ApexCharts. Дуга занимает ширину карточки,
 // а высоту карточки определяет только .an-grid--top (не размер графика).
 function ClosedGauge({ percent }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
     const gaugeRef = useRef(null);
     const [space, setSpace] = useState({ width: 0, height: 0 });
     const hasData = percent !== null && percent !== undefined && Number.isFinite(Number(percent));
@@ -769,7 +772,7 @@ function ClosedGauge({ percent }) {
             hover: { filter: { type: "none" } },
             active: { filter: { type: "none" } },
         },
-    }), [chartOffsetY]);
+    }), [chartOffsetY, __i18nLocaleToken]);
     return (
         <div
             ref={gaugeRef}
@@ -791,7 +794,7 @@ function ClosedGauge({ percent }) {
                 )}
                 <div className="an-gauge__metric" aria-hidden="true">
                     <strong className="an-gauge__percent">{hasData ? displayPercent(value) : "—"}</strong>
-                    <span className="an-gauge__caption">завершено</span>
+                    <span className="an-gauge__caption">{i18nT("pages.analytics.analytics.65f0a19")}</span>
                 </div>
             </div>
         </div>

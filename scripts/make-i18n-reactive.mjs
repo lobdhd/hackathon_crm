@@ -170,7 +170,7 @@ function isComponent(p) {
     const name = getComponentName(p);
 
     return name === 'default' ||
-        Boolean(name && /^[A-Z]/.test(name));
+        Boolean(name && /^[A-Z]/.test(name) && !/^[A-Z0-9_]+$/.test(name));
 }
 
 function enclosingFunction(p) {

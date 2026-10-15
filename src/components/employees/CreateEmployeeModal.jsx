@@ -766,7 +766,7 @@ export default function CreateEmployeeModal({
                                     )}
 
                                     {isSubmitting
-                                        ? "Создание..."
+                                        ? i18nT("components.employees.createemployeemodal.32f23b2")
                                         : i18nT("pages.admin.admin.admin.5eba283")}
                                 </button>
                             </div>

@@ -463,6 +463,8 @@ function Welcome({ onSend, }) {
 }
 // MARK: Message
 function Message({ message, navigate, hasFollowing = false, isFresh = false }) {
+    useI18n();
+    const __i18nLocaleToken = i18nT("sidebar.home");
   const assistant = message.role === "assistant";
   const [view, setView] = useState("original");
   const [copied, setCopied] = useState(false);
@@ -470,11 +472,11 @@ function Message({ message, navigate, hasFollowing = false, isFresh = false }) {
   const [menuRoom, setMenuRoom] = useState(0);
   const messageRef = useRef(null);
   const reducedMotion = useReducedMotion();
-  const richData = useMemo(() => parseRichData(message.data), [message.data]);
-  const chart = useMemo(() => getAssistantChartConfig(message.intent, richData, message.text), [message.intent, richData, message.text]);
+  const richData = useMemo(() => parseRichData(message.data), [message.data, __i18nLocaleToken]);
+  const chart = useMemo(() => getAssistantChartConfig(message.intent, richData, message.text), [message.intent, richData, message.text, __i18nLocaleToken]);
   const actions = [
-    { key: "original", label: "Обычный вид", icon: RiListCheck2 },
-    ...(chart ? [{ key: "charts", label: "Графики и таблица", icon: RiBarChartBoxLine }] : []),
+    { key: "original", label: i18nT("pages.assistant.assistant.assistant.23c9540"), icon: RiListCheck2 },
+    ...(chart ? [{ key: "charts", label: i18nT("pages.assistant.assistant.assistant.eab40ff"), icon: RiBarChartBoxLine }] : []),
     { key: "copy", label: copied ? "Скопировано" : "Копировать ответ", icon: RiFileCopyLine },
   ];
   function handleMenuOpenChange(open) {
@@ -550,14 +552,14 @@ function Message({ message, navigate, hasFollowing = false, isFresh = false }) {
               {assistant && (
                 <div className="ai-message__actions">
                   {view !== "original" && (
-                    <span className="ai-message__view-caption">Данные из ответа ИИ</span>
+                    <span className="ai-message__view-caption">{i18nT("pages.assistant.assistant.assistant.e88363d")}</span>
                   )}
                   <GooeyMenu
                     items={actions}
                     value={view}
                     onSelect={handleAction}
                     onOpenChange={handleMenuOpenChange}
-                    label="Представление и действия"
+                    label={i18nT("pages.assistant.assistant.assistant.d862285")}
                     triggerIcon={chart ? RiBarChartBoxLine : RiFileCopyLine}
                     iconOnly
                   />
@@ -612,6 +614,7 @@ function IntentContent({ intent, data, navigate, }) {
 }
 // MARK: Free Executors
 function FreeExecutors({ data, navigate, }) {
+    useI18n();
   const items = asArray(data);
   if (!items.length) {
     return null;
@@ -629,7 +632,7 @@ function FreeExecutors({ data, navigate, }) {
         </p>
         <p className="mt-1 text-xs text-gray-500">
           {item.specialty ||
-            "Специальность не указана"}
+            i18nT("components.employees.employeecard.2a2d667")}
           {item.grade
             ? ` • ${item.grade} разряд`
             : ""}
@@ -811,6 +814,7 @@ function smoothPath(points) {
 }
 // MARK: One chart for all equipment
 function ForecastResult({ data, navigate }) {
+    const __i18nLocaleToken = i18nT("sidebar.home");
   useI18n();
   const [activeIndex, setActiveIndex] = useState(null);
   const [showAllEquipment, setShowAllEquipment] = useState(false);
@@ -824,7 +828,7 @@ function ForecastResult({ data, navigate }) {
         title: equipmentTitle(item),
       }))
       .sort((a, b) => b.risk - a.risk || a.originalIndex - b.originalIndex);
-  }, [data]);
+  }, [data, __i18nLocaleToken]);
   const plot = useMemo(() => {
     const width = 760;
     const height = 248;
@@ -857,7 +861,7 @@ function ForecastResult({ data, navigate }) {
       y: top + part * chartHeight,
     }));
     return { width, height, points, guides, linePath, areaPath, axisMin, axisMax };
-  }, [items]);
+  }, [items, __i18nLocaleToken]);
   if (!items.length)
     return null;
   const average = items.reduce((total, item) => total + item.risk, 0) / items.length;
@@ -884,7 +888,7 @@ function ForecastResult({ data, navigate }) {
           {item.title}
         </span>
         <span className="mt-0.5 block text-[11px] text-slate-400">
-          Отказов: {item.recentFailures ?? 0}
+          {i18nT("pages.assistant.assistant.assistant.fec291d")} {item.recentFailures ?? 0}
         </span>
       </span>
       <span className={`shrink-0 text-sm font-semibold tabular-nums ${item.risk >= 90 ? "text-rose-600" : "text-slate-700"}`}>
@@ -899,25 +903,25 @@ function ForecastResult({ data, navigate }) {
         <div>
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
             <span className="h-2 w-2 rounded-full bg-blue-500" />
-            Аналитика оборудования
+            {i18nT("pages.assistant.assistant.assistant.3b3feb3")}
           </div>
           <h3 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
-            Прогноз рисков
+            {i18nT("pages.assistant.assistant.assistant.a47a6c1")}
           </h3>
           <p className="mt-1 text-xs leading-5 text-slate-500">
-            Сравнение вероятности отказа по оборудованию
+            {i18nT("pages.assistant.assistant.assistant.630c423")}
           </p>
         </div>
         <div className="flex items-center gap-5 sm:gap-7">
           <div>
-            <p className="text-[11px] text-slate-400">Оборудование</p>
+            <p className="text-[11px] text-slate-400">{i18nT("quickOrder.equipment")}</p>
             <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900">
               {items.length}
             </p>
           </div>
           <div className="h-8 w-px bg-slate-200" />
           <div>
-            <p className="text-[11px] text-slate-400">Средний риск</p>
+            <p className="text-[11px] text-slate-400">{i18nT("pages.assistant.assistant.assistant.30e8156")}</p>
             <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900">
               {Math.round(average)}%
             </p>
@@ -928,10 +932,10 @@ function ForecastResult({ data, navigate }) {
       <div className="px-4 pb-4 pt-5 sm:px-6">
         <div className="flex items-center justify-between gap-3 px-1">
           <span className="text-xs font-medium text-slate-600">
-            Вероятность отказа
+            {i18nT("pages.assistant.assistant.assistant.79831a4")}
           </span>
           <span className="text-[11px] tabular-nums text-slate-400">
-            Макс. {Math.round(peak.risk)}%
+            {i18nT("pages.assistant.assistant.assistant.a6c2e78")} {Math.round(peak.risk)}%
           </span>
         </div>
         <div className="relative mt-3">
@@ -971,19 +975,19 @@ function ForecastResult({ data, navigate }) {
               {items[selected].title}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Вероятность: <span className="font-semibold text-blue-600">{Math.round(items[selected].risk)}%</span>
+              {i18nT("pages.assistant.assistant.assistant.b214703")} <span className="font-semibold text-blue-600">{Math.round(items[selected].risk)}%</span>
             </p>
           </div>)}
         </div>
         <p className="mt-1 px-1 text-[11px] leading-4 text-slate-400">
-          Точки — разные единицы оборудования, в порядке убывания риска. Это не график по времени.
+          {i18nT("pages.assistant.assistant.assistant.3847e61")}
         </p>
       </div>
       {/* Compact equipment list, linked to the graph points */}
       <div className="border-t border-slate-100">
         <div className="flex items-center justify-between px-5 pb-2 pt-4 sm:px-6">
-          <p className="text-xs font-semibold text-slate-700">Оборудование</p>
-          <p className="text-[11px] text-slate-400">Вероятность</p>
+          <p className="text-xs font-semibold text-slate-700">{i18nT("quickOrder.equipment")}</p>
+          <p className="text-[11px] text-slate-400">{i18nT("pages.assistant.assistant.assistant.d3cd07a")}</p>
         </div>
         <div className="px-2 pb-2 sm:px-3">
           {items.slice(0, 2).map(renderEquipmentRow)}
@@ -1009,7 +1013,7 @@ function ForecastResult({ data, navigate }) {
             onClick={() => setShowAllEquipment((current) => !current)}
             className="flex w-full items-center justify-center gap-2 border-t border-slate-100 px-5 py-3 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
           >
-            <span>{showAllEquipment ? "Свернуть" : "Показать все"}</span>
+            <span>{showAllEquipment ? i18nT("pages.assistant.assistant.assistant.ca9f19d") : i18nT("pages.assistant.assistant.assistant.b0c3c9b")}</span>
             {!showAllEquipment && <span className="font-normal text-slate-400">({items.length})</span>}
             <RiArrowDownSLine className={`h-4 w-4 transition-transform duration-200 ${showAllEquipment ? "rotate-180" : ""}`} />
           </button>
@@ -1020,8 +1024,9 @@ function ForecastResult({ data, navigate }) {
 }
 // MARK: Loading states
 function HistorySkeleton() {
+    useI18n();
   return (
-    <div className="ai-history-skeleton" role="status" aria-label="Загрузка переписки">
+    <div className="ai-history-skeleton" role="status" aria-label={i18nT("pages.assistant.assistant.assistant.242055a")}>
       {[0, 1, 2].map((item) => (
         <div className={`ai-history-skeleton__row ${item === 1 ? 'ai-history-skeleton__row--user' : ''}`} key={item} aria-hidden="true">
           <span className="ai-history-skeleton__avatar ai-shimmer" />

@@ -1061,21 +1061,21 @@ export default function OneC() {
 
             {notice && <Notice notice={notice} onClose={() => setNotice(null)} />}
 
-            <section className="oc-stats" aria-label="Состояние заданий обмена">
-                <MetricCard title={i18nT("pages.integrations.onec.onec.b69f8c6")} value={stats.pending} icon={RiTimeLine} description="Ожидают отправки" tone="pending" loading={statsQuery.isLoading} />
-                <MetricCard title={i18nT("pages.integrations.onec.onec.239ce90")} value={stats.processing} icon={RiRefreshLine} description="Обрабатываются" tone="processing" loading={statsQuery.isLoading} />
-                <MetricCard title={i18nT("pages.integrations.onec.onec.f5cce37")} value={stats.success} icon={RiCheckboxCircleLine} description="Успешно доставлены" tone="success" loading={statsQuery.isLoading} />
+            <section className="oc-stats" aria-label={i18nT("pages.integrations.onec.onec.18a4695")}>
+                <MetricCard title={i18nT("pages.integrations.onec.onec.b69f8c6")} value={stats.pending} icon={RiTimeLine} description={i18nT("pages.integrations.onec.onec.45612db")} tone="pending" loading={statsQuery.isLoading} />
+                <MetricCard title={i18nT("pages.integrations.onec.onec.239ce90")} value={stats.processing} icon={RiRefreshLine} description={i18nT("pages.integrations.onec.onec.723a172")} tone="processing" loading={statsQuery.isLoading} />
+                <MetricCard title={i18nT("pages.integrations.onec.onec.f5cce37")} value={stats.success} icon={RiCheckboxCircleLine} description={i18nT("pages.integrations.onec.onec.f20f50c")} tone="success" loading={statsQuery.isLoading} />
                 <MetricCard title={i18nT("pages.integrations.onec.onec.058d8bc")} value={stats.failed} icon={RiErrorWarningLine} description={`${stats.dead} требуют внимания`} tone="failed" loading={statsQuery.isLoading} />
             </section>
-            <p className="oc-stats-note">Показатели рассчитаны по последним {statsQuery.isLoading ? "до 500" : stats.total} заданиям (максимум 500), а не по всей истории обмена.</p>
+            <p className="oc-stats-note">{i18nT("pages.integrations.onec.onec.125ebef")} {statsQuery.isLoading ? i18nT("pages.integrations.onec.onec.9605eb5") : stats.total} {i18nT("pages.integrations.onec.onec.c6da8ef")}</p>
 
             <section className="oc-panel oc-workspace">
                 <div className="oc-workspace__top">
                     <div className="oc-workspace__title">
                         <span className="oc-title-icon"><RiDatabase2Line size={20} /></span>
                         <div>
-                            <h2>Управление обменом</h2>
-                            <p>Задания, соответствия идентификаторов и сверка нарядов</p>
+                            <h2>{i18nT("pages.integrations.onec.onec.45d4017")}</h2>
+                            <p>{i18nT("pages.integrations.onec.onec.1c9f331")}</p>
                         </div>
                     </div>
                     <div className="oc-tabs">
@@ -1093,13 +1093,13 @@ export default function OneC() {
                             inset={3}
                             equalSlots
                             draggable
-                            aria-label="Разделы интеграции 1С"
+                            aria-label={i18nT("pages.integrations.onec.onec.f35a9dc")}
                         />
                     </div>
                 </div>
                 <div className="oc-workspace__body">
                     {activeTab === "jobs" && (
-                        <div role="region" id="oc-jobs-panel" aria-label="Задания обмена">
+                        <div role="region" id="oc-jobs-panel" aria-label={i18nT("pages.integrations.onec.onec.9ba82a4")}>
                             <JobsTab jobs={visibleJobs} query={jobsQuery} status={status} setStatus={setStatus}
                                 direction={direction} setDirection={setDirection} search={search} setSearch={setSearch}
                                 limit={limit} setLimit={setLimit} onJob={setSelectedJob} onRetry={handleRetry}
@@ -1107,14 +1107,14 @@ export default function OneC() {
                         </div>
                     )}
                     {activeTab === "mappings" && (
-                        <div role="region" id="oc-mappings-panel" aria-label="Соответствия 1С">
+                        <div role="region" id="oc-mappings-panel" aria-label={i18nT("pages.integrations.onec.onec.4e7ee7c")}>
                             <MappingsTab input={mappingInput} setInput={setMappingInput} entity={mappingEntity}
                                 setEntity={setMappingEntity} search={mappingSearch} setSearch={setMappingSearch}
                                 items={visibleMappings} query={mappingsQuery} />
                         </div>
                     )}
                     {activeTab === "reconciliation" && (
-                        <div role="region" id="oc-reconciliation-panel" aria-label="Сверка нарядов">
+                        <div role="region" id="oc-reconciliation-panel" aria-label={i18nT("pages.integrations.onec.onec.45b6f8e")}>
                             <ReconciliationTab since={reconcileInput} setSince={setReconcileInput} onApply={applyReconciliation}
                                 search={reconcileSearch} setSearch={setReconcileSearch} items={visibleReconciliationOrders}
                                 total={reconciliationOrders.length} query={reconciliationQuery} />
@@ -1139,13 +1139,14 @@ export default function OneC() {
 
 // MARK: KPI
 function MetricCard({ title, value, icon: Icon, description, tone, loading }) {
+    __useI18nReactive();
     return (
         <div className={`oc-kpi oc-kpi--${tone}`}>
             <div className="oc-kpi__top">
                 <span className="oc-kpi__label">{title}</span>
                 <span className="oc-kpi__icon"><Icon size={21} /></span>
             </div>
-            {loading ? <span className="oc-kpi__skeleton" aria-label="Загрузка" /> : <strong className="oc-kpi__value">{value}</strong>}
+            {loading ? <span className="oc-kpi__skeleton" aria-label={i18nT("analytics.area.load")} /> : <strong className="oc-kpi__value">{value}</strong>}
             <div className="oc-kpi__foot"><span className="oc-kpi__dot" />{description}</div>
         </div>
     );
@@ -1160,20 +1161,20 @@ function JobsTab({ jobs, query, status, setStatus, direction, setDirection, sear
                 <label className="oc-search oc-search--wide">
                     <RiSearchLine size={18} aria-hidden="true" />
                     <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
-                        placeholder={i18nT("pages.integrations.onec.onec.bd2ee1c")} aria-label="Поиск заданий обмена" />
+                        placeholder={i18nT("pages.integrations.onec.onec.bd2ee1c")} aria-label={i18nT("pages.integrations.onec.onec.783d8d1")} />
                 </label>
                 <div className="oc-toolbar__filters">
                     <div className="oc-filter"><GlideSelect className="glide-select--field" options={STATUS_OPTIONS()} value={status} onChange={setStatus} menuWidth={195} portal ariaLabel="Статус задания" /></div>
                     <div className="oc-filter"><GlideSelect className="glide-select--field" options={DIRECTION_OPTIONS()} value={direction} onChange={setDirection} menuWidth={185} portal ariaLabel="Направление обмена" /></div>
                     <div className="oc-filter oc-filter--limit"><GlideSelect className="glide-select--field" options={LIMIT_OPTIONS()} value={limit} onChange={setLimit} menuWidth={240} portal ariaLabel="Количество заданий" /></div>
-                    <button type="button" className="oc-btn oc-btn--icon" onClick={() => query.refetch()} disabled={query.isFetching} title="Обновить задания" aria-label="Обновить задания">
+                    <button type="button" className="oc-btn oc-btn--icon" onClick={() => query.refetch()} disabled={query.isFetching} title={i18nT("pages.integrations.onec.onec.be331eb")} aria-label={i18nT("pages.integrations.onec.onec.be331eb")}>
                         <RiRefreshLine size={19} className={query.isFetching ? "oc-spin" : ""} />
                     </button>
                 </div>
             </div>
             <div className="oc-list-topline">
-                <span><RiFileList3Line size={16} /> Найдено: <strong>{jobs.length}</strong></span>
-                <span className="oc-list-topline__hint">Обновление очереди каждые 10 секунд</span>
+                <span><RiFileList3Line size={16} /> {i18nT("employeesPage.found")} <strong>{jobs.length}</strong></span>
+                <span className="oc-list-topline__hint">{i18nT("pages.integrations.onec.onec.8fc3242")}</span>
             </div>
             {query.isLoading && !query.data ? (
                 <LoadingState text="Загружаем задания обмена..." />
@@ -1182,12 +1183,12 @@ function JobsTab({ jobs, query, status, setStatus, direction, setDirection, sear
             ) : jobs.length === 0 ? (
                 <EmptyState title={i18nT("pages.integrations.onec.onec.6f15733")} text="Для выбранных фильтров заданий обмена нет." />
             ) : (
-                <div className="oc-table-area" tabIndex={0} role="region" aria-label="Прокручиваемая таблица">
+                <div className="oc-table-area" tabIndex={0} role="region" aria-label={i18nT("pages.integrations.onec.onec.9067d05")}>
                     <table className="oc-table oc-table--jobs">
                         <thead><tr>
-                            <Th>Задание</Th><Th>{i18nT("employeeModal.status")}</Th>
+                            <Th>{i18nT("pages.integrations.onec.onec.7c0325c")}</Th><Th>{i18nT("employeeModal.status")}</Th>
                             <Th>{i18nT("pages.integrations.onec.onec.0153214")}</Th>
-                            <Th>Идентификаторы</Th><Th>Попытки / повтор</Th>
+                            <Th>{i18nT("pages.integrations.onec.onec.1732ee6")}</Th><Th>{i18nT("pages.integrations.onec.onec.10282b6")}</Th>
                             <Th>{i18nT("pages.integrations.onec.onec.d1227a4")}</Th>
                             <Th align="right">{i18nT("pages.integrations.onec.onec.fb3df31")}</Th>
                         </tr></thead>
@@ -1202,7 +1203,7 @@ function JobsTab({ jobs, query, status, setStatus, direction, setDirection, sear
                                     <Td><div className="oc-status-stack"><StatusBadge status={job.status} /></div></Td>
                                     <Td><span className="oc-ellipsis oc-ellipsis--event" title={job.eventType || ""}>{eventLabel(job.eventType)}</span></Td>
                                     <Td><div className="oc-cell-pair"><span className="oc-cell-pair__label">Local ID</span><b title={String(job.localId ?? "—")}>{job.localId ?? "—"}</b></div>
-                                        <div className="oc-cell-pair"><span className="oc-cell-pair__label">1С ID</span><b title={String(job.externalId ?? "—")}>{job.externalId ?? "—"}</b></div></Td>
+                                        <div className="oc-cell-pair"><span className="oc-cell-pair__label">{i18nT("pages.integrations.onec.onec.2b7f85e")}</span><b title={String(job.externalId ?? "—")}>{job.externalId ?? "—"}</b></div></Td>
                                     <Td><div className="oc-cell-primary">{job.attempts ?? 0}</div><div className="oc-cell-secondary">{formatDate(job.nextAttemptAt)}</div></Td>
                                     <Td><span className="oc-cell-date">{formatDate(job.updatedAt)}</span></Td>
                                     <Td align="right">{canRetry ? (
@@ -1211,8 +1212,8 @@ function JobsTab({ jobs, query, status, setStatus, direction, setDirection, sear
                                             <RiRefreshLine size={15} /> {i18nT("components.layout.appnavbar.b914bbb")}
                                         </button>
                                     ) : (
-                                        <button type="button" className="oc-btn oc-btn--details" onClick={(event) => { event.stopPropagation(); onJob(job); }} title="Открыть подробности задания">
-                                            Подробнее
+                                        <button type="button" className="oc-btn oc-btn--details" onClick={(event) => { event.stopPropagation(); onJob(job); }} title={i18nT("pages.integrations.onec.onec.cbe3f7d")}>
+                                            {i18nT("pages.dashboard.dashboard.db5f55c")}
                                         </button>
                                     )}</Td>
                                 </tr>
@@ -1221,7 +1222,7 @@ function JobsTab({ jobs, query, status, setStatus, direction, setDirection, sear
                     </table>
                 </div>
             )}
-            {query.isError && query.data && <p className="oc-inline-warning">Не удалось обновить данные: {getErrorMessage(query.error)}</p>}
+            {query.isError && query.data && <p className="oc-inline-warning">{i18nT("pages.integrations.onec.onec.634e9cc")} {getErrorMessage(query.error)}</p>}
         </div>
     );
 }
@@ -1240,20 +1241,20 @@ function MappingsTab({ input, setInput, entity, setEntity, search, setSearch, it
                 <button type="button" className="oc-btn oc-btn--primary oc-btn--apply" onClick={() => setEntity(input.trim())}>
                     {i18nT("pages.integrations.onec.onec.2cd8441")}
                 </button>
-                <label className="oc-field oc-field--search"><span>Поиск соответствия</span>
+                <label className="oc-field oc-field--search"><span>{i18nT("pages.integrations.onec.onec.a96f4fa")}</span>
                     <span className="oc-search"><RiSearchLine size={18} aria-hidden="true" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
                         placeholder={i18nT("pages.integrations.onec.onec.1a89234")} /></span>
                 </label>
-                <button type="button" className="oc-btn oc-btn--icon oc-btn--mapping-refresh" onClick={() => query.refetch()} disabled={query.isFetching} title="Обновить соответствия" aria-label="Обновить соответствия">
+                <button type="button" className="oc-btn oc-btn--icon oc-btn--mapping-refresh" onClick={() => query.refetch()} disabled={query.isFetching} title={i18nT("pages.integrations.onec.onec.bf2075e")} aria-label={i18nT("pages.integrations.onec.onec.bf2075e")}>
                     <RiRefreshLine size={19} className={query.isFetching ? "oc-spin" : ""} />
                 </button>
             </div>
             <div className="oc-mapping-hint"><RiInformationLine size={17} /><span>{i18nT("pages.integrations.onec.onec.81cc281")} <strong>EQUIPMENT</strong> {i18nT("pages.integrations.onec.onec.b9488ea")}</span></div>
-            <div className="oc-list-topline"><span><RiDatabase2Line size={16} /> Найдено: <strong>{items.length}</strong></span><span>Сущность: <b>{entity || "все"}</b></span></div>
+            <div className="oc-list-topline"><span><RiDatabase2Line size={16} /> {i18nT("employeesPage.found")} <strong>{items.length}</strong></span><span>{i18nT("pages.integrations.onec.onec.3f2252f")} <b>{entity || i18nT("pages.integrations.onec.onec.08a34eb")}</b></span></div>
             {query.isLoading && !query.data ? <LoadingState text="Загружаем соответствия 1С..." />
                 : query.isError && !query.data ? <ErrorState text={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
                     : items.length === 0 ? <EmptyState title={i18nT("pages.integrations.onec.onec.9f73c42")} text={`Для сущности ${entity || "без фильтра"} записей не найдено.`} />
-                        : <div className="oc-table-area" tabIndex={0} role="region" aria-label="Прокручиваемая таблица">
+                        : <div className="oc-table-area" tabIndex={0} role="region" aria-label={i18nT("pages.integrations.onec.onec.9067d05")}>
                             <table className="oc-table oc-table--mappings">
                                 <thead><tr><Th>ID</Th><Th>{i18nT("pages.integrations.onec.onec.de2925f")}</Th><Th>Local ID</Th><Th>{i18nT("pages.integrations.onec.onec.e978367")}</Th><Th>{i18nT("pages.integrations.onec.onec.342a6a5")}</Th><Th>{i18nT("pages.integrations.onec.onec.d1227a4")}</Th></tr></thead>
                                 <tbody>{items.map((item) => (
@@ -1265,7 +1266,7 @@ function MappingsTab({ input, setInput, entity, setEntity, search, setSearch, it
                                 ))}</tbody>
                             </table>
                         </div>}
-            {query.isError && query.data && <p className="oc-inline-warning">Не удалось обновить данные: {getErrorMessage(query.error)}</p>}
+            {query.isError && query.data && <p className="oc-inline-warning">{i18nT("pages.integrations.onec.onec.634e9cc")} {getErrorMessage(query.error)}</p>}
         </div>
     );
 }
@@ -1282,18 +1283,18 @@ function ReconciliationTab({ since, setSince, onApply, search, setSearch, items,
                 <button type="button" className="oc-btn oc-btn--primary oc-btn--apply" onClick={onApply}>
                     {i18nT("pages.integrations.onec.onec.9359cf8")}
                 </button>
-                <label className="oc-field oc-field--search"><span>Поиск наряда</span>
+                <label className="oc-field oc-field--search"><span>{i18nT("pages.integrations.onec.onec.7fa6f96")}</span>
                     <span className="oc-search"><RiSearchLine size={18} aria-hidden="true" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
                         placeholder={i18nT("pages.integrations.onec.onec.a1d4727")} /></span>
                 </label>
             </div>
-            <div className="oc-list-topline"><span><RiFileList3Line size={16} /> {i18nT("pages.integrations.onec.onec.a5cbbd1")} <strong>{total}</strong></span><span className="oc-list-topline__hint">Сверка с выбранной даты</span></div>
+            <div className="oc-list-topline"><span><RiFileList3Line size={16} /> {i18nT("pages.integrations.onec.onec.a5cbbd1")} <strong>{total}</strong></span><span className="oc-list-topline__hint">{i18nT("pages.integrations.onec.onec.6b52090")}</span></div>
             {query.isLoading && !query.data ? <LoadingState text="Получаем изменённые наряды..." />
                 : query.isError && !query.data ? <ErrorState text={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
                     : items.length === 0 ? <EmptyState title={i18nT("pages.integrations.onec.onec.c985d79")} text="После указанной даты изменённых нарядов не найдено." />
-                        : <div className="oc-table-area" tabIndex={0} role="region" aria-label="Прокручиваемая таблица">
+                        : <div className="oc-table-area" tabIndex={0} role="region" aria-label={i18nT("pages.integrations.onec.onec.9067d05")}>
                             <table className="oc-table oc-table--reconcile">
-                                <thead><tr><Th>Наряд</Th><Th>{i18nT("employeeModal.status")}</Th><Th>Описание / оборудование</Th><Th>{i18nT("ordersTable.area")}</Th><Th>{i18nT("ordersTable.assignee")}</Th><Th>{i18nT("pages.integrations.onec.onec.d1227a4")}</Th></tr></thead>
+                                <thead><tr><Th>{i18nT("ordersTable.order")}</Th><Th>{i18nT("employeeModal.status")}</Th><Th>{i18nT("pages.integrations.onec.onec.aeade14")}</Th><Th>{i18nT("ordersTable.area")}</Th><Th>{i18nT("ordersTable.assignee")}</Th><Th>{i18nT("pages.integrations.onec.onec.d1227a4")}</Th></tr></thead>
                                 <tbody>{items.map((order) => (
                                     <tr key={order.id} className="oc-table__row">
                                         <Td><div className="oc-cell-primary">{order.number || "—"}</div><div className="oc-cell-secondary">#{order.id}</div></Td>
@@ -1305,7 +1306,7 @@ function ReconciliationTab({ since, setSince, onApply, search, setSearch, items,
                                 ))}</tbody>
                             </table>
                         </div>}
-            {query.isError && query.data && <p className="oc-inline-warning">Не удалось обновить данные: {getErrorMessage(query.error)}</p>}
+            {query.isError && query.data && <p className="oc-inline-warning">{i18nT("pages.integrations.onec.onec.634e9cc")} {getErrorMessage(query.error)}</p>}
         </div>
     );
 }
@@ -1443,7 +1444,7 @@ function PushOrdersModal({
                 onSubmit={
                     submit
                 }
-                role="dialog" aria-modal="true" aria-label="Отправка нарядов в 1С" className="oc-modal__dialog oc-modal__dialog--form w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl"
+                role="dialog" aria-modal="true" aria-label={i18nT("pages.integrations.onec.onec.5c7fbcd")} className="oc-modal__dialog oc-modal__dialog--form w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl"
             >
                 <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                     <div>
@@ -1624,7 +1625,7 @@ function JobDetailsModal({
 
     return (
         <div className="oc-modal fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/40 p-4">
-            <div role="dialog" aria-modal="true" aria-label="Подробности задания обмена" className="oc-modal__dialog oc-modal__dialog--details flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+            <div role="dialog" aria-modal="true" aria-label={i18nT("pages.integrations.onec.onec.ee14159")} className="oc-modal__dialog oc-modal__dialog--details flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
                 <div className="flex items-start justify-between border-b border-gray-100 px-5 py-4">
                     <div>
                         <div className="flex items-center gap-2">
@@ -1664,7 +1665,7 @@ function JobDetailsModal({
                     </button>
                 </div>
 
-                <div className="oc-modal-scroll min-h-0 flex-1" tabIndex={0} role="region" aria-label="Содержимое задания">
+                <div className="oc-modal-scroll min-h-0 flex-1" tabIndex={0} role="region" aria-label={i18nT("pages.integrations.onec.onec.6fbb31b")}>
                     <div className="space-y-5 p-5">
                         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                             <DetailBox
@@ -1673,14 +1674,14 @@ function JobDetailsModal({
                             />
 
                             <DetailBox
-                                label="Локальный ID"
+                                label={i18nT("pages.integrations.onec.onec.91c732b")}
                                 value={
                                     job.localId
                                 }
                             />
 
                             <DetailBox
-                                label="ID в 1С"
+                                label={i18nT("pages.integrations.onec.onec.e69bddf")}
                                 value={
                                     job.externalId
                                 }
@@ -1697,7 +1698,7 @@ function JobDetailsModal({
 
                         <div className="grid gap-3 md:grid-cols-2">
                             <DetailBox
-                                label="Последняя попытка"
+                                label={i18nT("pages.integrations.onec.onec.5c91ff9")}
                                 value={
                                     formatDate(
                                         job.lastAttemptAt,
@@ -1715,7 +1716,7 @@ function JobDetailsModal({
                             />
 
                             <DetailBox
-                                label="Завершено"
+                                label={i18nT("pages.integrations.onec.onec.0083ce0")}
                                 value={
                                     formatDate(
                                         job.completedAt,
@@ -1735,7 +1736,7 @@ function JobDetailsModal({
 
                         <div>
                             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">
-                                Ключ идемпотентности
+                                {i18nT("pages.integrations.onec.onec.b638268")}
                             </p>
 
                             <div className="break-all rounded-xl bg-gray-50 p-3 font-mono text-xs text-gray-600">
@@ -1759,7 +1760,7 @@ function JobDetailsModal({
                         )}
 
                         <JsonBlock
-                            title="Данные запроса"
+                            title={i18nT("pages.integrations.onec.onec.eab07c5")}
                             value={
                                 job.payload
                             }
@@ -1908,10 +1909,11 @@ function JsonBlock({
 }
 
 function LoadingState({ text }) {
+    __useI18nReactive();
     return <div className="oc-state" role="status">
         <div className="oc-state__inner">
             <div className="oc-state__icon"><RiLoader4Line className="oc-spin" size={25} /></div>
-            <h3>Загрузка данных</h3><p>{text}</p>
+            <h3>{i18nT("pages.integrations.onec.onec.0446082")}</h3><p>{text}</p>
         </div>
     </div>;
 }
@@ -1937,8 +1939,9 @@ function EmptyState({ title, text }) {
 }
 
 function Notice({ notice, onClose }) {
+    __useI18nReactive();
     const type = ["success", "warning", "error"].includes(notice?.type) ? notice.type : "warning";
     return <div role="status" className={`oc-notice oc-notice--${type}`}>
-        <span>{notice.text}</span><button type="button" onClick={onClose} aria-label="Закрыть уведомление"><RiCloseLine size={18} /></button>
+        <span>{notice.text}</span><button type="button" onClick={onClose} aria-label={i18nT("pages.integrations.onec.onec.abed8a2")}><RiCloseLine size={18} /></button>
     </div>;
 }

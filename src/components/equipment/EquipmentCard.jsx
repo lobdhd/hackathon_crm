@@ -75,7 +75,7 @@ export default function EquipmentCard({
                     <RiMapPinLine size={15} />
 
                     <span>
-                        {area?.name ?? "Участок не указан"}
+                        {area?.name ?? i18nT("components.equipment.equipmentcard.21c6437")}
                     </span>
                 </div>
 
@@ -89,7 +89,7 @@ export default function EquipmentCard({
           ">
                     <MiniStat label={i18nT("sidebar.orders")} value={activeOrders} icon={RiFileList3Line} tone="blue" />
 
-                    <MiniStat label="Аварийные" value={emergencyOrders} icon={RiAlarmWarningLine} tone="red" />
+                    <MiniStat label={i18nT("components.equipment.equipmentcard.f4c5991")} value={emergencyOrders} icon={RiAlarmWarningLine} tone="red" />
 
                     <MiniStat label={i18nT("analytics.downtime.label")} value={formatMinutes(equipment.downtimeMinutes)} icon={RiTimeLine} tone="orange" />
                 </div>
