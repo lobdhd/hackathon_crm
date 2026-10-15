@@ -71,6 +71,15 @@ const RISK_STOPS = [
     [100, "#e94553"],
 ];
 const GAUGE_ARC = "M 20 120 A 100 100 0 0 1 220 120";
+// Кольца прогноза: центр (150,150), 270° дуга, кольца идут от внешнего к внутреннему.
+const RING_CX = 150;
+const RING_CY = 150;
+const RING_R0 = 132;
+const RING_STEP = 20;
+function ringPath(radius) {
+    const k = (Math.SQRT1_2 * radius).toFixed(2); // r·sin45°
+    return `M ${(RING_CX - k).toFixed(2)} ${(RING_CY + Number(k)).toFixed(2)} A ${radius} ${radius} 0 1 1 ${(RING_CX + Number(k)).toFixed(2)} ${(RING_CY + Number(k)).toFixed(2)}`;
+}
 const EMPTY = [];
 
 // MARK: Helpers
@@ -127,6 +136,24 @@ function errorMessage(error) {
 function tr(key, fallback) {
     const value = i18nT(key);
     return value && value !== key ? value : fallback;
+}
+
+// Типы аномалий приходят с сервера кодами (FREQUENT_FAILURES и т.п.) — показываем по-русски.
+const ANOMALY_TYPE_LABELS = {
+    FREQUENT_FAILURES: ["pages.analytics.analytics.91b6362", "Частые отказы"],
+    REPEATED_FAULT: ["pages.analytics.analytics.a6d8e7b", "Повторяющаяся неисправность"],
+    FAILURE_AFTER_PLANNED_MAINTENANCE: ["pages.analytics.analytics.ebc8df2", "Отказ после планового обслуживания"],
+    MATERIAL_ANOMALY: ["pages.analytics.analytics.db68c6c", "Аномалия по материалам"],
+    AREA_HOTSPOT: ["pages.analytics.analytics.a871901", "Проблемный участок"],
+    SHIFT_PATTERN: ["pages.analytics.analytics.349d3d9", "Закономерность по сменам"],
+    TIME_OF_DAY: ["pages.analytics.analytics.e3d751f", "Время суток"],
+    EXECUTOR_REPEAT_FAILURES: ["pages.analytics.analytics.1d44cc6", "Повторные отказы у исполнителя"],
+    BRIGADE_REPEAT_FAILURES: ["pages.analytics.analytics.15a05ac", "Повторные отказы у бригады"],
+};
+function anomalyTypeLabel(type) {
+    const entry = ANOMALY_TYPE_LABELS[type];
+    if (entry) return tr(entry[0], entry[1]);
+    return /^[A-Z0-9_]+$/.test(String(type)) ? "Аномалия" : String(type);
 }
 
 // MARK: Page
@@ -427,7 +454,6 @@ export default function Dashboard() {
                         title={tr("pages.analytics.analytics.b89121c", "Прогноз отказов")}
                         description="Риск по оборудованию на 30 дней"
                         icon={RiFlashlightLine}
-                        action={""}
                     />
                     <div className="dash-panel__content">
                         {forecastQuery.isLoading ? <PanelLoading /> : forecastQuery.isError && !forecastQuery.data ? (
@@ -463,10 +489,11 @@ export default function Dashboard() {
                 </section>
 
                 <section className="dash-panel dash-panel--anomaly">
-                    <PanelHeader 
+                    <PanelHeader
                         title={tr("pages.dashboard.dashboard.33cd729", "Аномалии")}
                         description="Приоритетные события, требующие внимания"
                         icon={RiSparkling2Line}
+                        hideIcon
                         action={<button type="button" className="dash-link" onClick={() => navigate("/analytics")}>Аналитика <RiArrowRightLine size={16} /></button>}
                     />
                     <div className="dash-panel__content dash-anomaly-content">
@@ -565,7 +592,7 @@ function StatCard({ title, value, note, icon: Icon, tone, onClick }) {
     );
 }
 
-function PanelHeader({ title, description, icon: Icon, action }) {
+function PanelHeader({ title, description, icon: Icon, action, hideIcon = false }) {
     return (
         <div className="dash-panel__header">
             <div className="dash-panel__titles">
@@ -574,7 +601,7 @@ function PanelHeader({ title, description, icon: Icon, action }) {
             </div>
             <div className="dash-panel__aside">
                 {action}
-                <span className="dash-panel__icon"><Icon size={18} /></span>
+                {!hideIcon && <span className="dash-panel__icon"><Icon size={18} /></span>}
             </div>
         </div>
     );
@@ -610,8 +637,8 @@ function LoadGauge({ percent, empty }) {
                     strokeDasharray={`${shown} 100`}
                     style={{ opacity: shown > 0.3 ? 1 : 0 }}
                 />
-                <text x="20" y="131" className="dash-gauge__edge" textAnchor="middle">0</text>
-                <text x="220" y="131" className="dash-gauge__edge" textAnchor="middle">100</text>
+                <text x="20" y="120" dy=".35em" className="dash-gauge__edge" textAnchor="middle">0</text>
+                <text x="220" y="120" dy=".35em" className="dash-gauge__edge" textAnchor="middle">100</text>
             </svg>
             <div className="dash-gauge__metric" aria-hidden="true">
                 <strong>{empty ? "—" : `${Math.round(clampPercent(percent))}%`}</strong>
@@ -624,6 +651,10 @@ function LoadGauge({ percent, empty }) {
 // MARK: Executors
 function ExecutorRow({ employee, onClick }) {
     const status = EXECUTOR_STATUS[employee.employeeStatus] || EXECUTOR_STATUS.OFF_SHIFT;
+    /* statusText с сервера может прийти кодом на английском — тогда берём русскую подпись */
+    const statusText = employee.statusText && !/^[A-Za-z_\s]+$/.test(employee.statusText)
+        ? employee.statusText
+        : status.label;
     return (
         <button type="button" onClick={onClick} className="dash-executor">
             <span className="dash-executor__avatar">{initials(employee.fullName)}</span>
@@ -634,63 +665,67 @@ function ExecutorRow({ employee, onClick }) {
                     {employee.grade ? ` · ${employee.grade} разряд` : ""}
                 </span>
             </span>
-            <ToneBadge tone={status.tone}>{employee.statusText || status.label}</ToneBadge>
+            <ToneBadge tone={status.tone}>{statusText}</ToneBadge>
         </button>
     );
 }
 
-// MARK: Forecast — концентрические кольца риска
+// MARK: Forecast — концентрические кольца риска (свой SVG: точный центр и надёжное наведение)
 const ForecastRings = memo(function ForecastRings({ items }) {
+    const [hovered, setHovered] = useState(null);
     const values = items.map((item) => Math.round(formatRisk(item.probability)));
-    const names = items.map((item) => shorten(equipmentName(item), 22));
-    const signature = `${values.join(",")}|${names.join(",")}`;
-    const options = useMemo(() => ({
-        chart: {
-            type: "radialBar",
-            background: "transparent",
-            fontFamily: "inherit",
-            sparkline: { enabled: true },
-            animations: { enabled: true, speed: 700 },
-        },
-        colors: values.map(riskColor),
-        labels: names,
-        stroke: { lineCap: "round" },
-        fill: { type: "solid", opacity: 1 },
-        plotOptions: {
-            radialBar: {
-                startAngle: -135,
-                endAngle: 135,
-                hollow: { size: "32%", background: "transparent" },
-                track: { background: "#e3ecfa", strokeWidth: "100%", margin: 5 },
-                dataLabels: {
-                    name: { show: true, fontSize: "11px", fontWeight: 600, color: "#7f97b2", offsetY: 22 },
-                    value: {
-                        show: true,
-                        fontSize: "28px",
-                        fontWeight: 800,
-                        color: "#153454",
-                        offsetY: -14,
-                        formatter: (value) => `${Math.round(value)}%`,
-                    },
-                    total: {
-                        show: true,
-                        label: "Макс. риск",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: "#7f97b2",
-                        formatter: () => `${Math.max(...values)}%`,
-                    },
-                },
-            },
-        },
-        states: { hover: { filter: { type: "none" } }, active: { filter: { type: "none" } } },
-        legend: { show: false },
+    const names = items.map((item) => equipmentName(item));
+    const signature = values.join(",");
+    const [shown, setShown] = useState(() => items.map(() => 0));
+    useEffect(() => {
+        const id = requestAnimationFrame(() => setShown(values));
+        return () => cancelAnimationFrame(id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), [signature]);
+    }, [signature]);
+    const current = Math.min(hovered ?? 0, items.length - 1);
     return (
-        <div className="dash-rings" aria-label="Вероятность отказа по оборудованию">
-            <Chart type="radialBar" options={options} series={values} height={285} width="100%" />
-        </div>
+        <>
+            <div className="dash-rings">
+                <svg
+                    className="dash-rings__svg"
+                    viewBox="0 0 300 262"
+                    role="img"
+                    aria-label="Вероятность отказа по оборудованию"
+                    onMouseLeave={() => setHovered(null)}
+                >
+                    {items.map((item, i) => {
+                        const d = ringPath(RING_R0 - i * RING_STEP);
+                        const value = shown[i] ?? 0;
+                        const cls = `dash-ring${hovered !== null && hovered !== i ? " is-dim" : ""}`;
+                        return (
+                            <g
+                                key={item.equipmentId ?? i}
+                                className={cls}
+                                onMouseEnter={() => setHovered(i)}
+                                onClick={() => setHovered(i)}
+                            >
+                                <path d={d} pathLength="100" className="dash-ring__track" />
+                                <path
+                                    d={d}
+                                    pathLength="100"
+                                    className="dash-ring__value"
+                                    stroke={riskColor(values[i])}
+                                    strokeDasharray={`${value} 100`}
+                                    style={{ opacity: value > 0.4 ? 1 : 0, transitionDelay: `${i * 70}ms` }}
+                                />
+                            </g>
+                        );
+                    })}
+                    <text x={RING_CX} y={RING_CY} dy=".35em" textAnchor="middle" className="dash-rings__value">
+                        {values[current]}%
+                    </text>
+                </svg>
+            </div>
+            <div className="dash-rings__caption">
+                <i style={{ backgroundColor: riskColor(values[current]) }} />
+                <span title={names[current]}>{names[current]}</span>
+            </div>
+        </>
     );
 });
 
@@ -773,7 +808,7 @@ function AnomalyCard({ anomaly, counts, onOpen }) {
         <div className="dash-anomaly">
             <div className="dash-anomaly__top">
                 <ToneBadge tone={tone}>Важность {severity}/5</ToneBadge>
-                {anomaly.type && <span className="dash-anomaly__type">{anomaly.type}</span>}
+                {anomaly.type && <span className="dash-anomaly__type">{anomalyTypeLabel(anomaly.type)}</span>}
             </div>
             <h3>{anomaly.title || "Обнаружена аномалия"}</h3>
             <p className="dash-anomaly__description">{anomaly.description || "Необычное событие в производственных данных"}</p>

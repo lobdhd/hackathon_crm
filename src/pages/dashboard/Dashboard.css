@@ -70,7 +70,7 @@
     /* filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.32)); */
     transition: stroke-dasharray .9s cubic-bezier(.22, 1, .36, 1), opacity .3s;
 }
-.dash-gauge__edge { fill: var(--faint); font-size: 9px; font-weight: 700; }
+.dash-gauge__edge { fill: var(--ink); font-size: 9.5px; font-weight: 800; pointer-events: none; }
 .dash-gauge__metric { position: absolute; left: 50%; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px; transform: translateX(-50%); white-space: nowrap; pointer-events: none; }
 .dash-gauge__metric strong { color: var(--ink); font-size: clamp(30px, 2.5vw, 40px); font-weight: 800; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .dash-gauge__metric span { color: #829bb4; font-size: 11px; font-weight: 600; line-height: 1.15; }
@@ -148,7 +148,17 @@
 .dash-panel__footer:hover { background: rgba(239, 246, 255, 0.7); }
 
 /* ---------- forecast rings ---------- */
-.dash-rings { min-width: 0; margin: -6px -8px 0; }
+.dash-rings { min-width: 0; margin: 0 0 4px; }
+.dash-rings__svg { display: block; width: 100%; max-width: 330px; height: auto; margin: 0 auto; overflow: visible; }
+.dash-ring { cursor: pointer; transition: opacity .2s; }
+.dash-ring.is-dim { opacity: .35; }
+.dash-ring__track, .dash-ring__value { fill: none; stroke-width: 13; stroke-linecap: round; }
+.dash-ring__track { stroke: #e3ecfa; }
+.dash-ring__value { transition: stroke-dasharray .9s cubic-bezier(.22, 1, .36, 1), opacity .3s; }
+.dash-rings__value { fill: var(--ink); font-size: 32px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; pointer-events: none; }
+.dash-rings__caption { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; margin: 0 0 12px; color: var(--ink-2); font-size: 12px; font-weight: 700; }
+.dash-rings__caption i { flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%; }
+.dash-rings__caption span { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-page .apexcharts-tooltip { border: 1px solid #dce8f4 !important; box-shadow: 0 12px 30px -14px rgba(37, 99, 235, 0.4) !important; }
 .dash-risk-list { margin-top: 4px; border-top: 1px solid rgba(37, 99, 235, 0.13); }
 .dash-risk-row { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; padding: 11px 2px; border: 0; border-bottom: 1px solid rgba(37, 99, 235, 0.09); background: transparent; text-align: left; cursor: pointer; }
@@ -261,7 +271,7 @@
     .dash-risk-row__failures { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .dash-stat, .dash-button, .dash-executor, .dash-ranking__fill, .dash-gauge__value { transition: none; }
+    .dash-stat, .dash-button, .dash-executor, .dash-ranking__fill, .dash-gauge__value, .dash-ring__value { transition: none; }
     .dash-stat:hover { transform: none; }
     .dash-spin { animation: none; }
 }
